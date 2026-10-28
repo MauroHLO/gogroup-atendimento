@@ -1,0 +1,10 @@
+data/raw/
+*.zip
+*.pdf
+.env
+.env.local
+.venv/
+__pycache__/
+node_modules/
+.next/
+.vercel/
