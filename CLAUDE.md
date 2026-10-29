@@ -25,18 +25,18 @@ Um agente que, para cada conversa de atendimento: classifica o motivo real, deci
 - Groq como LLM, com saída estruturada (JSON) e validação do esquema.
 
 # Estrutura
-
-    analysis/          scripts Python que geram os números e agregados
-    app/               aplicação Next.js
-      lib/pii          mascaramento de dados pessoais
-      lib/policy       regra de autonomia (determinística, testada)
-      lib/agent        chamada ao modelo e saída estruturada
-      lib/faq          FAQ em duas camadas (política e produto/promoções)
-      app/api/agent    rota pública com limite de requisições
-    data/raw/          dados originais (fora do Git)
-    data/processed/    agregados (podem ir para o Git)
-    evals/             casos de teste sintéticos escritos por nós
-    docs/decisoes.md   decisões e justificativas
+    analysis/              scripts Python que geram os números e agregados
+    app/                   aplicação Next.js (raiz do projeto na Vercel)
+    src/lib/pii          mascaramento de dados pessoais
+    src/lib/policy       regra de autonomia (determinística, testada)
+    src/lib/agent        chamada ao modelo e saída estruturada
+    src/lib/faq          FAQ em duas camadas (política e produto/promoções)
+    src/app/api/agent    rota pública com limite de requisições
+    src/app/             interface
+    data/raw/              dados originais (fora do Git)
+    data/processed/        agregados (podem ir para o Git)
+    evals/                 casos de teste sintéticos escritos por nós
+    docs/decisoes.md       decisões e justificativas
 
 # Convenções
 
