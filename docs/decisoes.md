@@ -15,15 +15,16 @@ Métrica associada (não central): R$ economizados por automação. O custo por 
 ## 2. O que os dados mostram (preliminar)
 
 - Custo estimado no período: ~R$ 108 mil (~12 mil conversas, amostra escalada ×3).
-- Atraso e rastreio juntos: ~34% do custo.
+- Atraso e rastreio juntos: ~37% do custo (19,5% + 17,3%).
 - Reclame Aqui: ~10% das conversas, ~47% do custo (R$ 42 por conversa).
-- A tag manual diverge do motivo real em até ~34% das conversas (teto: parte vem de conversas com dois assuntos e de limites do classificador). As conversas sem tag são exatamente as que só têm a saudação do bot.
-- A tag errada não mudou a taxa de resolução; o custo é de visibilidade para a liderança.
-- 19% das conversas são a 2ª ou posterior do mesmo pedido (~26% do custo).
-- Reclame Aqui tende a ser fim de escalada: 36% das conversas do canal são recontato, contra 17% nos demais.
-- Rota Express está ~2,8× sobre-representada nos contatos de rastreio e atraso, concentrada no Nordeste (indício, não prova: a base de comparação é aproximada).
-- 40 conversas de reação adversa a produto: nenhuma com tag própria, e em todas o agente humano ofereceu troca sem mencionar o registro de cosmetovigilância exigido pela política.
-- ~30% dos contatos chegam fora das 8h às 20h, quando só o bot responde, e o bot do WhatsApp apenas cumprimenta.
+- A tag manual é coerente com o motivo inferido em 71% das conversas (divergência de até ~29%, um teto: parte vem de conversas com dois assuntos e de limites do classificador). A concordância é de apenas 20% nos casos de reação adversa. As conversas sem tag são exatamente as que só têm a saudação do bot.
+- A tag divergente não mudou a resolução (62,4% com tag coerente contra 61,8% com divergente); o custo é de visibilidade para a liderança.
+- 19% das conversas são a 2ª ou posterior do mesmo pedido (~R$ 28 mil, ~26% do custo).
+- Reclame Aqui tende a ser fim de escalada: 36% das conversas do canal são recontato, contra 17% nos demais. Com ameaça de reclamação, a próxima conversa do pedido é no Reclame Aqui em 50% dos casos, contra 11% sem ameaça (só 34 casos com ameaça: indício, não prova).
+- Rota Express aparece em 63% dos contatos de rastreio e atraso, contra ~20% na referência (~3,1×), concentrada no Nordeste: CE 3,5×, RN 4,7×, PB 5,5×, PE 2,3×, BA 1,8×. A base de comparação é aproximada.
+- Em 72% das reclamações de atraso, o status do pedido ainda é "em trânsito".
+- 40 conversas de reação adversa: nenhuma com tag própria, nenhuma cita registro ou lote, e em todas o agente humano ofereceu troca.
+- ~30% dos contatos chegam fora das 8h às 20h, quando só o bot responde. No WhatsApp, a mediana da primeira resposta é de 12 min e ~20% estouram o SLA em horário comercial.
 
 ## 3. Taxonomia de motivos
 
@@ -71,7 +72,7 @@ O agente também sinaliza **risco de escalada para o Reclame Aqui** (recontato, 
 
 **Princípio:** explicar política é nível 0; executar ou aprovar (reenvio, cancelamento, reembolso, troca) é nível 1, porque exige fatos que o agente não tem (foto, data de recebimento).
 
-Simulação preliminar (3.541 conversas com mensagem do cliente), com a FAQ de produto e promoção pendente: nível 0 ≈ 15%, nível 1 ≈ 60%, nível 2 ≈ 25%. O nível 2 concentra ~58% do custo por causa do Reclame Aqui. Com a FAQ preenchida, o nível 0 subiria até ~21%.
+Simulação preliminar (3.541 conversas com mensagem do cliente), com a FAQ de produto e promoção pendente: nível 0 ≈ 14,5%, nível 1 ≈ 57%, nível 2 ≈ 28,6%. O nível 2 concentra ~60% do custo por causa do Reclame Aqui. O efeito de preencher a FAQ pode ser simulado ajustando `FAQ_VALIDADA` no script.
 
 ## 6. Regras específicas
 

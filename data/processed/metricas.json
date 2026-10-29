@@ -1,0 +1,56 @@
+{
+  "validacao": {
+    "conversas": 4000,
+    "mensagens": 14559,
+    "pedidos": 3237,
+    "conversas_duplicadas": 0,
+    "mensagens_duplicadas": 0,
+    "conversas_sem_pedido_na_base": 0,
+    "conversas_sem_mensagem": 0,
+    "conversas_sem_tag": 308
+  },
+  "pii_nas_mensagens": {
+    "msgs_cliente": 5684,
+    "com_cpf": 174,
+    "com_telefone": 91,
+    "com_cartao": 45,
+    "com_email": 0
+  },
+  "resumo": {
+    "conversas_amostra": 4000,
+    "conversas_com_mensagem_do_cliente": 3541,
+    "conversas_so_bot": 459,
+    "pct_multi_intencao": 8.5,
+    "pct_nao_classificado": 0.02,
+    "custo_estimado_populacao_rs": 108299,
+    "conversas_estimadas_populacao": 12000
+  },
+  "concordancia_tag_geral": 0.713,
+  "pct_abertas_fora_do_horario": 30.3,
+  "recontato_escalada": {
+    "pct_conversas_recontato": 19.1,
+    "custo_recontato_rs": 28343,
+    "pct_ra_recontato": 36.1,
+    "pct_demais_recontato": 17.1,
+    "custo_ra_apos_outra_conversa_rs": 18522,
+    "custo_ra_total_rs": 51282,
+    "p_proxima_ra_com_ameaca": 0.5,
+    "n_com_ameaca": 34,
+    "p_proxima_ra_sem_ameaca": 0.108,
+    "pct_aberturas_com_recontato_declarado": 16.8
+  },
+  "pct_atraso_com_status_em_transito": 72.0,
+  "reacao_adversa": {
+    "conversas": 40,
+    "com_tag_especifica": 0,
+    "tags_usadas": {
+      "Outros": 11,
+      "Troca": 10,
+      "Reclamação produto": 7,
+      "Dúvida": 7,
+      "Avaria": 5
+    },
+    "agente_cita_registro_ou_lote": 0,
+    "agente_oferece_troca": 40
+  }
+}

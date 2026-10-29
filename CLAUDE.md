@@ -47,4 +47,4 @@ Um agente que, para cada conversa de atendimento: classifica o motivo real, deci
 
 # Estado atual
 
-Ambiente e repositório criados. Desenho do agente aprovado. Próximo: script de análise em `analysis/`, depois o app e um deploy inicial na Vercel.
+Ambiente e repositório criados. Desenho do agente aprovado. Análise concluída em `analysis/analise_atendimento.py` (agregados em `data/processed/`). Próximo: módulos `lib/pii` e `lib/policy` do app, depois a rota do agente e um deploy inicial na Vercel.

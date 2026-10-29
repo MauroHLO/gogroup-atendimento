@@ -1,0 +1,17 @@
+motivo,concordancia,conversas
+reacao_adversa,0.2,40
+elogio,0.577,52
+financeiro_cobranca,0.631,217
+atraso,0.65,589
+cancelamento,0.694,219
+promo_cupom,0.715,137
+rastreio,0.726,751
+avaria,0.738,275
+troca_tamanho,0.74,146
+item_faltando,0.747,265
+personalizacao_erro,0.748,163
+brinde,0.758,153
+endereco,0.77,113
+fragrancia,0.778,144
+duvida_produto,0.793,213
+pagamento_pendente,0.873,63
