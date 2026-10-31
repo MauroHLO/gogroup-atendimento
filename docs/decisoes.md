@@ -28,7 +28,7 @@ Métrica associada (não central): R$ economizados por automação. O custo por 
 
 ## 3. Taxonomia de motivos
 
-Rastreio, atraso, item faltando, brinde, avaria, erro de personalização, cancelamento, endereço, cobrança/financeiro, pagamento pendente, promoção/cupom, troca ou devolução, fragrância, dúvida de produto, elogio e **reação adversa** (categoria nova, não existe na lista de tags atual). Cada motivo é mapeado para as 13 tags originais para comparação. Conversas podem ter mais de um motivo (6% das aberturas).
+Rastreio, atraso, item faltando, brinde, avaria, erro de personalização, cancelamento, endereço, cobrança/financeiro, pagamento pendente, promoção/cupom, troca ou devolução, fragrância, dúvida de produto, elogio e **reação adversa** (categoria nova, não existe na lista de tags atual). O app acrescenta dúvida de política e direitos do titular (ver seção 12). Cada motivo é mapeado para as 13 tags originais para comparação. Conversas podem ter mais de um motivo (6% das aberturas).
 
 ## 4. Desenho do agente
 
@@ -112,4 +112,18 @@ Não há rótulo verdadeiro. Plano: rotular à mão ~60 conversas e medir classi
 
 - Preencher a FAQ de produto e promoções se houver fonte validada.
 - Rotular a amostra de avaliação.
-- Definir o limiar de confiança.
+- Calibrar o limiar de confiança (valor inicial 0,7) com a amostra rotulada.
+- Alinhar o script Python à regra do app: hoje `FAQ_VALIDADA` zera qualquer motivo, e o script não tem `duvida_politica` nem `direitos_titular`.
+
+## 12. Implementação da regra (`app/src/lib/policy`)
+
+A função `decidirNivel` é pura e devolve `{ nivel, razoes }`, com uma razão legível para cada regra cuja condição foi atendida. Decisões tomadas na implementação:
+
+- **Motivos novos:** `duvida_politica` (pergunta informativa de política, como "como funciona a troca") e `direitos_titular` (indica a Central de Privacidade) têm nível-base 0. **Eles não existem na taxonomia do script Python** (`analysis/analise_atendimento.py`); lá essas conversas caem em outros motivos ou em `nao_classificado`.
+- **Arrependimento** continua dentro de `cancelamento` (nível 1), como no script.
+- **FAQ validada** só baixa para 0 `duvida_produto` e `promo_cupom`. Nenhum outro motivo é afetado pela FAQ (no script Python, qualquer motivo é).
+- **Status de entrega:** `entregue`, `em_transito`, `em_separacao`, `atrasado` e `aguardando_pagamento`. Rastreio é nível 0 só em `em_transito`; nos outros status, nível 1. Endereço é nível 0 (recusa automática com explicação) em `em_transito`, `entregue` e `atrasado`; nível 1 (assistido) em `em_separacao` e `aguardando_pagamento`.
+- **Ordem:** nível-base por motivo → mais restritivo entre os motivos → Reclame Aqui → nº do contato → valor → saúde/ameaça → confiança. A confiança vem por último e soma um nível ao resultado (máximo 2), o que é a opção mais conservadora: valor de R$ 250 com confiança 0,5 resulta em nível 2.
+- **Bordas:** o valor escala só quando é estritamente maior que R$ 200; a confiança escala só quando é estritamente menor que `LIMIAR_CONFIANCA` (0,7).
+- **Lista de motivos vazia ou motivo desconhecido:** nível 1.
+- **Entrada inválida** (confiança fora de 0 a 1 ou NaN, `seq` não inteiro ou menor que 1, valor negativo ou não finito): a função lança `RangeError`. **A rota do agente deve capturar esse erro e responder em nível 2 com a razão "entrada inválida".**
