@@ -8,7 +8,7 @@ O agente existe para dar à liderança uma visão confiável de por que os clien
 
 Métricas principais:
 1. **Precisa de humano ou não:** percentual de conversas por nível de autonomia.
-2. **Contatos evitados:** conversas que não precisariam existir (aviso proativo, autoatendimento, correção de processo).
+2. **Contatos evitados:** conversas que não precisariam existir (aviso proativo, autoatendimento, correção de processo). Como o agente não rodou em produção, o painel e o README falam em contatos **potencialmente evitáveis (hipótese)**, nunca em contatos evitados medidos (seção 15).
 
 Métrica associada (não central): R$ economizados por automação. O custo por conversa do `parametros.md` é por canal, não por quem atende, então não serve como prova direta de economia.
 
@@ -17,7 +17,7 @@ Métrica associada (não central): R$ economizados por automação. O custo por 
 - Custo estimado no período: ~R$ 108 mil (~12 mil conversas, amostra escalada ×3).
 - Atraso e rastreio juntos: ~37% do custo (19,5% + 17,3%).
 - Reclame Aqui: ~10% das conversas, ~47% do custo (R$ 42 por conversa).
-- A tag manual é coerente com o motivo inferido em 71% das conversas (divergência de até ~29%, um teto: parte vem de conversas com dois assuntos e de limites do classificador). A concordância é de apenas 20% nos casos de reação adversa. As conversas sem tag são exatamente as que só têm a saudação do bot.
+- A tag manual é coerente com o motivo inferido em 71% das conversas (divergência de até ~29%, um teto: parte vem de conversas com dois assuntos e de limites do classificador). A concordância é de apenas 20% nos casos de reação adversa. As 308 conversas sem tag estão todas entre as 459 que só têm a saudação do bot (um subconjunto, não o mesmo conjunto: as outras 151 conversas só com o bot têm tag). Conferido em 31/10/2026 com as funções de `analysis/analise_atendimento.py`.
 - A tag divergente não mudou a resolução (62,4% com tag coerente contra 61,8% com divergente); o custo é de visibilidade para a liderança.
 - 19% das conversas são a 2ª ou posterior do mesmo pedido (~R$ 28 mil, ~26% do custo).
 - Reclame Aqui tende a ser fim de escalada: 36% das conversas do canal são recontato, contra 17% nos demais. Com ameaça de reclamação, a próxima conversa do pedido é no Reclame Aqui em 50% dos casos, contra 11% sem ameaça (só 34 casos com ameaça: indício, não prova).
@@ -28,7 +28,7 @@ Métrica associada (não central): R$ economizados por automação. O custo por 
 
 ## 3. Taxonomia de motivos
 
-Rastreio, atraso, item faltando, brinde, avaria, erro de personalização, cancelamento, endereço, cobrança/financeiro, pagamento pendente, promoção/cupom, troca ou devolução, fragrância, dúvida de produto, elogio e **reação adversa** (categoria nova, não existe na lista de tags atual). O app acrescenta dúvida de política e direitos do titular (ver seção 12). Cada motivo é mapeado para as 13 tags originais para comparação. Conversas podem ter mais de um motivo (6% das aberturas).
+Rastreio, atraso, item faltando, brinde, avaria, erro de personalização, cancelamento, endereço, cobrança/financeiro, pagamento pendente, promoção/cupom, troca ou devolução, fragrância, dúvida de produto, elogio e **reação adversa** (categoria nova, não existe na lista de tags atual). O app acrescenta dúvida de política e direitos do titular (ver seção 12). Cada motivo é mapeado para as 13 tags originais para comparação. Conversas podem ter mais de um motivo (8,5% das conversas da amostra; `metricas.json` → `resumo.pct_multi_intencao`).
 
 ## 4. Desenho do agente
 
@@ -99,6 +99,14 @@ Implementação (`app/src/lib/faq`):
 - Brinde não tem entrada (a política não trata dele) e continua em nível 1.
 - `PADROES_COMPROMISSO` (exportado de `lib/faq`) lista verbos de compromisso proibidos em texto ao cliente (garantimos, vamos reembolsar, já reenviamos, será reembolsado, será reenviado). Os testes garantem que nenhuma entrada de uso "cliente" os contém; a parte 3 reaproveita a lista na checagem do texto redigido.
 
+**Cautelas operacionais e ambiguidades (revisão de 31/10/2026; nenhuma entrada mudou):**
+- "Sujeito/sujeita à análise da equipe" (avaria e item faltante, personalização), "a solicitação é analisada pela nossa equipe antes de qualquer devolução" (arrependimento) e "a solicitação passa pela análise da equipe" (fragrância) são **cautelas operacionais, não política**: o agente não aprova troca, reenvio nem reembolso (essas ações são nível 1), então o texto não pode soar como aprovação. A política do desafio não descreve essa etapa de análise.
+- "Avise-nos" (avaria e item faltante, personalização) também é cautela: indica o próprio atendimento, porque a política não diz por qual canal o cliente avisa.
+- "Dentro de 30 dias" (troca por fragrância) não diz a partir de quando (compra ou recebimento). A ambiguidade é da própria política, e o texto apenas a repete, sem escolher um marco.
+- A instrução interna de cobrança duplicada "não confirmar estorno ao cliente antes da verificação" também é cautela operacional; ela nunca vai ao cliente.
+- O endereço deixou de dizer "por aqui": a entrada termina em "a alteração não é mais possível".
+- **Ponto para a avaliação manual (seção 9):** no exemplo de endereço com pedido em trânsito, o modelo escreveu "não é possível alterar o endereço **agora**". O "agora" não vem da FAQ e sugere que a alteração seria possível depois; a checagem não pega esse tipo de sugestão.
+
 ## 8. Privacidade
 
 - Mascarar CPF, telefone, e-mail e número de cartão antes de enviar texto ao modelo. O cartão não consta entre os dados que a empresa declara coletar, então é sempre removido.
@@ -110,6 +118,8 @@ Implementação (`app/src/lib/faq`):
 ## 9. Avaliação
 
 Não há rótulo verdadeiro. Plano: rotular à mão ~60 conversas e medir classificação e nível de autonomia contra elas, reportando acertos e erros, em vez de confiar só nas regras usadas na exploração.
+
+A avaliação manual também deve ler os textos redigidos em busca do que a checagem automática não pega: sugestões de exceção ou de prazo que a FAQ não traz, como o "agora" do exemplo de endereço (seção 7).
 
 ## 10. Limitações
 
@@ -242,3 +252,47 @@ Na primeira gravação, os rascunhos de nível 1 dos exemplos de atraso e de inj
 ### Valor do pedido fora da redação (31/10/2026)
 
 O valor do pedido só serve ao código, para o escalonador de valor acima de R$ 200. Ele saiu dos fatos enviados ao prompt de redação (que agora traz só status e canal) e, com isso, da lista de números que a checagem aceita: uma resposta que cite o valor reprova como `numero_sem_fonte`. Motivo: na gravação anterior, a resposta de rastreio dizia "O valor total é R$ 89,90", o que não ajuda quem pergunta onde está o pedido. Regravação: 8 de 8 com o nível e a ação esperados, sem fallback.
+
+## 15. Rota, demonstração e painel de impacto (parte 4)
+
+### Rota `api/agent` (`app/src/app/api/agent/route.ts` e `app/src/lib/rota/handler.ts`)
+
+- O arquivo da rota só exporta `maxDuration = 20` e `POST`. A lógica fica em `criarHandler(deps)`, com cliente do modelo, limites, relógio, log e contingência injetáveis para os testes. Com `cacheComponents: true`, o Next 16 recusa no build as exportações `dynamic` e `runtime`, então elas não existem.
+- **Ordem das verificações:** mesma origem (403) → tamanho do corpo, até 10 KB, lido com teto mesmo sem `Content-Length` (413) → zod: mensagem de até 2.000 caracteres, status, canal, valor de 0 a 10.000 e nº do contato de 1 a 20 (400) → limites (429) → pipeline.
+- **Mesma origem:** `Origin` precisa bater com o host (`x-forwarded-host` ou `host`), e `sec-fetch-site`, quando vem, precisa ser `same-origin`. Não é autenticação: só impede que outro site use a rota pelo navegador de um visitante.
+- **Exceção na rota:** responde 200 no formato do pipeline, com nível 2, `falha.tipo: "interno"` e a razão "falha interna: revisão humana". O erro original não é devolvido nem logado.
+- **Log:** uma linha por requisição, `{nivel, falha, ms, chamadas}`. Sem IP, mensagem nem erro.
+
+### Limites (`app/src/lib/limites`)
+
+- Janela fixa em memória, sem serviço externo: por IP, 10 por minuto e 100 por dia; teto global diário `LIMITE_DIARIO_GLOBAL` (padrão 300). O dia vira à meia-noite de Brasília. Todos os limitadores são verificados antes de consumir qualquer um, então quem é barrado não gasta a cota dos outros.
+- **Os limites são parciais em serverless:** cada instância tem o próprio contador, e um reinício o zera. Servem para conter abuso casual e custo, não como garantia. Um contador compartilhado (Redis ou similar) fica para produção.
+- IP: `x-real-ip`, depois `x-vercel-forwarded-for` (os dois definidos pela Vercel) e, por último, `x-forwarded-for`.
+
+### Contingência com respostas gravadas (`app/src/lib/demo/contingencia.ts`)
+
+- As saídas do modelo para os 8 exemplos prontos ficam em `gravados.json`, gravadas com `npm run smoke -- --gravar`. Na reprodução, o pipeline real roda com essas saídas: nível, ação e checagens são calculados na hora pelo código.
+- **Quando entra:** 429 da rota (`ip_minuto`, `ip_dia` ou `diario`) ou falha do modelo (`timeout`, `rate_limit`, `indisponivel`, `config`, `requisicao_recusada`, `json_invalido`), incluindo a classificação inválida mesmo após nova tentativa. Só vale para a mensagem e o contexto **exatos** de um exemplo pronto. Não consome cota nem chama o Groq.
+- A interface mostra uma faixa "Resposta gravada" com o motivo real e a data da gravação.
+- A gravação guarda um hash dos prompts. Se um prompt mudar sem regravar, o teste falha e diz como regravar. Um arquivo inválido desliga a contingência, sem derrubar a rota.
+
+### Interface (`app/src/app`)
+
+- `page.tsx` traz o problema, a regra, a demo e o aviso de dados fictícios: a mensagem é mascarada e processada pelo Groq, sem ser guardada pela aplicação, e a hospedagem registra IP e caminho, não o conteúdo.
+- `Demo.tsx` (cliente) traz os 8 exemplos e o contexto simulado do pedido. `Resultado.tsx` mostra o nível com cor, símbolo e texto, as razões, a ação, a resposta ou o resumo interno, as checagens, a telemetria e "O que o modelo viu" (a mensagem mascarada e delimitada, calculada no navegador, porque a API não a devolve).
+- Páginas com `noindex`; tema claro; movimento reduzido respeitado.
+
+### Painel de impacto (`app/src/lib/impacto` e `Impacto.tsx`)
+
+- Os números vêm de `data/processed/` (`metricas.json` e os CSVs gerados por `analysis/analise_atendimento.py`), copiados para `dados.ts` com arquivo e chave de origem. O teste compara cada número com o arquivo, quando ele existe, e confere as somas (níveis = 3.541 conversas com mensagem do cliente; grupos = 4.000; canais = custo estimado).
+- Cada número é rotulado: "na amostra", "estimado para a população" (todo valor em R$), "hipótese" ou "associação, não causa". O texto não diz "no período de 90 dias": o período não está nos agregados, então fala em "no período da amostra".
+- "Contatos evitados" não foi medido. O painel mostra contatos **potencialmente evitáveis (hipótese)**, pelos grupos de motivo do script, mais o recontato e o atraso com pedido em trânsito. O custo dos recontatos aparece só como associação.
+- A simulação de autonomia traz o aviso de que usa o classificador por regras do script Python, não o LLM. A leitura: o nível 0 cobre 14,5% das conversas, mas só 8,1% do custo; o valor está em preparar o nível 1 (31,7% do custo) e priorizar o nível 2 (60,1%, com humano).
+- O bloco do problema inclui Rota Express (3,08×, rotulado como associação, não causa), o estouro de SLA no WhatsApp (20,3%) e o recontato no Reclame Aqui (36,1% contra 17,1% nos demais canais). "Dados sintéticos" vem do dicionário de dados do desafio.
+
+### Deploy na Vercel
+
+- Raiz do projeto: `app/`.
+- Variáveis: `GROQ_API_KEY` (marcada como Sensitive), `GROQ_MODEL` (opcional; padrão `openai/gpt-oss-20b`) e `LIMITE_DIARIO_GLOBAL` (opcional; padrão 300).
+- **Variável nova ou alterada só vale depois de um Redeploy.**
+- Sem chave, a rota responde com falha `config` em nível 2, e os exemplos prontos usam a contingência.
