@@ -24,8 +24,9 @@ export default function Home() {
           role="note"
           className="rounded-md border border-amber-600 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950"
         >
-          Dados fictícios. Não digite dados reais (nome, CPF, telefone, e-mail, cartão). A mensagem é mascarada antes de ir
-          ao modelo e não é guardada.
+          Dados fictícios. Não digite dados reais (nome, CPF, telefone, e-mail, cartão). A mensagem é mascarada e
+          processada pelo provedor do modelo (Groq), sem ser guardada pela aplicação; a hospedagem registra o IP e o
+          caminho das requisições, não o conteúdo.
         </p>
       </header>
 
