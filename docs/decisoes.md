@@ -270,6 +270,14 @@ Em 22 cenários testados ao vivo em produção, o exemplo de atraso que estava d
 - **Fatos do pedido na redação:** só o status. O canal saiu (serve à regra, não à resposta).
 - **Prazos na checagem `termo_de_solucao`:** amanhã, hoje, depois de amanhã, nesta semana, próxima semana, dias da semana, "até o fim do dia", "nas próximas horas" e "ainda hoje" só passam se estiverem nas entradas de FAQ usadas. O texto de reserva e todas as entradas de FAQ do cliente continuam passando (há teste).
 
+### Assunto do rascunho de rastreio depende do status (31/10/2026)
+
+Com os motivos [rastreio, atraso], o desempate põe rastreio como principal, e o rascunho saía "Seu pedido está com status atrasado", sem pedido de desculpas. A ordem dos motivos não muda; muda o assunto:
+
+- **Rastreio por status:** atrasado → "o atraso do seu pedido" (com pedido de desculpas); aguardando pagamento → "o pagamento do seu pedido"; em separação → "a preparação do seu pedido"; em trânsito e entregue → "a situação do seu pedido". O pedido de desculpas acompanha o assunto: só quando ele é um problema (atraso, avaria, item faltando, brinde, erro de personalização).
+- **Sem a palavra "status" no prompt do nível 1:** o fato do pedido passou a se chamar "Situação do pedido" (vale para os dois níveis), e há teste de que o prompt do nível 1 não contém "status" em nenhuma combinação de motivo e status.
+- **Tom:** o rascunho termina com a frase do texto de reserva ("Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui."), com tom natural e curto, evitando formas formais como "analisará" e "responderá".
+
 ## 15. Rota, demonstração e painel de impacto (parte 4)
 
 ### Rota `api/agent` (`app/src/app/api/agent/route.ts` e `app/src/lib/rota/handler.ts`)

@@ -104,13 +104,14 @@ export interface ContextoPedido {
 }
 
 // Fatos do pedido que a resposta pode citar. A checagem só aceita números que estejam aqui ou na FAQ usada.
-// Só o status entra. O valor serve ao código para o escalonador acima de R$ 200; o canal serve à regra
-// (Reclame Aqui) e não ajuda a resposta; o nº do contato (seq) também não entra.
+// Só o status entra, com o rótulo "Situação do pedido" (a palavra "status" no prompt levava o modelo a escrever
+// "seu pedido está com status atrasado"). O valor serve ao código para o escalonador acima de R$ 200; o canal
+// serve à regra (Reclame Aqui) e não ajuda a resposta; o nº do contato (seq) também não entra.
 export function fatosDoPedido(contexto: ContextoPedido): string[] {
-  return [`Status do pedido: ${ROTULO_STATUS[contexto.statusEntrega]}`];
+  return [`Situação do pedido: ${ROTULO_STATUS[contexto.statusEntrega]}`];
 }
 
-// Assunto do rascunho de nível 1, decidido em código pelo motivo principal (e pelo status no endereço).
+// Assunto do rascunho de nível 1, decidido em código pelo motivo principal (e pelo status no rastreio e no endereço).
 // O prompt recebe só esta frase, para que o modelo não leve o assunto de um motivo para outro.
 export interface Assunto {
   frase: string;
@@ -149,7 +150,17 @@ const FRASE_ASSUNTO: Readonly<Record<Motivo, string>> = {
   nao_classificado: "a sua mensagem",
 };
 
+// Rastreio: o assunto depende do status. Pedido de desculpas só quando o assunto é um problema (atraso).
+const ASSUNTO_RASTREIO: Readonly<Record<StatusEntrega, Pick<Assunto, "frase" | "desculpas">>> = {
+  atrasado: { frase: "o atraso do seu pedido", desculpas: true },
+  aguardando_pagamento: { frase: "o pagamento do seu pedido", desculpas: false },
+  em_separacao: { frase: "a preparação do seu pedido", desculpas: false },
+  em_transito: { frase: "a situação do seu pedido", desculpas: false },
+  entregue: { frase: "a situação do seu pedido", desculpas: false },
+};
+
 export function assuntoDoContato(motivo: Motivo, status: StatusEntrega): Assunto {
+  if (motivo === "rastreio") return { ...ASSUNTO_RASTREIO[status] };
   const assunto: Assunto = { frase: FRASE_ASSUNTO[motivo], desculpas: MOTIVOS_PROBLEMA.has(motivo) };
   if (motivo === "endereco" && status === "em_separacao") {
     assunto.instrucaoExtra =
@@ -166,7 +177,8 @@ export const INSTRUCAO_NIVEL_0 = `Importante: a resposta só pode conter os fato
 export function instrucaoNivel1(a: Assunto): string {
   const partes = [
     `Importante: o rascunho é sobre ${a.frase}. A ação AINDA NÃO foi feita; ela aguarda a aprovação de uma pessoa da equipe. Não diga que algo já foi feito (nada de "já acionamos", "abrimos um chamado", "foi aberto um chamado", "já solicitamos").`,
-    `Escreva no máximo 3 frases: comece citando ${a.frase}; ${a.desculpas ? "peça desculpas pelo transtorno" : "não peça desculpas"}; termine dizendo que uma pessoa da nossa equipe vai analisar o caso e responder por aqui.`,
+    `Escreva no máximo 3 frases: comece citando ${a.frase}; ${a.desculpas ? "peça desculpas pelo transtorno" : "não peça desculpas"}; termine com a frase "Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui."`,
+    `Use um tom natural e curto, como numa conversa: prefira "vai analisar", "vai responder" e evite formas formais como "analisará", "responderá" ou "um membro da nossa equipe".`,
   ];
   if (a.instrucaoExtra) partes.push(a.instrucaoExtra);
   partes.push(

@@ -75,7 +75,7 @@ describe("prompt de redação", () => {
   it("nível 1 traz a FAQ e os fatos, mas não a descrição da ação", () => {
     expect(p.sistema).not.toContain(acaoSugerida("endereco", 1, "em_separacao").descricao);
     expect(p.sistema).toContain("[pol-endereco]");
-    expect(p.sistema).toContain("Status do pedido: em separação");
+    expect(p.sistema).toContain("Situação do pedido: em separação");
     expect(p.sistema).toContain("rascunho");
   });
 
@@ -169,20 +169,51 @@ describe("assunto do rascunho de nível 1 (vem do código)", () => {
     expect(assuntoDoContato("endereco", "em_transito").semFaq).toBeUndefined();
   });
 
-  it.each(MOTIVOS_NIVEL_1)("%s: o prompt traz a frase do assunto e só fala de atraso no motivo atraso", (motivo) => {
+  it.each(MOTIVOS_NIVEL_1)(
+    "%s: o prompt traz a frase do assunto e só fala de atraso no motivo atraso (ou rastreio atrasado)",
+    (motivo) => {
+      for (const status of STATUS) {
+        const s = prompt1(motivo, status);
+        expect(s).toContain(assuntoDoContato(motivo, status).frase);
+        const falaDeAtraso = motivo === "atraso" || (motivo === "rastreio" && status === "atrasado");
+        if (falaDeAtraso) expect(normalizar(s)).toContain("atraso");
+        else expect(normalizar(s)).not.toMatch(/\batraso\b/);
+      }
+    },
+  );
+
+  it.each(MOTIVOS_NIVEL_1)("%s: pedido de desculpas só quando o assunto é um problema", (motivo) => {
     for (const status of STATUS) {
       const s = prompt1(motivo, status);
-      expect(s).toContain(assuntoDoContato(motivo, status).frase);
-      if (motivo === "atraso") expect(normalizar(s)).toContain("atraso");
-      else expect(normalizar(s)).not.toMatch(/\batraso\b/);
+      const problema =
+        ["atraso", "avaria", "item_faltando", "brinde", "personalizacao_erro"].includes(motivo) ||
+        (motivo === "rastreio" && status === "atrasado");
+      expect(assuntoDoContato(motivo, status).desculpas, status).toBe(problema);
+      expect(s.includes("peça desculpas pelo transtorno"), status).toBe(problema);
+      expect(s.includes("não peça desculpas"), status).toBe(!problema);
     }
   });
 
-  it.each(MOTIVOS_NIVEL_1)("%s: pedido de desculpas só para motivos que são problema", (motivo) => {
-    const s = prompt1(motivo);
-    const problema = ["atraso", "avaria", "item_faltando", "brinde", "personalizacao_erro"].includes(motivo);
-    expect(s.includes("peça desculpas pelo transtorno")).toBe(problema);
-    expect(s.includes("não peça desculpas")).toBe(!problema);
+  it.each([
+    ["atrasado", "o atraso do seu pedido", true],
+    ["aguardando_pagamento", "o pagamento do seu pedido", false],
+    ["em_separacao", "a preparação do seu pedido", false],
+    ["em_transito", "a situação do seu pedido", false],
+    ["entregue", "a situação do seu pedido", false],
+  ] as const)("rastreio / %s: %s (desculpas: %s)", (status, frase, desculpas) => {
+    expect(assuntoDoContato("rastreio", status)).toEqual({ frase, desculpas });
+    expect(prompt1("rastreio", status)).toContain(frase);
+  });
+
+  it.each(MOTIVOS_NIVEL_1)("%s: o prompt do nível 1 não contém o texto \"status\"", (motivo) => {
+    for (const status of STATUS) expect(prompt1(motivo, status), status).not.toMatch(/status/i);
+  });
+
+  it("tom natural e curto, no formato do texto de reserva, sem formas formais", () => {
+    const s = instrucaoNivel1(assuntoDoContato("atraso", "atrasado"));
+    expect(s).toContain('"Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui."');
+    expect(s).toContain("tom natural e curto");
+    expect(s).toContain('evite formas formais como "analisará", "responderá"');
   });
 
   it("pagamento pendente, cancelamento e arrependimento não levam pedido de desculpas", () => {
@@ -262,7 +293,7 @@ describe("neutralização do delimitador nos dois prompts", () => {
 describe("fatos do pedido", () => {
   it("só o status: sem canal, valor nem nº do contato", () => {
     expect(fatosDoPedido({ statusEntrega: "aguardando_pagamento", canal: "reclame_aqui", valor: 89.9, seq: 2 })).toEqual([
-      "Status do pedido: aguardando pagamento",
+      "Situação do pedido: aguardando pagamento",
     ]);
   });
 
