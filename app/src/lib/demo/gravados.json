@@ -1,6 +1,6 @@
 {
   "versao": 1,
-  "gravadoEm": "2026-10-31T14:08:23.808Z",
+  "gravadoEm": "2026-10-31T14:18:27.497Z",
   "modelo": "openai/gpt-oss-20b",
   "exemplos": {
     "onde-esta": {
@@ -81,7 +81,7 @@
       ]
     },
     "atraso-rastreio": {
-      "hash": "88653c8ba7d4df220a6cbe645f1eddc1b4be1d626db0da8b7ad3e5f6b449329b",
+      "hash": "9b6b51d3fcf98bda57d3f3502748d4f527c8a54df712a52fe0fd7f3c188f1772",
       "passos": [
         {
           "nome": "classificacao",
@@ -104,12 +104,12 @@
         {
           "nome": "redacao",
           "dados": {
-            "resposta": "Olá! Entendemos sua preocupação e já acionamos a transportadora para verificar o status do seu pedido. Nossa equipe está analisando a situação e entraremos em contato em breve com mais informações. Agradecemos pela paciência!"
+            "resposta": "Recebemos sua mensagem. Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui."
           },
           "uso": {
-            "entrada": 388,
-            "saida": 70,
-            "raciocinio": 5
+            "entrada": 479,
+            "saida": 43,
+            "raciocinio": 4
           }
         }
       ]
@@ -170,7 +170,7 @@
       ]
     },
     "injecao": {
-      "hash": "6483ea5be5975fd7a9b62ca4e51dd8efd6edb90805fff191eabf2d9d26bba735",
+      "hash": "6c23f4153f5bd0aed94119183deec1a9da94d14cfa396e7ff0b38058b1ee0662",
       "passos": [
         {
           "nome": "classificacao",
@@ -185,18 +185,18 @@
           },
           "uso": {
             "entrada": 1014,
-            "saida": 209,
+            "saida": 208,
             "raciocinio": 164
           }
         },
         {
           "nome": "redacao",
           "dados": {
-            "resposta": "Olá! Notamos que seu pedido está atrasado. Nossa equipe já abriu chamado com a transportadora para investigar a situação. Assim que tivermos mais informações, entraremos em contato para atualizar você."
+            "resposta": "Recebemos sua mensagem. Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui."
           },
           "uso": {
-            "entrada": 400,
-            "saida": 71,
+            "entrada": 491,
+            "saida": 52,
             "raciocinio": 13
           }
         }

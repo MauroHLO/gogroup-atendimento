@@ -177,14 +177,14 @@ Os números da análise continuam vindo do script Python; a divergência só afe
 
 ### Checagem do texto redigido (`checagem.ts`)
 
-Vale para os níveis 0 e 1. O texto reprova se tiver: número em algarismos que não esteja nas entradas de FAQ usadas nem nos fatos do contexto; número por extenso (exceto "um" e "uma"); verbo de compromisso (`PADROES_COMPROMISSO`); menção a CPF, cartão, senha, CVV ou código de segurança (conservador: até "não precisa mandar o CPF" reprova); link que não esteja nas entradas de FAQ usadas; texto vazio ou acima de 700 caracteres. Se reprovar, o pipeline usa o texto seguro de reserva, que passa em todas as checagens.
+Vale para os níveis 0 e 1. O texto reprova se tiver: afirmação de ação já cumprida (`PADROES_ACAO_FEITA`, ver abaixo); número em algarismos que não esteja nas entradas de FAQ usadas nem nos fatos do contexto; número por extenso (exceto "um" e "uma"); verbo de compromisso (`PADROES_COMPROMISSO`); menção a CPF, cartão, senha, CVV ou código de segurança (conservador: até "não precisa mandar o CPF" reprova); link que não esteja nas entradas de FAQ usadas; texto vazio ou acima de 700 caracteres. Se reprovar, o pipeline usa o texto seguro de reserva, que passa em todas as checagens.
 
 ### Cliente do modelo (`cliente.ts`)
 
 - Interface `ClienteLLM` injetável; `criarClienteGroq(env, sdk?)` lê `GROQ_API_KEY` e `GROQ_MODEL` do ambiente. Modelo padrão: `openai/gpt-oss-20b`.
 - Modo estrito (`json_schema` com `strict: true`) só nos modelos que a documentação do Groq lista com decodificação restrita (`openai/gpt-oss-20b`, `openai/gpt-oss-120b`, `qwen/qwen3.8-27b`, `meta-models/muse-spark-open`); nos demais, `json_object`, sempre com validação zod no pipeline.
 - Nos modelos gpt-oss: `reasoning_effort: "low"` e `include_reasoning: false`. `temperature: 0`.
-- Limites iniciais: `max_completion_tokens` 512 (classificação) e 600 (redação), depois calibrados para 384 e 400 (ver "Calibração com o smoke test"); 8 s por chamada; `maxRetries: 0` no SDK (a única nova tentativa é a do pipeline, para JSON inválido). A documentação não diz se o raciocínio conta no limite de tokens; os valores serão calibrados com o smoke test.
+- Limites iniciais: `max_completion_tokens` 512 (classificação) e 600 (redação), depois calibrados para 384 e 400 e, por fim, 512 na classificação (ver "Calibração com o smoke test"); 8 s por chamada; `maxRetries: 0` no SDK (a única nova tentativa é a do pipeline, para JSON inválido). A documentação não diz se o raciocínio conta no limite de tokens; os valores serão calibrados com o smoke test.
 - `finish_reason: "length"`, conteúdo vazio ou JSON quebrado contam como `json_invalido`.
 - Erros do SDK viram `FalhaAgente` com um tipo, sem a mensagem nem a causa original: `timeout`, `rate_limit`, `json_invalido` (inclui o 400 `json_validate_failed`), `config` (401, 403, 404, chave ausente), `requisicao_recusada` (outro 400, como esquema estrito recusado) e `indisponivel` (conexão, 5xx, erro qualquer).
 
@@ -209,6 +209,8 @@ Duas rodadas com as 5 mensagens fictícias (a segunda já pelo pipeline). O Groq
 
 O maior consumo veio da mensagem com injeção (mais raciocínio). Com folga de cerca de 3x e 4,5x sobre o máximo medido, `max_completion_tokens` passou de 512 para **384** (classificação) e de 600 para **400** (redação). Tempo total por conversa: de 0,5 s (nível 2, uma chamada) a 1,3 s (duas chamadas), bem abaixo do orçamento de 12 s. Taxa de fallback na amostra: 0 de 4.
 
+**Revisão (31/10/2026, gravação dos 8 exemplos):** a classificação da mensagem com injeção usou **209 tokens de completion, 164 de raciocínio** na primeira gravação e 208/164 na segunda, contra 128/83 no smoke. O raciocínio varia bastante entre mensagens e rodadas, então `max_completion_tokens` da classificação subiu de 384 para **512** (cerca de 2,4x o máximo medido). A redação continua em **400** (máximo medido de 87, raciocínio incluído). Demais classificações da gravação: de 56 a 123 tokens de completion (7 a 72 de raciocínio).
+
 ### Pipeline (`index.ts`, `processarConversa`)
 
 1. Mascara a mensagem (`lib/pii`); só o texto mascarado vai ao modelo.
@@ -221,3 +223,11 @@ O maior consumo veio da mensagem com injeção (mais raciocínio). Com folga de 
 8. **Orçamento total de 12 s.** Cada chamada usa o menor entre 8 s e o tempo restante; não se começa chamada com menos de 1,5 s. A nova tentativa (só para JSON inválido, nas duas chamadas) só ocorre se sobrar tempo.
 9. **Falhas:** qualquer erro leva a nível 2, ação `escalar_atendimento_humano`, razão "falha interna: revisão humana" e `falha.tipo` (`timeout`, `rate_limit`, `json_invalido`, `config`, `requisicao_recusada`, `indisponivel`, ou `interno` para exceção fora do cliente do modelo, como o `RangeError` da policy). O erro original não é devolvido nem logado.
 10. **Privacidade:** o resultado não contém a mensagem nem trechos dela (há teste nos caminhos de nível 0, nível 2, fallback e falha); a telemetria (`chamadas`) só traz tokens, `finish_reason`, latência e se o zod aceitou.
+
+### Afirmações de ação já feita (31/10/2026)
+
+Na primeira gravação, os rascunhos de nível 1 dos exemplos de atraso e de injeção diziam "já acionamos a transportadora" e "nossa equipe já abriu chamado com a transportadora", embora a ação ainda aguardasse aprovação. A checagem não pegava, porque os verbos não estavam em `PADROES_COMPROMISSO`. Correções:
+
+- `PADROES_ACAO_FEITA` (em `checagem.ts`, sobre texto normalizado e com fronteiras de palavra) reprova, nos níveis 0 e 1, afirmações de ação cumprida em formas ativas e passivas: "já" seguido de verbo no passado (acionamos, abrimos/abriu, solicitamos, entramos em contato, reembolsamos, estornamos, enviamos, reenviamos, cancelamos, trocamos, providenciamos, registramos, encaminhamos, resolvemos e afins); verbos que só descrevem ação feita mesmo sem "já" (acionamos, providenciamos, estornamos, reembolsamos; abrimos/registramos um chamado); passivas como "foi aberto um chamado", "seu pedido já foi cancelado", "o reembolso foi feito". Falha nova: `acao_feita`. Os testes confirmam que os padrões não casam com o texto de reserva, com as entradas da FAQ, nem com frases no futuro ou pendentes ("uma pessoa da equipe vai analisar") ou com fatos do pedido ("seu pedido foi enviado e está em trânsito").
+- O prompt de redação do nível 1 diz que a ação **ainda não foi feita** e aguarda aprovação, proíbe narrá-la como cumprida e pede o formato do texto de reserva. O prompt de nível 0 não traz essa instrução.
+- Regravação (8 exemplos): todos com o nível e a ação esperados, checagens aprovadas, sem fallback e sem afirmação de ação feita. Os dois rascunhos de nível 1 passaram a reproduzir o texto de reserva.

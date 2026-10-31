@@ -23,9 +23,10 @@ export const MODELOS_ESTRITOS: ReadonlySet<string> = new Set([
   "meta-models/muse-spark-open",
 ]);
 
-// Calibrados com scripts/smoke-groq.ts em 31/10/2026 (decisoes.md, seção 14): máximo medido de 128 tokens
-// na classificação e 87 na redação, raciocínio incluído. Folga de cerca de 3x e 4,5x.
-export const MAX_TOKENS_CLASSIFICACAO = 384;
+// Calibrados com scripts/smoke-groq.ts em 31/10/2026 (decisoes.md, seção 14). Máximo medido: 209 tokens na
+// classificação (164 de raciocínio, mensagem com injeção) e 87 na redação, raciocínio incluído.
+// Folga de cerca de 2,4x e 4,5x; o raciocínio varia bastante entre rodadas.
+export const MAX_TOKENS_CLASSIFICACAO = 512;
 export const MAX_TOKENS_REDACAO = 400;
 export const TIMEOUT_CHAMADA_MS = 8_000;
 

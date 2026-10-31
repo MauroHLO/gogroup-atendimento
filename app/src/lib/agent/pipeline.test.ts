@@ -239,6 +239,25 @@ describe("checagem reprovada", () => {
     expect(r.razoes.at(-1)).toContain("checagem do texto reprovou");
   });
 
+  it.each([
+    "Olá! Já acionamos a transportadora e logo teremos notícias.",
+    "Nossa equipe já abriu chamado com a transportadora.",
+    "Foi aberto um chamado para o seu pedido.",
+    "O reembolso foi feito.",
+  ])("ação narrada como feita cai no texto de reserva: %s", async (texto) => {
+    const { r } = await rodar({ classificacao: [cls(["atraso"])], redacao: [{ resposta: texto }] }, MSG, { ...CTX, statusEntrega: "atrasado" });
+    expect(r.resposta).toBe(TEXTO_RESERVA);
+    expect(r.fallback).toBe(true);
+    expect(r.checagem?.falhas).toContain("acao_feita");
+    expect(r.nivel).toBe(1);
+  });
+
+  it("no nível 0, ação narrada como feita também cai no texto de reserva e vai a nível 1", async () => {
+    const { r } = await rodar({ classificacao: [cls(["rastreio"])], redacao: [{ resposta: "Já entramos em contato com a transportadora." }] });
+    expect(r.resposta).toBe(TEXTO_RESERVA);
+    expect(r.nivel).toBe(1);
+  });
+
   it("no nível 1: reserva, continua nível 1 com a mesma ação", async () => {
     const { r } = await rodar(
       { classificacao: [cls(["atraso"])], redacao: [{ resposta: "Vamos reembolsar você." }] },

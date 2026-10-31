@@ -5,6 +5,7 @@ import { NIVEL_BASE } from "../policy";
 import {
   ABRE,
   FECHA,
+  INSTRUCAO_NIVEL_1,
   fatosDoPedido,
   neutralizarDelimitador,
   promptClassificacao,
@@ -12,6 +13,7 @@ import {
   type ContextoPedido,
 } from "./prompts";
 import { normalizar } from "./sinais";
+import { TEXTO_RESERVA } from "./checagem";
 
 const contexto: ContextoPedido = { statusEntrega: "em_separacao", canal: "whatsapp", valor: 150, seq: 1 };
 const MENSAGEM = "Oi, quero mudar o endereço de entrega do meu pedido.";
@@ -88,6 +90,15 @@ describe("prompt de redação", () => {
       fatos: fatosDoPedido({ ...contexto, statusEntrega: "em_transito" }),
     });
     expect(p0.sistema).toContain("será enviada ao cliente");
+    expect(p0.sistema).not.toContain(INSTRUCAO_NIVEL_1);
+    expect(p0.sistema).not.toContain("AINDA NÃO foi feita");
+  });
+
+  it("nível 1 diz que a ação ainda não foi feita e traz o formato do texto de reserva", () => {
+    expect(p.sistema).toContain(INSTRUCAO_NIVEL_1);
+    expect(INSTRUCAO_NIVEL_1).toContain("AINDA NÃO foi feita");
+    expect(INSTRUCAO_NIVEL_1).toContain("aguarda a aprovação");
+    expect(INSTRUCAO_NIVEL_1).toContain(TEXTO_RESERVA);
   });
 
   it("sem FAQ aplicável, diz isso explicitamente", () => {

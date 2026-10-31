@@ -5,6 +5,7 @@
 import type { AcaoSugerida } from "../acoes";
 import type { EntradaFaq, TopicoPolitica } from "../faq";
 import type { Canal, Motivo, Nivel, StatusEntrega } from "../policy";
+import { TEXTO_RESERVA } from "./checagem";
 
 export const ABRE = "<mensagem_cliente>";
 export const FECHA = "</mensagem_cliente>";
@@ -122,6 +123,9 @@ export function fatosDoPedido(contexto: ContextoPedido): string[] {
   ];
 }
 
+// Nível 1: a ação aguarda aprovação. O rascunho não pode narrá-la como cumprida.
+export const INSTRUCAO_NIVEL_1 = `Importante: a ação acima AINDA NÃO foi feita; ela aguarda a aprovação de uma pessoa da equipe. Não diga que algo já foi feito (por exemplo "já acionamos", "abrimos um chamado", "foi aberto um chamado", "já solicitamos"). Siga o formato deste texto, adaptado ao caso: "${TEXTO_RESERVA}"`;
+
 export interface DadosRedacao {
   textoMascarado: string;
   nivel: Nivel; // 0 ou 1; nível 2 não gera resposta ao cliente
@@ -137,7 +141,8 @@ export function promptRedacao(d: DadosRedacao): Prompt {
   const revisao =
     d.nivel === 0
       ? "A resposta será enviada ao cliente."
-      : "A resposta é um rascunho que uma pessoa da equipe vai revisar antes de enviar.";
+      : `A resposta é um rascunho que uma pessoa da equipe vai revisar antes de enviar.
+${INSTRUCAO_NIVEL_1}`;
 
   const sistema = `Você redige respostas curtas e cordiais, em português do Brasil, para clientes da Gocase e da GoBeauté.
 

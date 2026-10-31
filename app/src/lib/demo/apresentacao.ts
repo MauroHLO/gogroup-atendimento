@@ -44,6 +44,7 @@ export const CHECAGEM: Readonly<Record<FalhaChecagem, string>> = {
   compromisso: "promessa (verbo de compromisso)",
   dado_sensivel: "menciona CPF, cartão ou senha",
   link_sem_fonte: "link que não está na FAQ",
+  acao_feita: "afirma que uma ação já foi feita",
 };
 
 export const LIMITE: Readonly<Record<string, string>> = {

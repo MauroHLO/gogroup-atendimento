@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { buscarFaq } from "../faq";
+import { buscarFaq, FAQ } from "../faq";
 import { MAX_RESPOSTA } from "./esquema";
-import { TEXTO_RESERVA, verificarResposta, type Permitido } from "./checagem";
+import { contemAcaoFeita, TEXTO_RESERVA, verificarResposta, type Permitido } from "./checagem";
 
 const faqEndereco = buscarFaq({ motivo: "endereco", saude: false });
 const faqTitular = buscarFaq({ motivo: "direitos_titular", saude: false });
@@ -89,5 +89,67 @@ describe("textos que falham", () => {
   it("acumula várias falhas", () => {
     const r = verificarResposta("Garantimos o estorno em 2 dias, só mandar o CPF.", permitido());
     expect(r.falhas).toEqual(expect.arrayContaining(["compromisso", "numero_sem_fonte", "dado_sensivel"]));
+  });
+});
+
+describe("afirmação de ação já feita", () => {
+  const FRASES_FEITAS = [
+    "Já acionamos a transportadora.",
+    "Ja acionei a transportadora.",
+    "Nossa equipe já acionou a transportadora.",
+    "Acionamos a transportadora para verificar.",
+    "Já abrimos um chamado.",
+    "Já abri o chamado para você.",
+    "Nossa equipe já abriu chamado com a transportadora.",
+    "Abrimos um chamado com a transportadora.",
+    "Abrimos uma solicitação para o seu caso.",
+    "Foi aberto um chamado com a transportadora.",
+    "Foi aberta uma solicitação.",
+    "Um protocolo foi registrado.",
+    "O chamado já foi aberto.",
+    "Já solicitamos a troca.",
+    "Já entramos em contato com a transportadora.",
+    "Já reembolsamos o valor.",
+    "Reembolsamos o valor do pedido.",
+    "Já estornamos a cobrança.",
+    "Já enviamos um novo produto.",
+    "Já reenviamos o item.",
+    "Já cancelamos o seu pedido.",
+    "Seu pedido já foi cancelado.",
+    "Já trocamos o produto.",
+    "Já providenciamos o reenvio.",
+    "Providenciamos a troca.",
+    "O reembolso foi feito.",
+    "O estorno já foi realizado.",
+    "Foi feito o reembolso.",
+    "A troca foi aprovada.",
+    "Já está resolvido.",
+    "JÁ ENCAMINHAMOS seu caso ao setor responsável.",
+  ];
+
+  it.each(FRASES_FEITAS)("reprova: %s", (frase) => {
+    expect(contemAcaoFeita(frase)).toBe(true);
+    const r = verificarResposta(frase, permitido({ textosFaq: [] }));
+    expect(r.ok).toBe(false);
+    expect(r.falhas).toContain("acao_feita");
+  });
+
+  it.each([
+    TEXTO_RESERVA,
+    "Uma pessoa da equipe vai analisar o seu caso e responder por aqui.",
+    "A equipe vai verificar com a transportadora e responder por aqui.",
+    "Vamos encaminhar o seu pedido para análise da equipe.",
+    "Você pode solicitar a troca, e a equipe analisa.",
+    "Seu pedido foi enviado e está em trânsito.",
+    "Assim que tivermos novidades, entraremos em contato.",
+    "Se for aprovado, o reenvio é sem custo para você.",
+    "O pedido está em trânsito; qualquer novidade, avisamos por aqui.",
+    "A abertura de um chamado depende da aprovação da equipe.",
+  ])("passa (futuro, pendente ou fato do pedido): %s", (frase) => {
+    expect(contemAcaoFeita(frase)).toBe(false);
+  });
+
+  it("nenhuma entrada da FAQ casa com os padrões", () => {
+    for (const e of FAQ) expect(contemAcaoFeita(e.texto), e.id).toBe(false);
   });
 });
