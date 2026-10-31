@@ -174,3 +174,22 @@ Os números da análise continuam vindo do script Python; a divergência só afe
 ### Checagem do texto redigido (`checagem.ts`)
 
 Vale para os níveis 0 e 1. O texto reprova se tiver: número em algarismos que não esteja nas entradas de FAQ usadas nem nos fatos do contexto; número por extenso (exceto "um" e "uma"); verbo de compromisso (`PADROES_COMPROMISSO`); menção a CPF, cartão, senha, CVV ou código de segurança (conservador: até "não precisa mandar o CPF" reprova); link que não esteja nas entradas de FAQ usadas; texto vazio ou acima de 700 caracteres. Se reprovar, o pipeline usa o texto seguro de reserva, que passa em todas as checagens.
+
+### Cliente do modelo (`cliente.ts`)
+
+- Interface `ClienteLLM` injetável; `criarClienteGroq(env, sdk?)` lê `GROQ_API_KEY` e `GROQ_MODEL` do ambiente. Modelo padrão: `openai/gpt-oss-20b`.
+- Modo estrito (`json_schema` com `strict: true`) só nos modelos que a documentação do Groq lista com decodificação restrita (`openai/gpt-oss-20b`, `openai/gpt-oss-120b`, `qwen/qwen3.8-27b`, `meta-models/muse-spark-open`); nos demais, `json_object`, sempre com validação zod no pipeline.
+- Nos modelos gpt-oss: `reasoning_effort: "low"` e `include_reasoning: false`. `temperature: 0`.
+- Limites iniciais: `max_completion_tokens` 512 (classificação) e 600 (redação); 8 s por chamada; `maxRetries: 0` no SDK (a única nova tentativa é a do pipeline, para JSON inválido). A documentação não diz se o raciocínio conta no limite de tokens; os valores serão calibrados com o smoke test.
+- `finish_reason: "length"`, conteúdo vazio ou JSON quebrado contam como `json_invalido`.
+- Erros do SDK viram `FalhaAgente` com um tipo, sem a mensagem nem a causa original: `timeout`, `rate_limit`, `json_invalido` (inclui o 400 `json_validate_failed`), `config` (401, 403, 404, chave ausente), `requisicao_recusada` (outro 400, como esquema estrito recusado) e `indisponivel` (conexão, 5xx, erro qualquer).
+
+### Prompts (`prompts.ts`)
+
+- A mensagem mascarada vai só na mensagem de usuário, entre `<mensagem_cliente>` e `</mensagem_cliente>`. Qualquer variação do delimitador dentro dela (maiúsculas, espaços, barra) é trocada por `[delimitador removido]`, nos dois prompts.
+- O prompt de classificação não menciona nível, autonomia nem ação. O de redação recebe a decisão pronta (descrição da ação), as entradas de FAQ usadas e os fatos do pedido (status, valor e canal), e proíbe números fora dessas informações, promessas e pedido de CPF, cartão ou senha.
+
+### Smoke test (`app/scripts/smoke-groq.ts`)
+
+- Roda com `npm run smoke` (lê `app/.env.local`, fora do Git), com 5 mensagens fictícias. Fica fora do `npm test` e do CI. Imprime só nível, motivos, falha, checagem, tempo e tokens; nunca a chave nem a mensagem. Sai com código 1 se o Groq recusar o esquema estrito e 2 se faltar a chave.
+- **O `tsx` é devDependency só do smoke test** (roda TypeScript direto). O app e os testes não dependem dele.
