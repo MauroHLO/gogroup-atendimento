@@ -7,7 +7,7 @@ import {
   ROTULO,
   descreverFonte,
   fmtInt,
-  fmtPct,
+  fmtPct1,
   type BlocoImpacto,
   type ChaveAgregado,
   type NivelSimulado,
@@ -63,7 +63,7 @@ function Barra({ pct, cor, rotulo }: { pct: number; cor: string; rotulo: string 
         <div className={`h-3 rounded ${cor}`} style={{ width: `${pct}%` }} />
       </div>
       <span className="w-14 shrink-0 text-right tabular-nums">
-        {fmtPct(pct)}
+        {fmtPct1(pct)}
         <span className="sr-only"> {rotulo}</span>
       </span>
     </div>

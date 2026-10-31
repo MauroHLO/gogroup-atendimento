@@ -50,11 +50,13 @@ Origem de cada número: `data/processed/metricas.json` e os CSVs da mesma pasta.
 
 | Nível | O agente… | Exemplos |
 |---|---|---|
-| **0: executa** | responde sozinho, só com fatos do pedido e texto da FAQ | rastreio de pedido em trânsito, pagamento pendente, elogio, dúvida de política com entrada na FAQ, recusa explicada de mudança de endereço com o pedido já em trânsito |
-| **1: prepara e aguarda aprovação** | propõe a ação e um rascunho; uma pessoa aprova | atraso, avaria, item faltando, brinde, erro de personalização, cancelamento, troca, arrependimento, dúvida de produto ou cupom sem FAQ validada |
-| **2: humano obrigatório** | só resume e prioriza; não responde ao cliente | reação adversa (sempre), cobrança duplicada, qualquer assunto de saúde, ameaça jurídica ou de reclamação pública |
+| **0: executa** | responde sozinho, só com fatos do pedido e texto da FAQ | rastreio com pedido em trânsito, pagamento pendente, elogio; dúvida de política e direitos do titular **quando há entrada na FAQ** (sem entrada, nível 1); recusa explicada de mudança de endereço quando o pedido já está em trânsito, atrasado ou entregue |
+| **1: prepara e aguarda aprovação** | propõe a ação e um rascunho; uma pessoa aprova | atraso, avaria, item faltando, brinde, erro de personalização, cancelamento ou arrependimento, troca de tamanho, troca por fragrância, mudança de endereço com o pedido em separação, rastreio com pedido que não está em trânsito, dúvida de produto ou cupom (FAQ de produto pendente), mensagem não classificada |
+| **2: humano obrigatório** | só resume e prioriza; não responde ao cliente | reação adversa (sempre); cobrança duplicada, indevida ou não reconhecida |
 
-**Escalonadores (só sobem o nível):** canal Reclame Aqui → 2; 2º contato no pedido → pelo menos 1, 3º contato → 2; pedido acima de R$ 200 → pelo menos 1; confiança baixa → sobe um nível; vários motivos → vale o mais restritivo.
+Os níveis acima são o ponto de partida de cada motivo (`NIVEL_BASE` e `nivelMotivo` em `app/src/lib/policy`). Com vários motivos, vale o mais restritivo.
+
+**Escalonadores (só sobem o nível):** canal Reclame Aqui → 2; 2º contato no pedido → pelo menos 1, 3º contato ou mais → 2; pedido acima de R$ 200 → pelo menos 1; assunto de saúde → 2; ameaça jurídica ou de reclamação pública → 2; confiança do modelo abaixo de 0,7 → sobe um nível (aplicado por último).
 
 **Simulação nos dados** (3.541 conversas com mensagem do cliente; FAQ de produto e promoções pendente):
 
@@ -92,7 +94,7 @@ Modelo padrão: `openai/gpt-oss-20b` no Groq, com temperatura 0. Uma conversa fa
 - **Mascaramento** antes do modelo. A aplicação não guarda a mensagem, e o log tem uma linha por requisição só com métricas (nível, falha, tempo, nº de chamadas), sem IP nem texto.
 - **Checagem do texto redigido.** Reprova números, prazos e links que não estejam na FAQ ou no pedido; promessas (garantimos, vamos reembolsar); ação narrada como já feita (já acionamos, foi aberto um chamado); promessa de contato no nível 0; e menção a CPF, cartão ou senha. Se reprovar, a resposta vira um texto de reserva, e o nível 0 passa a 1.
 - **Injeção de instrução:** a mensagem do cliente vai entre delimitadores, tratada como dado, e variações do delimitador são neutralizadas. Além disso, o modelo não decide nível nem ação.
-- **Falhas** (tempo esgotado, limite do provedor, JSON inválido, erro interno) levam ao nível 2, com "falha interna: revisão humana". O erro original não é exposto.
+- **Falhas** (tempo esgotado, limite do provedor, provedor indisponível ou sem configuração, redação fora do formato, erro interno) levam ao nível 2, com "falha interna: revisão humana". O erro original não é exposto. Uma classificação fora do formato, mesmo depois de uma nova tentativa, vira "não classificado" com confiança 0, o que também dá nível 2.
 - **Rota pública:** só aceita a mesma origem; corpo até 10 KB e mensagem até 2.000 caracteres; 10 requisições por minuto e 100 por dia por IP, mais um teto diário global. Os limites ficam em memória e, em serverless, são parciais: cada instância conta separado.
 - **Contingência rotulada:** se o limite for atingido ou o modelo falhar, os 8 exemplos prontos reproduzem saídas gravadas do modelo. A decisão é recalculada pelo código, e a tela avisa "Resposta gravada" com o motivo real. Mensagens livres não têm contingência.
 
@@ -100,7 +102,7 @@ Modelo padrão: `openai/gpt-oss-20b` no Groq, com temperatura 0. Uma conversa fa
 
 ```bash
 cd app
-npm test          # 1.211 testes (vitest)
+npm test          # 1.213 testes (vitest)
 npx tsc --noEmit
 npm run lint
 npm run build
@@ -112,7 +114,7 @@ Os testes cobrem regra de autonomia, ação e trava, FAQ (incluindo nenhuma prom
 
 ## Limitações
 
-- Os dados são sintéticos e repetitivos; com texto real, o desempenho pode ser menor.
+- Os dados são sintéticos; com texto real, o desempenho pode ser menor.
 - Não há rótulo verdadeiro. O motivo da análise vem de um classificador por regras, e a avaliação manual com cerca de 60 conversas rotuladas está pendente.
 - A simulação de autonomia usa esse classificador por regras, que ainda não tem os motivos dúvida de política e direitos do titular.
 - O custo por conversa é por canal: não distingue conversa resolvida pelo bot de conversa com atendente.
@@ -123,18 +125,17 @@ Os testes cobrem regra de autonomia, ação e trava, FAQ (incluindo nenhuma prom
 
 ## Como rodar localmente
 
-**App** (Node 20 ou mais recente):
+**App.** Node 22.13 ou mais recente na linha 22, Node 24 ou Node 26 e posteriores. Não servem Node 23 e 25. O mínimo vem do `vitest` (`^22.12.0 || ^24.0.0 || >=26.0.0`) e do `eslint-visitor-keys` (`^22.13.0` na linha 22). O Next 16 sozinho aceitaria 20.9. Versão usada no desenvolvimento: 26.13.
 
 ```bash
 cd app
 npm install
-echo "GROQ_API_KEY=sua_chave" > .env.local   # fora do Git
-npm run dev                                   # http://localhost:3000
+npm run dev        # http://localhost:3000
 ```
 
-Sem chave, a demo continua funcionando com os exemplos prontos (contingência).
+Para chamar o modelo, crie o arquivo `app/.env.local` com a linha `GROQ_API_KEY=sua_chave`. O arquivo fica fora do Git. Sem chave, a demo continua funcionando com os exemplos prontos (contingência).
 
-**Análise** (Python 3.11). Exige os arquivos do desafio em `data/raw/`, que não estão no repositório:
+**Análise.** Python 3.14: os agregados de `data/processed/` foram gerados com o Python 3.14.7 do `.venv`. Exige os arquivos do desafio em `data/raw/`, que não estão no repositório:
 
 ```bash
 python -m venv .venv && .venv/Scripts/activate   # Linux/macOS: source .venv/bin/activate
@@ -144,12 +145,17 @@ python analysis/analise_atendimento.py           # grava data/processed/
 
 ## Deploy na Vercel
 
-- Raiz do projeto: `app/`.
-- Variáveis de ambiente:
-  - `GROQ_API_KEY`, marcada como Sensitive;
-  - `GROQ_MODEL`, opcional (padrão `openai/gpt-oss-20b`);
-  - `LIMITE_DIARIO_GLOBAL`, opcional (padrão 300).
-- **Variável nova ou alterada só vale depois de um Redeploy.**
+1. Importe o repositório na Vercel com **Root Directory** `app/`. O framework (Next.js) é detectado sozinho.
+2. Em **Settings → Environment Variables**, cadastre:
+
+| Variável | Obrigatória | Padrão | Para quê |
+|---|---|---|---|
+| `GROQ_API_KEY` | sim (marque como **Sensitive**) | não há | chave do Groq; sem ela, a rota responde com falha `config` em nível 2, e só os exemplos prontos funcionam (contingência) |
+| `GROQ_MODEL` | não | `openai/gpt-oss-20b` | modelo do Groq |
+| `LIMITE_DIARIO_GLOBAL` | não | `300` | teto de requisições por dia, somando todos os visitantes (inteiro; valor inválido volta ao padrão) |
+
+3. Os limites por IP **não são configuráveis por variável**: 10 requisições por minuto e 100 por dia, fixos em `app/src/lib/rota/handler.ts` (`LIMITE_IP_MINUTO` e `LIMITE_IP_DIA`). Todos os limites ficam em memória e valem por instância.
+4. **Variável nova ou alterada só vale depois de um Redeploy** (Deployments → ⋯ → Redeploy). Salvar a variável não muda o deploy que já está no ar.
 
 ## Decisões
 

@@ -29,6 +29,11 @@ export function fmtPct(n: number): string {
   return `${fmtDec(n)}%`;
 }
 
+// Sempre 1 casa (57 → "57,0%"), para a tabela da simulação ficar igual à do README.
+export function fmtPct1(n: number): string {
+  return `${n.toFixed(1).replace(".", ",")}%`;
+}
+
 export function fmtRs(n: number): string {
   return `R$ ${fmtInt(n)}`;
 }

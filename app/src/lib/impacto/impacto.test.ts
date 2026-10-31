@@ -10,6 +10,7 @@ import {
   fmtDec,
   fmtInt,
   fmtPct,
+  fmtPct1,
   fmtRs,
   type Arquivo,
   type ChaveAgregado,
@@ -105,6 +106,8 @@ describe("formatação pt-BR", () => {
     [fmtDec(72), "72"],
     [fmtDec(3.08), "3,08"],
     [fmtPct(60.1), "60,1%"],
+    [fmtPct1(57), "57,0%"],
+    [fmtPct1(14.5), "14,5%"],
     [fmtRs(28343), "R$ 28.343"],
   ])("%s", (obtido, esperado) => {
     expect(obtido).toBe(esperado);
