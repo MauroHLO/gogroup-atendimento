@@ -28,8 +28,6 @@ describe("nível-base por motivo", () => {
   const casos: [Motivo, Nivel][] = [
     ["pagamento_pendente", 0],
     ["elogio", 0],
-    ["duvida_politica", 0],
-    ["direitos_titular", 0],
     ["atraso", 1],
     ["avaria", 1],
     ["item_faltando", 1],
@@ -79,7 +77,7 @@ describe("endereço depende do status", () => {
 });
 
 describe("FAQ validada", () => {
-  it.each<Motivo>(["duvida_produto", "promo_cupom"])("%s sem FAQ → 1, com FAQ → 0", (motivo) => {
+  it.each<Motivo>(["duvida_produto", "promo_cupom", "duvida_politica", "direitos_titular"])("%s sem FAQ → 1, com FAQ → 0", (motivo) => {
     expect(decidirNivel(entrada({ motivos: [motivo] })).nivel).toBe(1);
     expect(decidirNivel(entrada({ motivos: [motivo], faqValidada: new Set([motivo]) })).nivel).toBe(0);
   });
@@ -216,7 +214,13 @@ describe("casos combinados", () => {
   });
 
   it("duas perguntas informativas sem escalonador → 0", () => {
-    expect(decidirNivel(entrada({ motivos: ["duvida_politica", "direitos_titular"] })).nivel).toBe(0);
+    const faqValidada = new Set<Motivo>(["duvida_politica", "direitos_titular"]);
+    expect(decidirNivel(entrada({ motivos: ["duvida_politica", "direitos_titular"], faqValidada })).nivel).toBe(0);
+  });
+
+  it("duas perguntas informativas, FAQ só de uma → 1", () => {
+    const faqValidada = new Set<Motivo>(["direitos_titular"]);
+    expect(decidirNivel(entrada({ motivos: ["duvida_politica", "direitos_titular"], faqValidada })).nivel).toBe(1);
   });
 });
 

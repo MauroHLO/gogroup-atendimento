@@ -48,7 +48,7 @@ O agente também sinaliza **risco de escalada para o Reclame Aqui** (recontato, 
 - rastreio de pedido em trânsito
 - pagamento pendente
 - elogio
-- perguntas puramente informativas de política (como funciona a troca) e direitos do titular de dados (indica a Central de Privacidade)
+- perguntas puramente informativas de política (como funciona a troca) e direitos do titular de dados (indica a Central de Privacidade), **somente** quando houver entrada de FAQ correspondente
 - dúvida de produto e cupom **somente** quando houver entrada validada na FAQ
 
 **Nível 1, o agente prepara ação e resposta, a pessoa aprova:**
@@ -56,6 +56,7 @@ O agente também sinaliza **risco de escalada para o Reclame Aqui** (recontato, 
 - cancelamento, troca e devolução, alteração de endereço
 - arrependimento (sempre nível 1)
 - dúvida de produto e cupom sem entrada validada na FAQ
+- dúvida de política e direitos do titular sem entrada de FAQ correspondente
 
 **Nível 2, humano obrigatório; o agente só resume e prioriza:**
 - reação adversa a produto (sempre)
@@ -113,15 +114,15 @@ Não há rótulo verdadeiro. Plano: rotular à mão ~60 conversas e medir classi
 - Preencher a FAQ de produto e promoções se houver fonte validada.
 - Rotular a amostra de avaliação.
 - Calibrar o limiar de confiança (valor inicial 0,7) com a amostra rotulada.
-- Alinhar o script Python à regra do app: hoje `FAQ_VALIDADA` zera qualquer motivo, e o script não tem `duvida_politica` nem `direitos_titular`.
+- Alinhar o script Python à regra do app: hoje `FAQ_VALIDADA` zera qualquer motivo, e o script não tem `duvida_politica` nem `direitos_titular` (que no app exigem entrada de FAQ para nível 0).
 
 ## 12. Implementação da regra (`app/src/lib/policy`)
 
 A função `decidirNivel` é pura e devolve `{ nivel, razoes }`, com uma razão legível para cada regra cuja condição foi atendida. Decisões tomadas na implementação:
 
-- **Motivos novos:** `duvida_politica` (pergunta informativa de política, como "como funciona a troca") e `direitos_titular` (indica a Central de Privacidade) têm nível-base 0. **Eles não existem na taxonomia do script Python** (`analysis/analise_atendimento.py`); lá essas conversas caem em outros motivos ou em `nao_classificado`.
+- **Motivos novos:** `duvida_politica` (pergunta informativa de política, como "como funciona a troca") e `direitos_titular` (indica a Central de Privacidade) têm nível-base 1 e só descem para 0 com entrada de FAQ correspondente (mudança da parte 2). **Eles não existem na taxonomia do script Python** (`analysis/analise_atendimento.py`); lá essas conversas caem em outros motivos ou em `nao_classificado`.
 - **Arrependimento** continua dentro de `cancelamento` (nível 1), como no script.
-- **FAQ validada** só baixa para 0 `duvida_produto` e `promo_cupom`. Nenhum outro motivo é afetado pela FAQ (no script Python, qualquer motivo é).
+- **FAQ validada** só baixa para 0 `duvida_produto`, `promo_cupom`, `duvida_politica` e `direitos_titular`. Nenhum outro motivo é afetado pela FAQ (no script Python, qualquer motivo é).
 - **Status de entrega:** `entregue`, `em_transito`, `em_separacao`, `atrasado` e `aguardando_pagamento`. Rastreio é nível 0 só em `em_transito`; nos outros status, nível 1. Endereço é nível 0 (recusa automática com explicação) em `em_transito`, `entregue` e `atrasado`; nível 1 (assistido) em `em_separacao` e `aguardando_pagamento`.
 - **Ordem:** nível-base por motivo → mais restritivo entre os motivos → Reclame Aqui → nº do contato → valor → saúde/ameaça → confiança. A confiança vem por último e soma um nível ao resultado (máximo 2), o que é a opção mais conservadora: valor de R$ 250 com confiança 0,5 resulta em nível 2.
 - **Bordas:** o valor escala só quando é estritamente maior que R$ 200; a confiança escala só quando é estritamente menor que `LIMIAR_CONFIANCA` (0,7).
@@ -139,4 +140,4 @@ A função `acaoSugerida(motivo, nivel, statusEntrega, faqValidada?)` é pura e 
 - **Endereço:** nível 0 recusa com explicação em `em_transito`, `entregue` e `atrasado`; com nível 1 nesses status, prepara a recusa para aprovação; em `em_separacao` e `aguardando_pagamento`, prepara a alteração.
 - **Coerência de status:** item faltando, brinde, avaria, erro de personalização, troca e fragrância pressupõem o pedido entregue; com outro status, a ação é triagem para conferir o pedido.
 - **Entradas fora do tipo:** nível diferente de 0, 1 e 2 lança `RangeError` (a rota responde em nível 2); motivo desconhecido vai para triagem.
-- **Planejado para a parte 2:** `duvida_politica` e `direitos_titular` só ficarão em nível 0 se houver entrada de FAQ correspondente; sem ela, nível 1. Mudança na regra de `lib/policy`, com testes e atualização da seção 12.
+- **Dúvida de política e direitos do titular:** só ficam em nível 0 se houver entrada de FAQ correspondente; sem ela, nível 1 (regra de `lib/policy`, seção 12).

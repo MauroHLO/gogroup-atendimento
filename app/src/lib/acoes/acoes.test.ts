@@ -58,22 +58,22 @@ describe("nível 0: executa", () => {
     ["duvida_politica", "entregue", "responder_com_politica"],
     ["direitos_titular", "entregue", "informar_central_privacidade"],
   ];
+  const faq = new Set<Motivo>(["duvida_politica", "direitos_titular"]);
   it.each(casos)("%s / %s → %s", (motivo, status, acao) => {
-    const r = acaoSugerida(motivo, 0, status);
+    const r = acaoSugerida(motivo, 0, status, faq);
     expect(r).toMatchObject({ acao, autonomia: "executa" });
     expect(r.ajuste).toBeUndefined();
   });
 
   it("direitos do titular cita a Central de Privacidade e o prazo de 15 dias", () => {
-    const r = acaoSugerida("direitos_titular", 0, "entregue");
+    const r = acaoSugerida("direitos_titular", 0, "entregue", faq);
     expect(r.descricao).toContain("Central de Privacidade");
     expect(r.descricao).toContain("15 dias");
   });
 
-  it("dúvida de produto e cupom executam só com FAQ validada", () => {
-    for (const motivo of ["duvida_produto", "promo_cupom"] as Motivo[]) {
+  it("dúvidas de produto, cupom, política e direitos do titular executam só com FAQ validada", () => {
+    for (const motivo of ["duvida_produto", "promo_cupom", "duvida_politica", "direitos_titular"] as Motivo[]) {
       expect(acaoSugerida(motivo, 0, "entregue", new Set([motivo]))).toMatchObject({
-        acao: "responder_com_faq",
         autonomia: "executa",
       });
       const semFaq = acaoSugerida(motivo, 0, "entregue");

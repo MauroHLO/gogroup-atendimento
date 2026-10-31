@@ -57,8 +57,8 @@ export const NIVEL_BASE: Readonly<Record<Motivo, Nivel>> = {
   rastreio: 0,
   pagamento_pendente: 0,
   elogio: 0,
-  duvida_politica: 0,
-  direitos_titular: 0,
+  duvida_politica: 1, // nível 0 só com entrada de FAQ correspondente
+  direitos_titular: 1, // nível 0 só com entrada de FAQ correspondente
   duvida_produto: 1, // nível 0 só com FAQ validada
   promo_cupom: 1, // nível 0 só com FAQ validada
   atraso: 1,
@@ -76,7 +76,12 @@ export const NIVEL_BASE: Readonly<Record<Motivo, Nivel>> = {
 };
 
 // Só estes motivos podem descer para o nível 0 com entrada validada na FAQ.
-const MOTIVOS_FAQ: ReadonlySet<Motivo> = new Set<Motivo>(["duvida_produto", "promo_cupom"]);
+const MOTIVOS_FAQ: ReadonlySet<Motivo> = new Set<Motivo>([
+  "duvida_produto",
+  "promo_cupom",
+  "duvida_politica",
+  "direitos_titular",
+]);
 const STATUS_RECUSA_ENDERECO: ReadonlySet<StatusEntrega> = new Set<StatusEntrega>([
   "em_transito",
   "entregue",
