@@ -127,3 +127,16 @@ A função `decidirNivel` é pura e devolve `{ nivel, razoes }`, com uma razão 
 - **Bordas:** o valor escala só quando é estritamente maior que R$ 200; a confiança escala só quando é estritamente menor que `LIMIAR_CONFIANCA` (0,7).
 - **Lista de motivos vazia ou motivo desconhecido:** nível 1.
 - **Entrada inválida** (confiança fora de 0 a 1 ou NaN, `seq` não inteiro ou menor que 1, valor negativo ou não finito): a função lança `RangeError`. **A rota do agente deve capturar esse erro e responder em nível 2 com a razão "entrada inválida".**
+
+## 13. Ação sugerida (`app/src/lib/acoes`)
+
+A função `acaoSugerida(motivo, nivel, statusEntrega, faqValidada?)` é pura e devolve `{ acao, descricao, autonomia, ajuste? }`. O nível final vem de `decidirNivel` (já com os escalonadores); aqui só se escolhe o que fazer dentro da autonomia correspondente: nível 0 `executa`, nível 1 `prepara_e_aguarda_aprovacao`, nível 2 `escala_para_humano`. A `descricao` é texto interno para quem opera, não resposta ao cliente.
+
+- **Trava única:** a autonomia efetiva é a mais restritiva entre a do nível recebido e a do nível mínimo do motivo dado o status. O mínimo vem de `nivelMotivo` (exportada de `lib/policy`), sem duplicar tabelas. Isso garante, por exemplo, que reação adversa e cobrança sempre escalam, que atraso nunca executa e que rastreio só executa em trânsito.
+- **Ajuste:** quando a trava eleva a autonomia, o retorno traz `ajuste` com a razão (nível recebido, nível efetivo e a razão de `nivelMotivo`).
+- **FAQ:** o parâmetro `faqValidada` é opcional e vazio por padrão, o que é conservador: sem ele, dúvida de produto e cupom nunca executam.
+- **Destinos do nível 2:** reação adversa vai à responsável técnica em até 24 horas (fluxo da seção 6); cobrança vai ao financeiro, sem prometer reembolso; os demais motivos vão à fila humana prioritária com resumo. Endereço já enviado leva a sugestão de recusa no resumo.
+- **Endereço:** nível 0 recusa com explicação em `em_transito`, `entregue` e `atrasado`; com nível 1 nesses status, prepara a recusa para aprovação; em `em_separacao` e `aguardando_pagamento`, prepara a alteração.
+- **Coerência de status:** item faltando, brinde, avaria, erro de personalização, troca e fragrância pressupõem o pedido entregue; com outro status, a ação é triagem para conferir o pedido.
+- **Entradas fora do tipo:** nível diferente de 0, 1 e 2 lança `RangeError` (a rota responde em nível 2); motivo desconhecido vai para triagem.
+- **Planejado para a parte 2:** `duvida_politica` e `direitos_titular` só ficarão em nível 0 se houver entrada de FAQ correspondente; sem ela, nível 1. Mudança na regra de `lib/policy`, com testes e atualização da seção 12.

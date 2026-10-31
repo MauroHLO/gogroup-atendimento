@@ -87,7 +87,9 @@ function reais(valor: number): string {
   return `R$ ${valor.toFixed(2).replace(".", ",")}`;
 }
 
-function nivelMotivo(
+// Nível mínimo de um motivo dado o status e a FAQ, antes dos escalonadores.
+// Exportada para lib/acoes reutilizar a mesma tabela (trava de autonomia).
+export function nivelMotivo(
   motivo: Motivo,
   status: StatusEntrega,
   faq: ReadonlySet<Motivo>,

@@ -47,4 +47,4 @@ Um agente que, para cada conversa de atendimento: classifica o motivo real, deci
 
 # Estado atual
 
-Ambiente e repositório criados. Desenho do agente aprovado. Análise concluída em `analysis/analise_atendimento.py` (agregados em `data/processed/`). Próximo: módulos `lib/pii` e `lib/policy` do app, depois a rota do agente e um deploy inicial na Vercel.
+Ambiente e repositório criados. Desenho do agente aprovado. Análise concluída em `analysis/analise_atendimento.py` (agregados em `data/processed/`). Deploy inicial na Vercel feito. Prontos, com testes: `lib/pii` (mascaramento), `lib/policy` (regra de autonomia) e `lib/acoes` (ação sugerida com trava de autonomia, `docs/decisoes.md` seção 13). Próximo, em partes com plano, testes e commit próprios: parte 2 `lib/faq`, parte 3 `lib/agent`, parte 4 rota `api/agent`.
