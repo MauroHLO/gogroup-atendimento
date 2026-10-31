@@ -1,4 +1,5 @@
 import { Demo } from "./_componentes/Demo";
+import { Impacto } from "./_componentes/Impacto";
 
 export default function Home() {
   return (
@@ -32,6 +33,10 @@ export default function Home() {
 
       <div className="mt-6">
         <Demo />
+      </div>
+
+      <div className="mt-12">
+        <Impacto />
       </div>
     </main>
   );
