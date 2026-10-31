@@ -12,7 +12,7 @@ Um agente que, para cada conversa de atendimento: classifica o motivo real, deci
 - Antes de qualquer commit, rodar `git status` e conferir que nada de `data/raw/` ou `.env.local` entrou.
 - Mascarar CPF, telefone, e-mail e cartão antes de enviar texto a qualquer LLM. Nunca logar nem guardar texto de conversa.
 - O LLM não decide ação. A regra de autonomia vive em código (`app/lib/policy`), com testes. O LLM classifica e redige.
-- Nunca inventar regra da empresa. Políticas só vêm do `parametros.md` e do Aviso de Privacidade público. Cupom, frete e ficha de produto estão pendentes: sem entrada validada na FAQ, a conversa vai para o nível 1.
+- Nunca inventar regra da empresa. Políticas só vêm do `parametros.md` e das páginas públicas do GoGroup citadas na FAQ (Aviso de Privacidade e Central de Privacidade). Cupom, frete e ficha de produto estão pendentes: sem entrada validada na FAQ, a conversa vai para o nível 1.
 - Reação adversa é sempre nível 2. Assuntos de saúde nunca saem da FAQ. O agente nunca pede CPF, cartão ou senha.
 - Chave do Groq só por variável de ambiente (`GROQ_API_KEY`); modelo configurável por `GROQ_MODEL`. Nunca no código.
 - A rota pública do agente precisa de limite de requisições e de tamanho de entrada.
@@ -47,4 +47,4 @@ Um agente que, para cada conversa de atendimento: classifica o motivo real, deci
 
 # Estado atual
 
-Ambiente e repositório criados. Desenho do agente aprovado. Análise concluída em `analysis/analise_atendimento.py` (agregados em `data/processed/`). Deploy inicial na Vercel feito. Prontos, com testes: `lib/pii` (mascaramento), `lib/policy` (regra de autonomia) e `lib/acoes` (ação sugerida com trava de autonomia, `docs/decisoes.md` seção 13). Próximo, em partes com plano, testes e commit próprios: parte 2 `lib/faq`, parte 3 `lib/agent`, parte 4 rota `api/agent`.
+Ambiente e repositório criados. Desenho do agente aprovado. Análise concluída em `analysis/analise_atendimento.py` (agregados em `data/processed/`). Deploy inicial na Vercel feito. Prontos, com testes: `lib/pii` (mascaramento), `lib/policy` (regra de autonomia) e `lib/acoes` (ação sugerida com trava de autonomia, `docs/decisoes.md` seção 13) e `lib/faq` (camada de política preenchida, camada de produto e promoções pendente, seção 7). Próximo, em partes com plano, testes e commit próprios: parte 3 `lib/agent`, parte 4 rota `api/agent`.

@@ -84,10 +84,20 @@ Simulação preliminar (3.541 conversas com mensagem do cliente), com a FAQ de p
 
 ## 7. FAQ em duas camadas
 
-1. **Política:** preenchida a partir do `parametros.md` (arrependimento, avaria e item faltante, troca por fragrância, cobrança duplicada, personalização, endereço, reação adversa) e do Aviso de Privacidade público do gogroup (direitos do titular, canal e prazo de 15 dias).
+1. **Política:** preenchida a partir do `parametros.md` (arrependimento, avaria e item faltante, troca por fragrância, cobrança duplicada, personalização, endereço, reação adversa) e da Central de Privacidade do GoGroup (https://privacidade.devgogroup.com: direitos do titular, canal e prazo de resposta de até 15 dias a partir do recebimento). O prazo consta na Central de Privacidade; o Aviso de Privacidade (`/politica`) não informa prazo.
 2. **Produto e promoções:** estrutura pronta, **conteúdo pendente**. Os sites oficiais consultados não trazem regras de cupom, frete grátis, cashback nem ficha de produto, e não se inventa regra da empresa. Cada entrada declara sua fonte. Sem entrada validada, a conversa cai no nível 1 com rascunho.
 
 Perguntas de saúde nunca são respondidas pela FAQ.
+
+Implementação (`app/src/lib/faq`):
+- O repositório é público: os textos são paráfrases próprias, só da política voltada ao cliente, sem custos internos, SLAs ou volumes. A fonte é rotulada como "política de atendimento do desafio" ou "Central de Privacidade do GoGroup". Antes do commit, um script descartável (fora do repositório) confirmou que nenhuma sequência de 5 ou mais palavras coincide com o documento do desafio.
+- Cada entrada tem `id`, `camada`, `motivos`, `topico`, `texto`, `fonte`, `validada` e `uso`. **`validada: true` significa conferida com o documento do desafio ou com a página pública citada.**
+- `uso: "cliente"` pode virar resposta; `uso: "interno"` (reação adversa e cobrança duplicada) só guia o resumo dos casos de nível 2 e nunca gera resposta ao cliente.
+- `faqValidada()` devolve os motivos com pelo menos uma entrada validada de uso "cliente". Hoje exclui `duvida_produto` e `promo_cupom` (camada de produto vazia).
+- `buscarFaq({ motivo, topico?, saude })` é determinística (ordem por `id`), só devolve entradas validadas de uso "cliente" e devolve vazio para assunto de saúde. Sem tópico, só responde quando o motivo tem um único tópico possível; por isso `duvida_politica` sem tópico correspondente fica sem entrada.
+- `faqParaConsulta({ topico?, saude })` monta o conjunto de FAQ de uma conversa (motivos para os quais a busca acha entrada). A parte 3 calcula esse conjunto uma vez e passa o mesmo para `decidirNivel` e `acaoSugerida`. Assim, `duvida_politica` só vai a nível 0 quando o tópico da pergunta tem entrada.
+- Brinde não tem entrada (a política não trata dele) e continua em nível 1.
+- `PADROES_COMPROMISSO` (exportado de `lib/faq`) lista verbos de compromisso proibidos em texto ao cliente (garantimos, vamos reembolsar, já reenviamos, será reembolsado, será reenviado). Os testes garantem que nenhuma entrada de uso "cliente" os contém; a parte 3 reaproveita a lista na checagem do texto redigido.
 
 ## 8. Privacidade
 

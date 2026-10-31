@@ -93,7 +93,7 @@ const NIVEL_0: Readonly<Record<Motivo, Escolha | null>> = {
   ),
   direitos_titular: fixa(
     "informar_central_privacidade",
-    "Informar a Central de Privacidade e o prazo de 15 dias para resposta, conforme o Aviso de Privacidade público.",
+    "Informar a Central de Privacidade e o prazo de resposta de até 15 dias informado por ela.",
   ),
   duvida_produto: fixa("responder_com_faq", "Responder com a entrada validada da FAQ de produto."),
   promo_cupom: fixa("responder_com_faq", "Responder com a entrada validada da FAQ de promoções."),
