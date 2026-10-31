@@ -24,7 +24,7 @@ describe("textos que passam", () => {
     expect(r).toEqual({ ok: true, falhas: [] });
   });
 
-  it("fato do contexto (valor do pedido)", () => {
+  it("número presente nos fatos informados à checagem", () => {
     const r = verificarResposta("O seu pedido de 150,00 está em trânsito.", permitido({ textosFaq: [], fatos: ["150,00"] }));
     expect(r.ok).toBe(true);
   });

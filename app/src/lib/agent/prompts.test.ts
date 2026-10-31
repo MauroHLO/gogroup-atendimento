@@ -14,7 +14,7 @@ import {
   type ContextoPedido,
 } from "./prompts";
 import { normalizar } from "./sinais";
-import { TEXTO_RESERVA } from "./checagem";
+import { TEXTO_RESERVA, verificarResposta } from "./checagem";
 
 const contexto: ContextoPedido = { statusEntrega: "em_separacao", canal: "whatsapp", valor: 150, seq: 1 };
 const MENSAGEM = "Oi, quero mudar o endereço de entrega do meu pedido.";
@@ -72,7 +72,7 @@ describe("prompt de redação", () => {
     expect(p.sistema).toContain(acaoSugerida("endereco", 1, "em_separacao").descricao);
     expect(p.sistema).toContain("[pol-endereco]");
     expect(p.sistema).toContain("Status do pedido: em separação");
-    expect(p.sistema).toContain("Valor do pedido: 150,00");
+    expect(p.sistema).toContain("Canal: WhatsApp");
     expect(p.sistema).toContain("rascunho");
   });
 
@@ -142,11 +142,29 @@ describe("neutralização do delimitador nos dois prompts", () => {
 });
 
 describe("fatos do pedido", () => {
-  it("formata status, valor e canal", () => {
+  it("formata status e canal, sem valor nem nº do contato", () => {
     expect(fatosDoPedido({ statusEntrega: "aguardando_pagamento", canal: "reclame_aqui", valor: 89.9, seq: 2 })).toEqual([
       "Status do pedido: aguardando pagamento",
-      "Valor do pedido: 89,90",
       "Canal: Reclame Aqui",
     ]);
+  });
+
+  it("o prompt de redação não contém o valor do pedido", () => {
+    for (const nivel of [0, 1] as const) {
+      const pv = promptRedacao({
+        textoMascarado: "Onde está meu pedido?",
+        nivel,
+        acao: acaoSugerida("rastreio", nivel, "em_transito"),
+        entradasFaq: [],
+        fatos: fatosDoPedido({ statusEntrega: "em_transito", canal: "whatsapp", valor: 187.45, seq: 1 }),
+      });
+      expect(pv.sistema).not.toMatch(/187|valor do pedido/i);
+    }
+  });
+
+  it("resposta que cita o valor do pedido reprova na checagem de número", () => {
+    const ctx = { statusEntrega: "em_transito", canal: "whatsapp", valor: 89.9, seq: 1 } as const;
+    const r = verificarResposta("Seu pedido de R$ 89,90 está em trânsito.", { textosFaq: [], fatos: fatosDoPedido(ctx), links: [], nivel: 0 });
+    expect(r.falhas).toContain("numero_sem_fonte");
   });
 });

@@ -191,7 +191,7 @@ Vale para os níveis 0 e 1. O texto reprova se tiver: afirmação de ação já 
 ### Prompts (`prompts.ts`)
 
 - A mensagem mascarada vai só na mensagem de usuário, entre `<mensagem_cliente>` e `</mensagem_cliente>`. Qualquer variação do delimitador dentro dela (maiúsculas, espaços, barra) é trocada por `[delimitador removido]`, nos dois prompts.
-- O prompt de classificação não menciona nível, autonomia nem ação. O de redação recebe a decisão pronta (descrição da ação), as entradas de FAQ usadas e os fatos do pedido (status, valor e canal), e proíbe números fora dessas informações, promessas e pedido de CPF, cartão ou senha.
+- O prompt de classificação não menciona nível, autonomia nem ação. O de redação recebe a decisão pronta (descrição da ação), as entradas de FAQ usadas e os fatos do pedido (status e canal; o valor saiu depois, ver abaixo), e proíbe números fora dessas informações, promessas e pedido de CPF, cartão ou senha.
 
 ### Smoke test (`app/scripts/smoke-groq.ts`)
 
@@ -238,3 +238,7 @@ Na primeira gravação, os rascunhos de nível 1 dos exemplos de atraso e de inj
 - **Checagem do nível 0** (`PADROES_PROMESSA_CONTATO`, falha `promessa_contato`): reprova "entraremos/entrará em contato", "vamos/vai entrar em contato, retornar, avisar, responder", "retornaremos", "daremos retorno", "voltaremos a falar", "avisaremos/avisamos", "em breve", "estamos/está acompanhando, verificando, analisando...", "verificaremos, analisaremos..." e "equipe ... vai/irá/analisará...". Vale **só no nível 0**: o texto de reserva ("uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui") só é usado no nível 1, onde continua permitido. Há teste que passa cada entrada da FAQ de uso "cliente" por todas as checagens do nível 0.
 - **Prompt do nível 1:** o rascunho cita o motivo do contato e, quando couber, pede desculpas pelo transtorno, no formato do texto de reserva, sem narrar a ação e sem datas ou prazos.
 - **Regravação:** na primeira tentativa, os rascunhos de nível 1 ainda copiavam o texto de reserva palavra por palavra; o prompt passou a pedir para não copiar literalmente e a dar um exemplo para pedido atrasado. Uma tentativa intermediária parou por `rate_limit` do Groq (três gravações em poucos minutos) e, como previsto, não gravou nada. Resultado final: 8 de 8 com o nível e a ação esperados, sem fallback; os rascunhos de nível 1 citam o atraso e pedem desculpas, e as respostas de nível 0 encerram convidando a responder a mensagem, sem prometer contato.
+
+### Valor do pedido fora da redação (31/10/2026)
+
+O valor do pedido só serve ao código, para o escalonador de valor acima de R$ 200. Ele saiu dos fatos enviados ao prompt de redação (que agora traz só status e canal) e, com isso, da lista de números que a checagem aceita: uma resposta que cite o valor reprova como `numero_sem_fonte`. Motivo: na gravação anterior, a resposta de rastreio dizia "O valor total é R$ 89,90", o que não ajuda quem pergunta onde está o pedido. Regravação: 8 de 8 com o nível e a ação esperados, sem fallback.

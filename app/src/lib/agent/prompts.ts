@@ -110,17 +110,11 @@ export interface ContextoPedido {
   seq: number;
 }
 
-export function valorBr(valor: number): string {
-  return valor.toFixed(2).replace(".", ",");
-}
-
 // Fatos do pedido que a resposta pode citar. A checagem só aceita números que estejam aqui ou na FAQ usada.
+// O valor do pedido fica de fora: ele só serve ao código para decidir o nível (escalonador acima de R$ 200)
+// e não deve aparecer na resposta. O nº do contato (seq) também não entra.
 export function fatosDoPedido(contexto: ContextoPedido): string[] {
-  return [
-    `Status do pedido: ${ROTULO_STATUS[contexto.statusEntrega]}`,
-    `Valor do pedido: ${valorBr(contexto.valor)}`,
-    `Canal: ${ROTULO_CANAL[contexto.canal]}`,
-  ];
+  return [`Status do pedido: ${ROTULO_STATUS[contexto.statusEntrega]}`, `Canal: ${ROTULO_CANAL[contexto.canal]}`];
 }
 
 // Nível 0: só fatos do pedido e texto da FAQ; sem narrar a equipe nem prometer contato, retorno ou prazo.

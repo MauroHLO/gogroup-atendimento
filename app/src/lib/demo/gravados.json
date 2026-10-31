@@ -1,10 +1,10 @@
 {
   "versao": 1,
-  "gravadoEm": "2026-10-31T14:34:16.705Z",
+  "gravadoEm": "2026-10-31T14:38:20.570Z",
   "modelo": "openai/gpt-oss-20b",
   "exemplos": {
     "onde-esta": {
-      "hash": "b66165c25372d324437f324bd5b6ef6d08d419cbff1b64862ebc270fa9d73dff",
+      "hash": "28570148840a3f6096e7f75af0612b543233da2c8e5cdf0bda16b9d9d6de359c",
       "passos": [
         {
           "nome": "classificacao",
@@ -26,12 +26,12 @@
         {
           "nome": "redacao",
           "dados": {
-            "resposta": "Seu pedido está em trânsito. O valor total é R$ 89,90. Se precisar de mais ajuda, basta responder a esta mensagem."
+            "resposta": "Seu pedido está em trânsito. Se precisar de mais ajuda, basta responder a esta mensagem."
           },
           "uso": {
-            "entrada": 458,
-            "saida": 76,
-            "raciocinio": 29
+            "entrada": 448,
+            "saida": 53,
+            "raciocinio": 17
           }
         }
       ]
@@ -74,14 +74,14 @@
           },
           "uso": {
             "entrada": 997,
-            "saida": 86,
-            "raciocinio": 41
+            "saida": 93,
+            "raciocinio": 48
           }
         }
       ]
     },
     "atraso-rastreio": {
-      "hash": "f95f8bd9c0653e12ec0547b1559ddcd66b5c50adc5ccb73c7831181cd5812b14",
+      "hash": "5750192507429644928cb504b206fe70a63b4c29dd013c86086e7d0105c19ff8",
       "passos": [
         {
           "nome": "classificacao",
@@ -104,18 +104,18 @@
         {
           "nome": "redacao",
           "dados": {
-            "resposta": "Sentimos muito pelo atraso do seu pedido. Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui."
+            "resposta": "Sentimos muito pelo atraso e pela falta de atualização do rastreio. Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui."
           },
           "uso": {
-            "entrada": 557,
-            "saida": 47,
+            "entrada": 547,
+            "saida": 53,
             "raciocinio": 5
           }
         }
       ]
     },
     "endereco-transito": {
-      "hash": "215e7b8db4db8d1a81653c5917f0ad83cbfdef96cec71ef84890dfc50255a431",
+      "hash": "8fae8550f108b8f26935bbff663b9295d697705aee7aef2a48d3fa5b647c04e9",
       "passos": [
         {
           "nome": "classificacao",
@@ -137,11 +137,11 @@
         {
           "nome": "redacao",
           "dados": {
-            "resposta": "O endereço de entrega só pode ser mudado enquanto o pedido ainda não entrou em separação. Depois dessa etapa, a alteração não é mais possível por aqui. Se precisar de mais ajuda, responda esta mensagem."
+            "resposta": "O endereço de entrega só pode ser mudado enquanto o pedido ainda não entrou em separação. Depois dessa etapa, a alteração não é mais possível por aqui. Seu pedido está em trânsito."
           },
           "uso": {
-            "entrada": 494,
-            "saida": 66,
+            "entrada": 484,
+            "saida": 61,
             "raciocinio": 5
           }
         }
@@ -170,7 +170,7 @@
       ]
     },
     "injecao": {
-      "hash": "b0d6f2d5cf87baac1b2f67c0e0f60319faadac93d1499814b212808b333759e2",
+      "hash": "9693e20a87c39485b01aab7374742880f8393c51b2f801884cf353d3f223cb65",
       "passos": [
         {
           "nome": "classificacao",
@@ -179,14 +179,14 @@
               "atraso"
             ],
             "topico": null,
-            "confianca": 0.95,
+            "confianca": 0.9,
             "saude": false,
             "ameaca": false
           },
           "uso": {
             "entrada": 1014,
-            "saida": 110,
-            "raciocinio": 66
+            "saida": 209,
+            "raciocinio": 164
           }
         },
         {
@@ -195,7 +195,7 @@
             "resposta": "Sentimos muito pelo atraso do seu pedido. Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui."
           },
           "uso": {
-            "entrada": 569,
+            "entrada": 559,
             "saida": 55,
             "raciocinio": 13
           }
@@ -203,7 +203,7 @@
       ]
     },
     "duvida-politica": {
-      "hash": "500d48d93c86eb928b32d0bf4473c44126d9c2069323bd4fa1d02694ee9dc09b",
+      "hash": "e0a6d3fc5a2d4c733e10a1d9b02b73b3bd139b548ef5217f51520942fee171dd",
       "passos": [
         {
           "nome": "classificacao",
@@ -218,8 +218,8 @@
           },
           "uso": {
             "entrada": 998,
-            "saida": 111,
-            "raciocinio": 60
+            "saida": 123,
+            "raciocinio": 72
           }
         },
         {
@@ -228,7 +228,7 @@
             "resposta": "Se a fragrância não agradou, você pode solicitar uma única troca para cada pedido, dentro de 30 dias, desde que tenha usado até 20% do conteúdo. A solicitação passa pela análise da equipe."
           },
           "uso": {
-            "entrada": 500,
+            "entrada": 490,
             "saida": 70,
             "raciocinio": 8
           }
