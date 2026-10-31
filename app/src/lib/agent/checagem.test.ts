@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buscarFaq, FAQ } from "../faq";
 import { MAX_RESPOSTA } from "./esquema";
-import { contemAcaoFeita, TEXTO_RESERVA, verificarResposta, type Permitido } from "./checagem";
+import { contemAcaoFeita, contemPromessaContato, TEXTO_RESERVA, verificarResposta, type Permitido } from "./checagem";
 
 const faqEndereco = buscarFaq({ motivo: "endereco", saude: false });
 const faqTitular = buscarFaq({ motivo: "direitos_titular", saude: false });
@@ -151,5 +151,63 @@ describe("afirmação de ação já feita", () => {
 
   it("nenhuma entrada da FAQ casa com os padrões", () => {
     for (const e of FAQ) expect(contemAcaoFeita(e.texto), e.id).toBe(false);
+  });
+});
+
+describe("nível 0: promessa de contato e atividade da equipe", () => {
+  const PROMESSAS = [
+    "Entraremos em contato.",
+    "A equipe entrará em contato com você.",
+    "Vamos entrar em contato assim que possível.",
+    "Retornaremos com novidades.",
+    "Daremos um retorno.",
+    "Voltaremos a falar sobre isso.",
+    "Avisaremos qualquer novidade.",
+    "Qualquer novidade, avisamos por aqui.",
+    "Teremos novidades em breve.",
+    "Estamos acompanhando o seu pedido.",
+    "A transportadora está verificando.",
+    "Estamos analisando o seu caso.",
+    "Verificaremos com a transportadora.",
+    "Nossa equipe vai verificar.",
+    "A equipe de atendimento analisará a situação.",
+    "A equipe irá cuidar disso.",
+  ];
+
+  it.each(PROMESSAS)("nível 0 reprova: %s", (frase) => {
+    expect(contemPromessaContato(frase)).toBe(true);
+    const r = verificarResposta(frase, permitido({ textosFaq: [], nivel: 0 }));
+    expect(r.falhas).toContain("promessa_contato");
+  });
+
+  it.each(PROMESSAS)("nível 1 não aplica esta regra: %s", (frase) => {
+    expect(verificarResposta(frase, permitido({ textosFaq: [], nivel: 1 })).falhas).not.toContain("promessa_contato");
+  });
+
+  it("texto de reserva passa em todas as checagens no nível 1 (e sem nível informado)", () => {
+    expect(verificarResposta(TEXTO_RESERVA, permitido({ textosFaq: [], nivel: 1 }))).toEqual({ ok: true, falhas: [] });
+    expect(verificarResposta(TEXTO_RESERVA, permitido({ textosFaq: [] }))).toEqual({ ok: true, falhas: [] });
+  });
+
+  it("rascunho de nível 1 com motivo e desculpas passa", () => {
+    const texto = "Sentimos muito pelo atraso do seu pedido. Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui.";
+    expect(verificarResposta(texto, permitido({ textosFaq: [], nivel: 1 }))).toEqual({ ok: true, falhas: [] });
+  });
+
+  it.each(FAQ.filter((e) => e.uso === "cliente").map((e) => [e.id, e] as const))(
+    "entrada da FAQ %s passa em todas as checagens no nível 0",
+    (_id, e) => {
+      const links = e.texto.match(/https?:\/\/[^\s)]+/g)?.map((l) => l.replace(/[.,;:!?]+$/, "")) ?? [];
+      expect(verificarResposta(e.texto, { textosFaq: [e.texto], fatos: [], links, nivel: 0 })).toEqual({ ok: true, falhas: [] });
+    },
+  );
+
+  it.each([
+    "Seu pedido está em trânsito.",
+    "Seu pedido está em trânsito. Se precisar de mais ajuda, é só responder esta mensagem.",
+    "O endereço só pode ser mudado antes da separação do pedido; como ele já está em trânsito, a alteração não é possível.",
+    "A solicitação passa pela análise da equipe.",
+  ])("nível 0 aceita: %s", (frase) => {
+    expect(contemPromessaContato(frase)).toBe(false);
   });
 });

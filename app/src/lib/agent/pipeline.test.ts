@@ -50,7 +50,7 @@ function cls(motivos: Motivo[], extra: Record<string, unknown> = {}) {
   return { motivos, topico: null, confianca: 0.9, saude: false, ameaca: false, ...extra };
 }
 
-const RESPOSTA_OK = { resposta: "Oi! Seu pedido está em trânsito. Qualquer novidade, avisamos por aqui." };
+const RESPOSTA_OK = { resposta: "Oi! Seu pedido está em trânsito. Se precisar de mais ajuda, é só responder esta mensagem." };
 const CTX: ContextoPedido = { statusEntrega: "em_transito", canal: "whatsapp", valor: 89.9, seq: 1 };
 const MSG = "Oi, onde está meu pedido? Comprei na semana passada e ainda nada chegou.";
 
@@ -256,6 +256,24 @@ describe("checagem reprovada", () => {
     const { r } = await rodar({ classificacao: [cls(["rastreio"])], redacao: [{ resposta: "Já entramos em contato com a transportadora." }] });
     expect(r.resposta).toBe(TEXTO_RESERVA);
     expect(r.nivel).toBe(1);
+  });
+
+  it.each([
+    "Seu pedido está em trânsito. Entraremos em contato em breve.",
+    "Seu pedido está em trânsito e nossa equipe está acompanhando.",
+    "Seu pedido está em trânsito; a equipe vai verificar e retornar.",
+  ])("nível 0 com promessa de contato ou atividade da equipe: reserva e nível 1 (%s)", async (texto) => {
+    const { r } = await rodar({ classificacao: [cls(["rastreio"])], redacao: [{ resposta: texto }] });
+    expect(r.resposta).toBe(TEXTO_RESERVA);
+    expect(r.nivel).toBe(1);
+    expect(r.checagem?.falhas).toContain("promessa_contato");
+  });
+
+  it("nível 1 aceita o formato do texto de reserva com o motivo", async () => {
+    const texto = "Sentimos muito pelo atraso do seu pedido. Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui.";
+    const { r } = await rodar({ classificacao: [cls(["atraso"])], redacao: [{ resposta: texto }] }, MSG, { ...CTX, statusEntrega: "atrasado" });
+    expect(r.resposta).toBe(texto);
+    expect(r.fallback).toBe(false);
   });
 
   it("no nível 1: reserva, continua nível 1 com a mesma ação", async () => {

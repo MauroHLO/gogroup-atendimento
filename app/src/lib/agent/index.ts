@@ -276,6 +276,7 @@ export async function processarConversa(entrada: EntradaAgente, deps: Dependenci
       textosFaq: entradas.map((e) => e.texto),
       fatos,
       links: linksDe(entradas),
+      nivel,
     });
     const razoes = [...decisao.razoes];
     let resposta = red.resposta;

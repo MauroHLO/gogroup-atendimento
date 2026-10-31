@@ -5,6 +5,7 @@ import { NIVEL_BASE } from "../policy";
 import {
   ABRE,
   FECHA,
+  INSTRUCAO_NIVEL_0,
   INSTRUCAO_NIVEL_1,
   fatosDoPedido,
   neutralizarDelimitador,
@@ -92,6 +93,9 @@ describe("prompt de redação", () => {
     expect(p0.sistema).toContain("será enviada ao cliente");
     expect(p0.sistema).not.toContain(INSTRUCAO_NIVEL_1);
     expect(p0.sistema).not.toContain("AINDA NÃO foi feita");
+    expect(p0.sistema).toContain(INSTRUCAO_NIVEL_0);
+    expect(INSTRUCAO_NIVEL_0).toContain("não prometa contato, retorno ou prazo");
+    expect(INSTRUCAO_NIVEL_0).toContain("encerre sem oferecer contato futuro");
   });
 
   it("nível 1 diz que a ação ainda não foi feita e traz o formato do texto de reserva", () => {
@@ -99,6 +103,10 @@ describe("prompt de redação", () => {
     expect(INSTRUCAO_NIVEL_1).toContain("AINDA NÃO foi feita");
     expect(INSTRUCAO_NIVEL_1).toContain("aguarda a aprovação");
     expect(INSTRUCAO_NIVEL_1).toContain(TEXTO_RESERVA);
+    expect(INSTRUCAO_NIVEL_1).toContain("Cite o motivo do contato");
+    expect(INSTRUCAO_NIVEL_1).toContain("peça desculpas pelo transtorno");
+    expect(INSTRUCAO_NIVEL_1).toContain("Não cite datas nem prazos");
+    expect(p.sistema).not.toContain(INSTRUCAO_NIVEL_0);
   });
 
   it("sem FAQ aplicável, diz isso explicitamente", () => {

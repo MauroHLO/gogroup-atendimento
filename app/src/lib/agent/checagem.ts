@@ -15,12 +15,14 @@ export type FalhaChecagem =
   | "compromisso"
   | "dado_sensivel"
   | "link_sem_fonte"
-  | "acao_feita";
+  | "acao_feita"
+  | "promessa_contato"; // só no nível 0
 
 export interface Permitido {
   textosFaq: readonly string[]; // textos das entradas de FAQ usadas na redação
   fatos: readonly string[]; // fatos do contexto do pedido, já formatados (ex.: "150,00")
   links: readonly string[]; // links das entradas de FAQ usadas
+  nivel?: 0 | 1; // no nível 0 também se proíbe prometer contato ou narrar a atividade da equipe
 }
 
 export interface ResultadoChecagem {
@@ -61,6 +63,27 @@ export const PADROES_ACAO_FEITA: readonly RegExp[] = [
   new RegExp(`\\b(foi|foram)\\s+(feit|${PARTICIPIOS})(o|a|os|as)\\s+(o\\s+|a\\s+|um\\s+|uma\\s+)?(${OBJETOS})\\b`),
 ];
 
+// Nível 0: a resposta só traz fatos do pedido e texto da FAQ; não promete contato, retorno ou prazo e não
+// narra o que a equipe está fazendo. Projetado para que todas as entradas da FAQ passem (há teste).
+// O texto de reserva ("uma pessoa da nossa equipe vai analisar") só é usado no nível 1, onde isso é permitido.
+export const PADROES_PROMESSA_CONTATO: readonly RegExp[] = [
+  /\bentrar(emos|a|ao)\s+em\s+contato\b/,
+  /\b(vamos|vai|vao|iremos|ira|irao)\s+(entrar\s+em\s+contato|retornar|voltar\s+a\s+falar|avisar|informar|responder)\b/,
+  /\bretornar(emos|a|ao)\b/,
+  /\bdar(emos|a|ao)\s+(um\s+)?retorno\b/,
+  /\bvoltar(emos|a|ao)\s+a\s+falar\b/,
+  /\b(avisaremos|informaremos|notificaremos|manteremos|avisamos|retornamos)\b/,
+  /\bem\s+breve\b/,
+  /\b(estamos|esta|estao)\s+(acompanhando|verificando|analisando|investigando|monitorando|cuidando|avaliando)\b/,
+  /\b(acompanharemos|verificaremos|analisaremos|investigaremos|avaliaremos|cuidaremos)\b/,
+  /\bequipe\b[^.!?]{0,40}?\b(vai|vao|ira|irao|analisara|verificara|acompanhara|avaliara|investigara|cuidara|resolvera|entrara|retornara)\b/,
+];
+
+export function contemPromessaContato(texto: string): boolean {
+  const t = normalizar(texto);
+  return PADROES_PROMESSA_CONTATO.some((p) => p.test(t));
+}
+
 export function contemAcaoFeita(texto: string): boolean {
   const t = normalizar(texto);
   return PADROES_ACAO_FEITA.some((p) => p.test(t));
@@ -96,6 +119,7 @@ export function verificarResposta(texto: string, permitido: Permitido): Resultad
   if (contemCompromisso(texto) || contemCompromisso(t)) falhas.push("compromisso");
   if (RE_DADO_SENSIVEL.test(t)) falhas.push("dado_sensivel");
   if (contemAcaoFeita(texto)) falhas.push("acao_feita");
+  if (permitido.nivel === 0 && contemPromessaContato(texto)) falhas.push("promessa_contato");
 
   return { ok: falhas.length === 0, falhas };
 }

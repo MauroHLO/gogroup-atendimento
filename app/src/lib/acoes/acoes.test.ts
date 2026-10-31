@@ -145,10 +145,19 @@ describe("nível 2: escala para humano", () => {
     expect(r.descricao).toContain("lote");
   });
 
-  it("cobrança vai ao financeiro sem prometer reembolso", () => {
+  it("cobrança vai ao financeiro sem confirmar estorno", () => {
     const r = acaoSugerida("financeiro_cobranca", 2, "entregue");
     expect(r.acao).toBe("encaminhar_financeiro");
-    expect(r.descricao).toContain("sem prometer reembolso");
+    expect(r.descricao).toContain("nenhum estorno é confirmado");
+  });
+
+  it("nenhuma descrição de nível 2 fala em resposta ao cliente (no nível 2 não há resposta)", () => {
+    for (const motivo of Object.keys(NIVEL_BASE) as Motivo[]) {
+      for (const status of STATUS) {
+        const d = acaoSugerida(motivo, 2, status).descricao;
+        expect(d, `${motivo}/${status}`).not.toMatch(/\bresposta\b|\bresponder\b|\brascunho\b/i);
+      }
+    }
   });
 });
 

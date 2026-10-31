@@ -30,7 +30,7 @@ describe("rótulos", () => {
     for (const t of ["timeout", "rate_limit", "json_invalido", "config", "requisicao_recusada", "indisponivel", "interno"] as const) {
       expect(FALHA[t]).toBeTruthy();
     }
-    for (const c of ["formato", "numero_sem_fonte", "numero_por_extenso", "compromisso", "dado_sensivel", "link_sem_fonte", "acao_feita"] as const) {
+    for (const c of ["formato", "numero_sem_fonte", "numero_por_extenso", "compromisso", "dado_sensivel", "link_sem_fonte", "acao_feita", "promessa_contato"] as const) {
       expect(CHECAGEM[c]).toBeTruthy();
     }
   });

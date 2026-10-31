@@ -206,20 +206,21 @@ const NIVEL_1: Readonly<Record<Motivo, Escolha | null>> = {
   reacao_adversa: null,
 };
 
-// Nível 2: humano obrigatório; o agente só resume e prioriza.
+// Nível 2: humano obrigatório; o agente só resume e prioriza. Não há resposta ao cliente:
+// as descrições dizem o que a pessoa da equipe faz.
 function nivel2(motivo: Motivo, status: StatusEntrega): Base {
   if (motivo === "reacao_adversa") {
     return {
       acao: "encaminhar_responsavel_tecnica",
       descricao:
-        "Orientar a suspender o uso, pedir produto, lote, descrição e fotos, e encaminhar à responsável técnica em até 24 horas. A troca não substitui o registro de cosmetovigilância.",
+        "Encaminhar à responsável técnica em até 24 horas. Quem atende orienta a suspender o uso e pede produto, lote, descrição e fotos para o registro de cosmetovigilância; a troca não substitui o registro.",
     };
   }
   if (motivo === "financeiro_cobranca") {
     return {
       acao: "encaminhar_financeiro",
       descricao:
-        "Encaminhar ao financeiro com resumo; não há dados de pagamento. A resposta cita o prazo de estorno da política, sem prometer reembolso.",
+        "Encaminhar ao financeiro com resumo; não há dados de pagamento. O resumo traz o prazo de estorno da política para quem atende; nenhum estorno é confirmado antes da verificação.",
     };
   }
   const sugestao =

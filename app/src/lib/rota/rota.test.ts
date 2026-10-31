@@ -28,7 +28,7 @@ const CONTEXTO = { statusEntrega: "em_transito", canal: "whatsapp", valor: 89.9,
 function clienteFalso(passos: Partial<Record<PedidoJson["nome"], unknown[]>> = {}): ClienteLLM {
   const filas = {
     classificacao: [...(passos.classificacao ?? [{ motivos: ["rastreio"], topico: null, confianca: 0.9, saude: false, ameaca: false }])],
-    redacao: [...(passos.redacao ?? [{ resposta: "Seu pedido está em trânsito; avisamos qualquer novidade por aqui." }])],
+    redacao: [...(passos.redacao ?? [{ resposta: "Seu pedido está em trânsito." }])],
   };
   return {
     modelo: "falso",
