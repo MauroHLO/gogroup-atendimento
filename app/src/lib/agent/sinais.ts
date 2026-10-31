@@ -5,7 +5,7 @@
 // Divergências em relação ao Python (todas registradas na seção 14):
 // - o texto é normalizado, então "gravida", "bebe" e "justica" também casam;
 // - "queima" virou queimadura|queimou|queimei|queimando (não pega "queima de estoque");
-// - "bebê" e "fórmula" exigem palavra inteira (não pegam "bebeu" nem "formulário");
+// - "grávida", "bebê" e "fórmula" exigem palavra inteira (não pegam "gravidade", "bebeu" nem "formulário");
 // - espaços entre palavras aceitam qualquer quantidade (\s+).
 
 export function normalizar(texto: string): string {
@@ -13,7 +13,7 @@ export function normalizar(texto: string): string {
 }
 
 export const RE_SAUDE =
-  /gravidez|gravida|gestante|amament|\bbebes?\b|minha\s+filha|meu\s+filho|alerg|inchad|coceira|queimadura|queimou|queimei|queimando|bolinhas|\bformulas?\b/;
+  /gravidez|\bgravidas?\b|gestante|amament|\bbebes?\b|minha\s+filha|meu\s+filho|alerg|inchad|coceira|queimadura|queimou|queimei|queimando|bolinhas|\bformulas?\b/;
 
 export const RE_AMEACA = /procon|advogad|processo\s+judicial|justica|abrir\s+reclamacao|reclame\s+aqui/;
 

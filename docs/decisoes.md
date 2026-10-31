@@ -160,10 +160,10 @@ O sinal final é "ou" entre a saída do modelo e as palavras-chave. As palavras-
 
 - Normalização: "gravida", "bebe", "justica" e "reclamacao" sem acento também casam (no Python, só com acento).
 - "queima" foi restrita a `queimadura|queimou|queimei|queimando`, para não pegar "queima de estoque".
-- "bebê" e "fórmula" exigem palavra inteira (`\bbebes?\b`, `\bformulas?\b`), porque, sem acento, pegariam "bebeu" e "formulário".
+- "grávida", "bebê" e "fórmula" exigem palavra inteira (`\bgravidas?\b`, `\bbebes?\b`, `\bformulas?\b`), porque, sem acento, pegariam "gravidade", "bebeu" e "formulário". "gravidez" continua como está.
 - Espaços entre palavras aceitam qualquer quantidade (`\s+`).
 
-Os números da análise continuam vindo do script Python; a divergência só afeta o app, e na direção mais conservadora (mais casos com sinal), exceto pelas três restrições acima, que removem falsos positivos.
+Os números da análise continuam vindo do script Python; a divergência só afeta o app, e na direção mais conservadora (mais casos com sinal), exceto pelas restrições acima, que removem falsos positivos.
 
 ### Esquemas (`esquema.ts`)
 

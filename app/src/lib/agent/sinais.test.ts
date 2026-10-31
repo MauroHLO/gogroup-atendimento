@@ -10,6 +10,7 @@ describe("normalizar", () => {
 describe("saúde", () => {
   it.each([
     "Estou grávida, posso usar?",
+    "somos grávidas de gêmeos",
     "estou gravida e quero saber",
     "Durante a gravidez pode?",
     "sou gestante",
@@ -37,6 +38,8 @@ describe("saúde", () => {
   it.each([
     "quando chega meu pedido?",
     "vi a queima de estoque no site",
+    "qual a gravidade do atraso?",
+    "Gravidade: alta",
     "a promoção é uma queima total",
     "ele bebeu água",
     "preenchi o formulário",
