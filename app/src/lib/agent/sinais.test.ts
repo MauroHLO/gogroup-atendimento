@@ -28,7 +28,12 @@ describe("saúde", () => {
     "queimou minha pele",
     "queimei o rosto",
     "está queimando",
-    "apareceram bolinhas",
+    "apareceram bolinhas na pele",
+    "bolinhas no rosto depois do creme",
+    "bolinhas pelo corpo",
+    "bolinhas no braço",
+    "bolinhas em perna e braço",
+    "minha filha, usou e pronto",
     "qual é a fórmula?",
     "as formulas mudaram?",
   ])("detecta: %s", (texto) => {
@@ -44,6 +49,10 @@ describe("saúde", () => {
     "ele bebeu água",
     "preenchi o formulário",
     "minha capinha veio errada",
+    "comprei a capinha de bolinhas",
+    "apareceram bolinhas",
+    "meu filhote mordeu a capinha",
+    "minha filhada", // borda de palavra no fim
   ])("não detecta: %s", (texto) => {
     expect(detectarSinais(texto).saude).toBe(false);
   });
@@ -57,6 +66,7 @@ describe("ameaça", () => {
     "vou abrir um processo  judicial",
     "vou na Justiça",
     "vou na justica",
+    "vou à justiça",
     "vou abrir reclamação",
     "vou abrir reclamacao",
     "vou postar no Reclame Aqui",
@@ -65,7 +75,7 @@ describe("ameaça", () => {
     expect(detectarSinais(texto).ameaca).toBe(true);
   });
 
-  it.each(["quero trocar o tamanho", "obrigada pelo atendimento", "abri o pacote"])("não detecta: %s", (texto) => {
+  it.each(["quero trocar o tamanho", "obrigada pelo atendimento", "abri o pacote", "que injustiça!", "isso é uma injustica"])("não detecta: %s", (texto) => {
     expect(detectarSinais(texto).ameaca).toBe(false);
   });
 });

@@ -161,7 +161,11 @@ O sinal final é "ou" entre a saída do modelo e as palavras-chave. As palavras-
 - Normalização: "gravida", "bebe", "justica" e "reclamacao" sem acento também casam (no Python, só com acento).
 - "queima" foi restrita a `queimadura|queimou|queimei|queimando`, para não pegar "queima de estoque".
 - "grávida", "bebê" e "fórmula" exigem palavra inteira (`\bgravidas?\b`, `\bbebes?\b`, `\bformulas?\b`), porque, sem acento, pegariam "gravidade", "bebeu" e "formulário". "gravidez" continua como está.
+- "bolinhas" deixou de ser termo solto: só casa com contexto de pele, `bolinhas\s+(na|no|pela|pelo|em)\s+(pele|rosto|corpo|braco|perna)\b`, porque "capinha de bolinhas" é estampa comum.
+- "meu filho" e "minha filha" exigem fim de palavra (`meu\s+filho\b`, `minha\s+filha\b`), para não pegar "meu filhote".
+- "justiça" exige palavra inteira (`\bjustica\b`), para não pegar "injustiça" (desabafo, não ameaça).
 - Espaços entre palavras aceitam qualquer quantidade (`\s+`).
+- **Colisões aceitas como estão** (erro na direção conservadora): `\bbebes?\b` também pega o verbo "bebe"; `queimou` também pega "o carregador queimou"; `reclame\s+aqui` também pega o imperativo "reclame aqui no chat".
 
 Os números da análise continuam vindo do script Python; a divergência só afeta o app, e na direção mais conservadora (mais casos com sinal), exceto pelas restrições acima, que removem falsos positivos.
 
