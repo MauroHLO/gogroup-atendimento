@@ -293,3 +293,44 @@ describe("termos de solução só se estiverem na FAQ usada", () => {
     },
   );
 });
+
+describe("palavras de prazo só se estiverem na FAQ usada (falha termo_de_solucao)", () => {
+  it.each([
+    "Seu pedido chega amanhã.",
+    "Seu pedido chega hoje.",
+    "Seu pedido chega depois de amanhã.",
+    "Seu pedido chega nesta semana.",
+    "Seu pedido chega na próxima semana.",
+    "Seu pedido chega na segunda-feira.",
+    "Seu pedido chega no sábado.",
+    "Resolvemos até o fim do dia.",
+    "Você recebe nas próximas horas.",
+    "Você recebe ainda hoje.",
+  ])("reprova nos níveis 0 e 1: %s", (frase) => {
+    for (const nivel of [0, 1] as const) {
+      const r = verificarResposta(frase, permitido({ textosFaq: [], nivel }));
+      expect(r.falhas).toContain("termo_de_solucao");
+    }
+  });
+
+  it("'seu pedido chega amanhã' reprova mesmo com a FAQ de avaria", () => {
+    expect(verificarResposta("Seu pedido chega amanhã.", permitido({ nivel: 0 })).falhas).toContain("termo_de_solucao");
+    expect(termosSemFonte("Seu pedido chega amanhã.", [])).toEqual(["amanha"]);
+  });
+
+  it("passa quando a palavra está na FAQ usada", () => {
+    expect(termosSemFonte("Responde ainda hoje.", ["Atendemos ainda hoje."])).toEqual([]);
+  });
+
+  it("não confunde ordinais nem palavras parecidas", () => {
+    expect(termosDeSolucao("É a segunda vez que escrevo; a terça parte; uma semana de espera; hojeiro")).toEqual([]);
+  });
+
+  it("texto de reserva e todas as entradas de FAQ do cliente continuam passando", () => {
+    expect(termosDeSolucao(TEXTO_RESERVA)).toEqual([]);
+    for (const e of FAQ.filter((x) => x.uso === "cliente")) {
+      expect(termosSemFonte(e.texto, [e.texto]), e.id).toEqual([]);
+      expect(verificarResposta(e.texto, permitido({ textosFaq: [e.texto], nivel: 0 })).falhas, e.id).not.toContain("termo_de_solucao");
+    }
+  });
+});

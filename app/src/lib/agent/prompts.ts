@@ -5,7 +5,6 @@
 import type { AcaoSugerida } from "../acoes";
 import type { EntradaFaq, TopicoPolitica } from "../faq";
 import type { Canal, Motivo, Nivel, StatusEntrega } from "../policy";
-import { TEXTO_RESERVA } from "./checagem";
 
 export const ABRE = "<mensagem_cliente>";
 export const FECHA = "</mensagem_cliente>";
@@ -97,12 +96,6 @@ const ROTULO_STATUS: Readonly<Record<StatusEntrega, string>> = {
   aguardando_pagamento: "aguardando pagamento",
 };
 
-const ROTULO_CANAL: Readonly<Record<Canal, string>> = {
-  whatsapp: "WhatsApp",
-  email: "e-mail",
-  reclame_aqui: "Reclame Aqui",
-};
-
 export interface ContextoPedido {
   statusEntrega: StatusEntrega;
   canal: Canal;
@@ -111,17 +104,76 @@ export interface ContextoPedido {
 }
 
 // Fatos do pedido que a resposta pode citar. A checagem só aceita números que estejam aqui ou na FAQ usada.
-// O valor do pedido fica de fora: ele só serve ao código para decidir o nível (escalonador acima de R$ 200)
-// e não deve aparecer na resposta. O nº do contato (seq) também não entra.
+// Só o status entra. O valor serve ao código para o escalonador acima de R$ 200; o canal serve à regra
+// (Reclame Aqui) e não ajuda a resposta; o nº do contato (seq) também não entra.
 export function fatosDoPedido(contexto: ContextoPedido): string[] {
-  return [`Status do pedido: ${ROTULO_STATUS[contexto.statusEntrega]}`, `Canal: ${ROTULO_CANAL[contexto.canal]}`];
+  return [`Status do pedido: ${ROTULO_STATUS[contexto.statusEntrega]}`];
+}
+
+// Assunto do rascunho de nível 1, decidido em código pelo motivo principal (e pelo status no endereço).
+// O prompt recebe só esta frase, para que o modelo não leve o assunto de um motivo para outro.
+export interface Assunto {
+  frase: string;
+  desculpas: boolean; // só para motivos que são problema do pedido
+  instrucaoExtra?: string;
+  semFaq?: boolean; // a regra não deve ser citada no rascunho (a FAQ não vai ao prompt)
+}
+
+export const MOTIVOS_PROBLEMA: ReadonlySet<Motivo> = new Set<Motivo>([
+  "atraso",
+  "avaria",
+  "item_faltando",
+  "brinde",
+  "personalizacao_erro",
+]);
+
+const FRASE_ASSUNTO: Readonly<Record<Motivo, string>> = {
+  rastreio: "a situação do seu pedido",
+  atraso: "o atraso do seu pedido",
+  item_faltando: "o item que faltou no seu pedido",
+  brinde: "o brinde do seu pedido",
+  avaria: "o problema com o seu pedido",
+  personalizacao_erro: "o erro na personalização",
+  cancelamento: "o seu pedido de cancelamento",
+  endereco: "a alteração do endereço de entrega",
+  financeiro_cobranca: "a cobrança do seu pedido",
+  pagamento_pendente: "o pagamento do seu pedido",
+  promo_cupom: "a sua dúvida sobre promoções",
+  troca_tamanho: "a sua solicitação sobre tamanho ou modelo",
+  fragrancia: "a sua solicitação sobre a fragrância",
+  duvida_produto: "a sua dúvida sobre o produto",
+  duvida_politica: "a sua dúvida sobre as nossas regras de atendimento",
+  direitos_titular: "a sua solicitação sobre dados pessoais",
+  elogio: "a sua mensagem",
+  reacao_adversa: "o seu relato sobre o produto",
+  nao_classificado: "a sua mensagem",
+};
+
+export function assuntoDoContato(motivo: Motivo, status: StatusEntrega): Assunto {
+  const assunto: Assunto = { frase: FRASE_ASSUNTO[motivo], desculpas: MOTIVOS_PROBLEMA.has(motivo) };
+  if (motivo === "endereco" && status === "em_separacao") {
+    assunto.instrucaoExtra =
+      "Não cite a regra de alteração de endereço nem diga se a alteração é possível; diga só que uma pessoa da nossa equipe vai verificar se a alteração ainda é possível.";
+    assunto.semFaq = true;
+  }
+  return assunto;
 }
 
 // Nível 0: só fatos do pedido e texto da FAQ; sem narrar a equipe nem prometer contato, retorno ou prazo.
 export const INSTRUCAO_NIVEL_0 = `Importante: a resposta só pode conter os fatos do pedido e o texto das entradas de FAQ acima. Não diga o que a equipe está fazendo ou vai fazer e não prometa contato, retorno ou prazo (nada de "entraremos em contato", "em breve", "estamos acompanhando"). Se a resposta já resolve a dúvida, encerre sem oferecer contato futuro; se quiser, convide o cliente a responder esta mensagem caso precise de mais ajuda.`;
 
-// Nível 1: a ação aguarda aprovação. O rascunho cita o motivo, mas não narra a ação como cumprida.
-export const INSTRUCAO_NIVEL_1 = `Importante: a ação acima AINDA NÃO foi feita; ela aguarda a aprovação de uma pessoa da equipe. Não diga que algo já foi feito (por exemplo "já acionamos", "abrimos um chamado", "foi aberto um chamado", "já solicitamos"). Cite o motivo do contato (por exemplo, o atraso do pedido) e, quando couber, peça desculpas pelo transtorno. Não cite datas nem prazos. Você pode pedir os dados necessários para a análise (por exemplo, fotos do produto), sem prometer o desfecho. Siga o formato deste texto, adaptado ao caso: "${TEXTO_RESERVA}". Não copie esse texto literalmente: comece pelo motivo do contato. Exemplo para um pedido atrasado: "Sentimos muito pelo atraso do seu pedido. Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui."`;
+// Nível 1: a ação aguarda aprovação. O rascunho cita o assunto vindo do código, sem exemplo literal.
+export function instrucaoNivel1(a: Assunto): string {
+  const partes = [
+    `Importante: o rascunho é sobre ${a.frase}. A ação AINDA NÃO foi feita; ela aguarda a aprovação de uma pessoa da equipe. Não diga que algo já foi feito (nada de "já acionamos", "abrimos um chamado", "foi aberto um chamado", "já solicitamos").`,
+    `Escreva no máximo 3 frases: comece citando ${a.frase}; ${a.desculpas ? "peça desculpas pelo transtorno" : "não peça desculpas"}; termine dizendo que uma pessoa da nossa equipe vai analisar o caso e responder por aqui.`,
+  ];
+  if (a.instrucaoExtra) partes.push(a.instrucaoExtra);
+  partes.push(
+    "Não cite outro assunto além desse. Não cite datas nem prazos. Você pode pedir os dados necessários para a análise (por exemplo, fotos do produto), sem prometer o desfecho.",
+  );
+  return partes.join(" ");
+}
 
 // Níveis 0 e 1: solução, custo ou resultado só se estiverem escritos na FAQ (a checagem termo_de_solucao confere).
 export const REGRA_SOLUCAO = `Não prometa nem descreva solução, custo ou resultado (reposição, troca, reembolso, estorno, devolução, desconto, cupom, "sem custo", gratuidade, "providenciar") que não esteja escrito no texto da FAQ acima; se a FAQ não traz, não mencione.`;
@@ -130,6 +182,8 @@ export interface DadosRedacao {
   textoMascarado: string;
   nivel: Nivel; // 0 ou 1; nível 2 não gera resposta ao cliente
   acao: AcaoSugerida;
+  motivo: Motivo; // motivo principal: define o assunto do rascunho de nível 1
+  statusEntrega: StatusEntrega;
   entradasFaq: readonly EntradaFaq[];
   fatos: readonly string[];
 }
@@ -138,16 +192,18 @@ export function promptRedacao(d: DadosRedacao): Prompt {
   const faq = d.entradasFaq.length
     ? d.entradasFaq.map((e) => `- [${e.id}] ${e.texto}`).join("\n")
     : "- (nenhuma entrada de FAQ se aplica)";
+  // No nível 1 o prompt não traz a descrição da ação (que fala em reposição, troca, devolução...):
+  // só o assunto decidido em código.
   const revisao =
     d.nivel === 0
-      ? `A resposta será enviada ao cliente.
+      ? `Decisão já tomada pelo sistema (não mude, não comente): ${d.acao.descricao}
+A resposta será enviada ao cliente.
 ${INSTRUCAO_NIVEL_0}`
       : `A resposta é um rascunho que uma pessoa da equipe vai revisar antes de enviar.
-${INSTRUCAO_NIVEL_1}`;
+${instrucaoNivel1(assuntoDoContato(d.motivo, d.statusEntrega))}`;
 
   const sistema = `Você redige respostas curtas e cordiais, em português do Brasil, para clientes da Gocase e da GoBeauté.
 
-Decisão já tomada pelo sistema (não mude, não comente): ${d.acao.descricao}
 ${revisao}
 
 Use somente estas informações:

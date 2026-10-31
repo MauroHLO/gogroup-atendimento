@@ -87,12 +87,12 @@ mensagem → mascarar dados pessoais → classificar (LLM, JSON validado) → si
 | `limites`, `rota` | limite de requisições e a rota `api/agent` |
 | `demo`, `impacto` | exemplos, respostas gravadas e números do painel |
 
-Modelo padrão: `openai/gpt-oss-20b` no Groq, com temperatura 0. Uma conversa faz 1 chamada (nível 2) ou 2 (níveis 0 e 1), mais uma nova tentativa se o JSON vier inválido, e levou de 0,5 s a 1,3 s nas medições do smoke test.
+Modelo padrão: `openai/gpt-oss-20b` no Groq, com temperatura 0. Uma conversa faz 1 chamada (nível 2 ou motivo não identificado, que recebe direto o texto de reserva) ou 2 (níveis 0 e 1), mais uma nova tentativa se o JSON vier inválido, e levou de 0,5 s a 1,3 s nas medições do smoke test.
 
 ## Segurança e privacidade
 
 - **Mascaramento** antes do modelo. A aplicação não guarda a mensagem, e o log tem uma linha por requisição só com métricas (nível, falha, tempo, nº de chamadas), sem IP nem texto.
-- **Checagem do texto redigido.** Reprova números, prazos e links que não estejam na FAQ ou no pedido; promessas (garantimos, vamos reembolsar); ação narrada como já feita (já acionamos, foi aberto um chamado); promessa de contato no nível 0; termos de solução (reposição, troca, reembolso, "sem custo"...) que não estejam na FAQ usada; e menção a CPF, cartão ou senha. Se reprovar, a resposta vira um texto de reserva, e o nível 0 passa a 1.
+- **Checagem do texto redigido.** Reprova números, prazos e links que não estejam na FAQ ou no pedido; promessas (garantimos, vamos reembolsar); ação narrada como já feita (já acionamos, foi aberto um chamado); promessa de contato no nível 0; termos de solução (reposição, troca, reembolso, "sem custo"...) e de prazo (amanhã, hoje, próxima semana...) que não estejam na FAQ usada; e menção a CPF, cartão ou senha. Se reprovar, a resposta vira um texto de reserva, e o nível 0 passa a 1.
 - **Injeção de instrução:** a mensagem do cliente vai entre delimitadores, tratada como dado, e variações do delimitador são neutralizadas. Além disso, o modelo não decide nível nem ação.
 - **Falhas** (tempo esgotado, limite do provedor, provedor indisponível ou sem configuração, redação fora do formato, erro interno) levam ao nível 2, com "falha interna: revisão humana". O erro original não é exposto. Uma classificação fora do formato, mesmo depois de uma nova tentativa, vira "não classificado" com confiança 0, o que também dá nível 2.
 - **Rota pública:** só aceita a mesma origem; corpo até 10 KB e mensagem até 2.000 caracteres; 10 requisições por minuto e 100 por dia por IP, mais um teto diário global. Os limites ficam em memória e, em serverless, são parciais: cada instância conta separado.
@@ -102,7 +102,7 @@ Modelo padrão: `openai/gpt-oss-20b` no Groq, com temperatura 0. Uma conversa fa
 
 ```bash
 cd app
-npm test          # 1.239 testes (vitest)
+npm test          # 1.296 testes (vitest)
 npx tsc --noEmit
 npm run lint
 npm run build
@@ -122,6 +122,8 @@ Os testes cobrem regra de autonomia, ação e trava, FAQ (incluindo nenhuma prom
 - Faltam data de entrega, dados de pagamento e fotos, por isso arrependimento, troca e reembolso ficam no nível 1.
 - A ligação entre ameaça e Reclame Aqui é só indício (34 casos).
 - Os limites de requisição são por instância.
+- A demo responde em português mesmo quando a mensagem vem em outro idioma.
+- "Executa" é a ação sugerida pelo agente: a demo não se integra a sistema de pedidos nem a CRM, então nada é executado de fato.
 
 ## Como rodar localmente
 

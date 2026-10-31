@@ -261,6 +261,15 @@ Teste ao vivo em produção: "Comprei uma capinha e veio o modelo errado." (entr
 - **Prompts de redação:** os dois níveis dizem para não prometer nem descrever solução, custo ou resultado que não esteja escrito na FAQ. O nível 1 permite pedir os dados necessários para a análise (por exemplo, fotos), sem prometer o desfecho.
 - **`--gravar` resistente a rate limit** (só ferramenta de desenvolvimento; o app não muda): pausa de 10 s entre exemplos; em `rate_limit`, espera o `retry-after` do Groq (ou 20 s) e repete só aquele exemplo, até 3 vezes; imprime o texto de cada resultado assim que ele passa. Continua tudo ou nada. Duas tentativas anteriores pararam por `rate_limit` sem gravar; a versão nova gravou os 8 na primeira passada, sem fallback.
 
+### Assunto do rascunho vem do código; canal fora dos fatos; prazos (31/10/2026)
+
+Em 22 cenários testados ao vivo em produção, o exemplo de atraso que estava dentro do prompt do nível 1 vazava para rascunhos de outros motivos. Correções:
+
+- **Assunto em código** (`assuntoDoContato` em `prompts.ts`): o motivo principal (e o status, no endereço) define a frase do assunto, por exemplo "o atraso do seu pedido", "a situação do seu pedido", "o seu pedido de cancelamento", "o problema com o seu pedido", "o erro na personalização". O prompt do nível 1 recebe só essa frase, sem exemplo literal, sem o texto de reserva e sem a descrição da ação (que fala em reposição, troca, devolução). O pedido de desculpas só vale para motivos que são problema do pedido (atraso, avaria, item faltando, brinde, erro de personalização). No **endereço em separação**, o rascunho não cita a regra: a FAQ não vai ao prompt, e o texto só diz que a equipe vai verificar se a alteração ainda é possível.
+- **Motivo não identificado** (`nao_classificado` como motivo principal): não há redação; a resposta é o texto de reserva, com nível 1 e ação `preparar_triagem`. Uma chamada ao modelo só. Não conta na taxa de fallback (não houve redação).
+- **Fatos do pedido na redação:** só o status. O canal saiu (serve à regra, não à resposta).
+- **Prazos na checagem `termo_de_solucao`:** amanhã, hoje, depois de amanhã, nesta semana, próxima semana, dias da semana, "até o fim do dia", "nas próximas horas" e "ainda hoje" só passam se estiverem nas entradas de FAQ usadas. O texto de reserva e todas as entradas de FAQ do cliente continuam passando (há teste).
+
 ## 15. Rota, demonstração e painel de impacto (parte 4)
 
 ### Rota `api/agent` (`app/src/app/api/agent/route.ts` e `app/src/lib/rota/handler.ts`)

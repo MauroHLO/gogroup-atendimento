@@ -61,6 +61,49 @@ function rodar(roteiro: Parameters<typeof clienteFalso>[0], mensagem = MSG, cont
 
 // ---------- testes ----------
 
+describe("assunto, motivo não classificado e endereço em separação", () => {
+  it("nao_classificado: texto de reserva direto, nível 1, preparar_triagem, uma chamada ao modelo só", async () => {
+    const { r, cliente } = await rodar({ classificacao: [cls(["nao_classificado"])] }, "Olá, bom dia.");
+    expect(r.nivel).toBe(1);
+    expect(r.acao.acao).toBe("preparar_triagem");
+    expect(r.resposta).toBe(TEXTO_RESERVA);
+    expect(r.fallback).toBe(false);
+    expect(r.checagem).toBeNull();
+    expect(cliente.pedidos.map((p) => p.nome)).toEqual(["classificacao"]);
+    expect(r.chamadas).toHaveLength(1);
+    expect(r.razoes.at(-1)).toContain("motivo não identificado");
+  });
+
+  it("endereço em separação (nível 1): a FAQ não vai ao prompt e o rascunho não cita a regra", async () => {
+    const { r, cliente } = await rodar(
+      {
+        classificacao: [cls(["endereco"])],
+        redacao: [{ resposta: "Recebemos o seu pedido de alteração do endereço de entrega. Uma pessoa da nossa equipe vai verificar se a alteração ainda é possível e responder por aqui." }],
+      },
+      "Quero mudar o endereço de entrega.",
+      { ...CTX, statusEntrega: "em_separacao" },
+    );
+    expect(r.nivel).toBe(1);
+    expect(r.faqUsada).toEqual([]);
+    const redacao = cliente.pedidos.find((p) => p.nome === "redacao")!;
+    expect(redacao.sistema).not.toContain("[pol-endereco]");
+    expect(redacao.sistema).toContain("a alteração do endereço de entrega");
+    expect(r.fallback).toBe(false);
+  });
+
+  it("o prompt de nível 1 usa o motivo principal: rastreio atrasado não fala em atraso", async () => {
+    const { cliente } = await rodar(
+      { classificacao: [cls(["rastreio"])], redacao: [{ resposta: "Recebemos a sua mensagem sobre a situação do seu pedido. Uma pessoa da nossa equipe vai analisar o caso e responder por aqui." }] },
+      MSG,
+      { ...CTX, statusEntrega: "entregue" },
+    );
+    const redacao = cliente.pedidos.find((p) => p.nome === "redacao")!;
+    expect(redacao.sistema).toContain("a situação do seu pedido");
+    expect(redacao.sistema).not.toMatch(/\batraso\b/);
+    expect(redacao.sistema).not.toMatch(/whatsapp/i);
+  });
+});
+
 describe("fluxo feliz", () => {
   it("rastreio em trânsito: nível 0, executa, resposta checada", async () => {
     const { r, cliente } = await rodar({ classificacao: [cls(["rastreio"])], redacao: [RESPOSTA_OK] });

@@ -80,7 +80,7 @@ export const PADROES_PROMESSA_CONTATO: readonly RegExp[] = [
   /\bequipe\b[^.!?]{0,40}?\b(vai|vao|ira|irao|analisara|verificara|acompanhara|avaliara|investigara|cuidara|resolvera|entrara|retornara)\b/,
 ];
 
-// Termos de solução, custo ou resultado (níveis 0 e 1). Cada termo só passa se o MESMO termo (a mesma família:
+// Termos de solução, custo ou resultado, e palavras de prazo (níveis 0 e 1; falha termo_de_solucao). Cada termo só passa se o MESMO termo (a mesma família:
 // "reposição" e "repor", "troca" e "trocar"...) aparecer nas entradas de FAQ usadas na redação. Assim o texto
 // pode repetir o que a política diz ("o reenvio é sem custo"), mas não inventar "reposição sem custo" ou
 // "troca gratuita". "Sem custo" e "sem nenhum custo" são termos diferentes de propósito: só a forma da FAQ passa.
@@ -101,6 +101,16 @@ export const TERMOS_DE_SOLUCAO: Readonly<Record<string, RegExp>> = {
   gratuito: /\b(gratuito|gratuita|gratuitos|gratuitas|gratuitamente|gratis)\b/,
   de_graca: /\bde\s+graca\b/,
   providenciar: /\b(providenciar|providenciaremos|providenciara|providenciarao|providenciando|providencie|providenciamos)\b/,
+  // Prazos: mesma regra (só passam se estiverem nas entradas de FAQ usadas).
+  amanha: /\bamanha\b/,
+  hoje: /\bhoje\b/,
+  depois_de_amanha: /\bdepois\s+de\s+amanha\b/,
+  nesta_semana: /\b(nesta|esta|essa|nessa)\s+semana\b/,
+  proxima_semana: /\bproxima\s+semana\b|\bsemana\s+que\s+vem\b/,
+  dia_da_semana: /\b(segunda|terca|quarta|quinta|sexta)(-|\s)feira\b|\bsabado\b|\bdomingo\b/,
+  fim_do_dia: /\bate\s+o\s+fim\s+do\s+dia\b|\bate\s+o\s+final\s+do\s+dia\b/,
+  proximas_horas: /\bnas\s+proximas\s+horas\b/,
+  ainda_hoje: /\bainda\s+hoje\b/,
 };
 
 // Famílias de termos de solução presentes no texto (normalizado aqui).

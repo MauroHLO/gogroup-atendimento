@@ -32,7 +32,7 @@ import {
   MOTIVOS,
   Redacao,
 } from "./esquema";
-import { fatosDoPedido, promptClassificacao, promptRedacao, type ContextoPedido } from "./prompts";
+import { assuntoDoContato, fatosDoPedido, promptClassificacao, promptRedacao, type ContextoPedido } from "./prompts";
 import { detectarSinais } from "./sinais";
 
 export { FalhaAgente, criarClienteGroq, type ClienteLLM } from "./cliente";
@@ -260,10 +260,38 @@ export async function processarConversa(entrada: EntradaAgente, deps: Dependenci
       };
     }
 
-    // 7b. Níveis 0 e 1: redigir com FAQ e fatos do pedido, depois checar em código.
-    const entradas = unicasPorId(motivos.flatMap((m) => buscarFaq({ motivo: m, topico, saude: sinais.saude })));
+    // 7b. Motivo não identificado: sem redação; texto de reserva direto (nível 1, triagem). Uma chamada só.
+    if (principal === "nao_classificado") {
+      return {
+        ...base,
+        nivel,
+        razoes: [...decisao.razoes, "motivo não identificado: texto de reserva, sem redação pelo modelo"],
+        acao,
+        resposta: TEXTO_RESERVA,
+        resumoInterno: null,
+        faqUsada: [],
+        checagem: null,
+        fallback: false,
+      };
+    }
+
+    // 7c. Níveis 0 e 1: redigir com FAQ e fatos do pedido, depois checar em código.
+    // No endereço em separação (nível 1), a regra não deve ser citada: a FAQ não vai ao prompt.
+    const assunto = assuntoDoContato(principal, contexto.statusEntrega);
+    const entradas =
+      nivel === 1 && assunto.semFaq
+        ? []
+        : unicasPorId(motivos.flatMap((m) => buscarFaq({ motivo: m, topico, saude: sinais.saude })));
     const fatos = fatosDoPedido(contexto);
-    const pr = promptRedacao({ textoMascarado: texto, nivel, acao, entradasFaq: entradas, fatos });
+    const pr = promptRedacao({
+      textoMascarado: texto,
+      nivel,
+      acao,
+      motivo: principal,
+      statusEntrega: contexto.statusEntrega,
+      entradasFaq: entradas,
+      fatos,
+    });
     const red = await chamar(
       cliente,
       { nome: "redacao", ...pr, esquema: ESQUEMA_REDACAO, maxTokens: MAX_TOKENS_REDACAO },
