@@ -304,26 +304,41 @@ export async function processarConversa(entrada: EntradaAgente, deps: Dependenci
   } catch (e) {
     // Qualquer falha: nível 2, sem resposta ao cliente e sem texto do erro original.
     const tipo: TipoFalhaPipeline = e instanceof FalhaAgente ? e.tipo : "interno";
-    const razoes = [RAZAO_FALHA];
-    return {
-      nivel: 2,
-      razoes,
-      motivos,
-      motivoPrincipal: motivos[0] ?? null,
-      topico: null,
-      confianca,
-      classificacaoValida: false,
-      sinais,
-      acao: ACAO_FALHA,
-      resposta: null,
-      resumoInterno: montarResumo({ motivos, sinais, confianca, razoes: [`${RAZAO_FALHA} (${tipo})`], acao: ACAO_FALHA, guias: [] }),
-      faqUsada: [],
-      checagem: null,
-      fallback: false,
-      falha: { tipo },
-      chamadas,
-    };
+    return resultadoFalha(tipo, { motivos, sinais, confianca, chamadas });
   }
+}
+
+// Resultado de falha no formato do pipeline (também usado pela rota para exceções fora dele).
+export function resultadoFalha(
+  tipo: TipoFalhaPipeline,
+  parcial: {
+    motivos?: Motivo[];
+    sinais?: { saude: boolean; ameaca: boolean };
+    confianca?: number | null;
+    chamadas?: Chamada[];
+  } = {},
+): ResultadoAgente {
+  const motivos = parcial.motivos ?? [];
+  const sinais = parcial.sinais ?? { saude: false, ameaca: false };
+  const confianca = parcial.confianca ?? null;
+  return {
+    nivel: 2,
+    razoes: [RAZAO_FALHA],
+    motivos,
+    motivoPrincipal: motivos[0] ?? null,
+    topico: null,
+    confianca,
+    classificacaoValida: false,
+    sinais,
+    acao: ACAO_FALHA,
+    resposta: null,
+    resumoInterno: montarResumo({ motivos, sinais, confianca, razoes: [`${RAZAO_FALHA} (${tipo})`], acao: ACAO_FALHA, guias: [] }),
+    faqUsada: [],
+    checagem: null,
+    fallback: false,
+    falha: { tipo },
+    chamadas: parcial.chamadas ?? [],
+  };
 }
 
 // Métrica: entre as conversas em que houve redação (níveis 0 e 1), quantas caíram no texto de reserva.
