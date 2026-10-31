@@ -334,3 +334,38 @@ describe("palavras de prazo só se estiverem na FAQ usada (falha termo_de_soluca
     }
   });
 });
+
+describe("ressalvas temporais só se estiverem na FAQ usada (falha termo_de_solucao)", () => {
+  it.each([
+    "Seu pedido está em trânsito, portanto não é possível alterar o endereço agora.",
+    "Por enquanto não é possível alterar o endereço.",
+    "No momento não é possível alterar o endereço.",
+    "Atualmente o endereço não pode ser alterado.",
+    "Por ora o endereço não pode ser alterado.",
+  ])("reprova nos níveis 0 e 1: %s", (frase) => {
+    for (const nivel of [0, 1] as const) {
+      const r = verificarResposta(frase, permitido({ textosFaq: faqEndereco.map((e) => e.texto), nivel }));
+      expect(r.falhas).toContain("termo_de_solucao");
+    }
+  });
+
+  it("'não é possível alterar o endereço agora' reprova com a FAQ de endereço", () => {
+    expect(termosSemFonte("Não é possível alterar o endereço agora.", faqEndereco.map((e) => e.texto))).toEqual(["agora"]);
+  });
+
+  it("passa quando a ressalva está na FAQ usada", () => {
+    expect(termosSemFonte("No momento, atendemos por aqui.", ["No momento, atendemos por aqui."])).toEqual([]);
+  });
+
+  it("não confunde palavras parecidas", () => {
+    expect(termosDeSolucao("Agoraphobia não; momentos; atual; orar")).toEqual([]);
+  });
+
+  it("texto de reserva e todas as entradas de FAQ do cliente continuam passando", () => {
+    expect(termosDeSolucao(TEXTO_RESERVA)).toEqual([]);
+    for (const e of FAQ.filter((x) => x.uso === "cliente")) {
+      expect(termosSemFonte(e.texto, [e.texto]), e.id).toEqual([]);
+      expect(verificarResposta(e.texto, permitido({ textosFaq: [e.texto], nivel: 0 })).falhas, e.id).not.toContain("termo_de_solucao");
+    }
+  });
+});

@@ -93,6 +93,7 @@ export interface LinhaLog {
   falha: string | null;
   ms: number;
   chamadas: number;
+  tentativasRedacao: number; // redações checadas pelo pipeline (0, 1 ou 2)
 }
 
 const CABECALHOS = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
@@ -178,7 +179,7 @@ export function criarHandler(deps: DepsRota): (req: Request) => Promise<Response
     const ms = () => agora() - inicio;
     try {
       if (!mesmaOrigem(req.headers)) {
-        registrar({ nivel: null, falha: "origem", ms: ms(), chamadas: 0 });
+        registrar({ nivel: null, falha: "origem", ms: ms(), chamadas: 0, tentativasRedacao: 0 });
         return json({ erro: "origem não permitida" }, 403);
       }
 
@@ -189,7 +190,7 @@ export function criarHandler(deps: DepsRota): (req: Request) => Promise<Response
         texto = ""; // UTF-8 inválido ou leitura interrompida: cai na validação
       }
       if (texto === null) {
-        registrar({ nivel: null, falha: "tamanho", ms: ms(), chamadas: 0 });
+        registrar({ nivel: null, falha: "tamanho", ms: ms(), chamadas: 0, tentativasRedacao: 0 });
         return json({ erro: "mensagem grande demais" }, 413);
       }
 
@@ -201,7 +202,7 @@ export function criarHandler(deps: DepsRota): (req: Request) => Promise<Response
       }
       const corpo = CorpoAgente.safeParse(bruto);
       if (!corpo.success) {
-        registrar({ nivel: null, falha: "entrada", ms: ms(), chamadas: 0 });
+        registrar({ nivel: null, falha: "entrada", ms: ms(), chamadas: 0, tentativasRedacao: 0 });
         return json({ erro: "entrada inválida" }, 400);
       }
 
@@ -215,10 +216,10 @@ export function criarHandler(deps: DepsRota): (req: Request) => Promise<Response
         // Exemplo pronto: reproduz a gravação sem consumir cota nem chamar o Groq.
         const replay = await gravada(corpo.data, limite.nome as NomeLimite);
         if (replay) {
-          registrar({ nivel: replay.nivel, falha: `gravada_${limite.nome}`, ms: ms(), chamadas: 0 });
+          registrar({ nivel: replay.nivel, falha: `gravada_${limite.nome}`, ms: ms(), chamadas: 0, tentativasRedacao: 0 });
           return json({ ...replay, modelo: replay.contingencia.modelo });
         }
-        registrar({ nivel: null, falha: `limite_${limite.nome}`, ms: ms(), chamadas: 0 });
+        registrar({ nivel: null, falha: `limite_${limite.nome}`, ms: ms(), chamadas: 0, tentativasRedacao: 0 });
         return json(
           { erro: MENSAGEM_LIMITE, limite: limite.nome as NomeLimite, reiniciaEm: new Date(limite.reiniciaEm).toISOString() },
           429,
@@ -239,15 +240,15 @@ export function criarHandler(deps: DepsRota): (req: Request) => Promise<Response
       if (motivoFalha) {
         const replay = await gravada(corpo.data, motivoFalha);
         if (replay) {
-          registrar({ nivel: replay.nivel, falha: `gravada_${motivoFalha}`, ms: ms(), chamadas: resultado.chamadas.length });
+          registrar({ nivel: replay.nivel, falha: `gravada_${motivoFalha}`, ms: ms(), chamadas: resultado.chamadas.length, tentativasRedacao: resultado.tentativasRedacao });
           return json({ ...replay, modelo: replay.contingencia.modelo });
         }
       }
-      registrar({ nivel: resultado.nivel, falha: resultado.falha?.tipo ?? null, ms: ms(), chamadas: resultado.chamadas.length });
+      registrar({ nivel: resultado.nivel, falha: resultado.falha?.tipo ?? null, ms: ms(), chamadas: resultado.chamadas.length, tentativasRedacao: resultado.tentativasRedacao });
       return json({ ...resultado, modelo: deps.modelo ?? null });
     } catch {
       const resultado = resultadoFalha("interno");
-      registrar({ nivel: 2, falha: "interno", ms: ms(), chamadas: 0 });
+      registrar({ nivel: 2, falha: "interno", ms: ms(), chamadas: 0, tentativasRedacao: 0 });
       return json({ ...resultado, modelo: deps.modelo ?? null });
     }
   };

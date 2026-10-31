@@ -80,7 +80,7 @@ function rascunho(assunto: string): Escolha {
 // Nível 0: só os motivos que lib/policy permite em nível 0 (com o status e a FAQ dados).
 // null = inalcançável, porque a trava impede nível 0 para o motivo.
 const NIVEL_0: Readonly<Record<Motivo, Escolha | null>> = {
-  rastreio: fixa("informar_status_pedido", "Informar o status atual do pedido em trânsito ao cliente."),
+  rastreio: fixa("informar_status_pedido", "Informar ao cliente a situação do pedido em trânsito."),
   endereco: fixa(
     "recusar_alteracao_endereco",
     "Recusar a alteração com explicação: a política só permite alterar o endereço antes da separação.",

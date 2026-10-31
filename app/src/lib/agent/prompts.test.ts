@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { acaoSugerida } from "../acoes";
-import { buscarFaq, TOPICOS_POLITICA } from "../faq";
+import { buscarFaq, faqParaConsulta, TOPICOS_POLITICA } from "../faq";
 import { NIVEL_BASE, type Motivo, type StatusEntrega } from "../policy";
 import {
   ABRE,
@@ -319,5 +319,50 @@ describe("fatos do pedido", () => {
     const ctx = { statusEntrega: "em_transito", canal: "whatsapp", valor: 89.9, seq: 1 } as const;
     const r = verificarResposta("Seu pedido de R$ 89,90 está em trânsito.", { textosFaq: [], fatos: fatosDoPedido(ctx), links: [], nivel: 0 });
     expect(r.falhas).toContain("numero_sem_fonte");
+  });
+});
+
+describe("nível 0 enxuto, um só pedido de desculpas e nenhum \"status\" nos prompts", () => {
+  const STATUS: readonly StatusEntrega[] = ["em_separacao", "em_transito", "entregue", "atrasado", "aguardando_pagamento"];
+  const MOTIVOS = Object.keys(NIVEL_BASE) as Motivo[];
+  const faqCompleta = faqParaConsulta({ saude: false });
+
+  it("nível 0: no máximo 3 frases, sem repetir a situação quando a FAQ responde, sem ressalvas de tempo", () => {
+    expect(INSTRUCAO_NIVEL_0).toContain("no máximo 3 frases");
+    expect(INSTRUCAO_NIVEL_0).toContain("Não repita a situação do pedido quando o texto da FAQ já responde");
+    for (const r of ['"agora"', '"por enquanto"', '"no momento"', '"atualmente"']) expect(INSTRUCAO_NIVEL_0).toContain(r);
+  });
+
+  it("nível 1: um único pedido de desculpas", () => {
+    expect(instrucaoNivel1(assuntoDoContato("atraso", "atrasado"))).toContain("peça desculpas pelo transtorno uma única vez");
+    expect(instrucaoNivel1(assuntoDoContato("rastreio", "em_transito"))).not.toContain("uma única vez");
+  });
+
+  it("nem o nível 0 nem o nível 1 contêm a palavra \"status\" (todas as combinações alcançáveis)", () => {
+    let n0 = 0;
+    for (const motivo of MOTIVOS) {
+      for (const status of STATUS) {
+        for (const nivel of [0, 1] as const) {
+          const acao = acaoSugerida(motivo, nivel, status, faqCompleta);
+          if (nivel === 0 && acao.autonomia !== "executa") continue; // a trava não deixa este motivo em nível 0
+          if (nivel === 0) n0++;
+          const s = promptRedacao({
+            textoMascarado: "mensagem de teste",
+            nivel,
+            acao,
+            motivo,
+            statusEntrega: status,
+            entradasFaq: buscarFaq({ motivo, saude: false }),
+            fatos: fatosDoPedido({ ...contexto, statusEntrega: status }),
+          }).sistema;
+          expect(s, `${motivo}/${status}/nível ${nivel}`).not.toMatch(/status/i);
+        }
+      }
+    }
+    expect(n0).toBeGreaterThan(0);
+  });
+
+  it("a descrição da ação de rastreio no nível 0 não usa \"status\"", () => {
+    expect(acaoSugerida("rastreio", 0, "em_transito", faqCompleta).descricao).not.toMatch(/status/i);
   });
 });

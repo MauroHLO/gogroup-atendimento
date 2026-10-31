@@ -30,6 +30,7 @@ function clienteFalso(
 ): Falso {
   const filas = { classificacao: [...(roteiro.classificacao ?? [])], redacao: [...(roteiro.redacao ?? [])] };
   const pedidos: PedidoJson[] = [];
+  let ultimaRedacao: Roteiro | undefined;
   return {
     modelo: "falso",
     estrito: true,
@@ -37,8 +38,12 @@ function clienteFalso(
     async gerarJson(p: PedidoJson): Promise<RespostaJson> {
       pedidos.push(p);
       if (relogio) relogio.t += relogio.custoMs ?? 0;
-      const passo = filas[p.nome].shift();
+      // Redação: com a fila vazia, repete a última (a nova tentativa usa a mesma entrada, e o modelo
+      // tende a repetir o texto). Classificação: fila vazia é chamada inesperada.
+      let passo = filas[p.nome].shift();
+      if (passo === undefined && p.nome === "redacao" && ultimaRedacao !== undefined) passo = ultimaRedacao;
       if (passo === undefined) throw new Error(`chamada inesperada: ${p.nome}`);
+      if (p.nome === "redacao") ultimaRedacao = passo;
       if (passo instanceof Error) throw passo;
       const dados = typeof passo === "function" ? (passo as (p: PedidoJson) => unknown)(p) : passo;
       return { dados, uso: { entrada: 100, saida: 20, raciocinio: 5 }, finishReason: "stop", ms: 10 };
@@ -520,5 +525,78 @@ describe("orçamento de tempo", () => {
     const { r, cliente } = await comRelogio({ classificacao: [cls(["rastreio"])] }, ORCAMENTO_MS - MIN_CHAMADA_MS + 1);
     expect(cliente.pedidos).toHaveLength(1);
     expect(r.falha).toEqual({ tipo: "timeout" });
+  });
+});
+
+describe("nova tentativa de redação quando a checagem reprova", () => {
+  const RUIM = { resposta: "Seu pedido chega amanhã." }; // prazo sem fonte: termo_de_solucao
+
+  it("reprova e depois passa: sem fallback, nível 0 mantido, 2 tentativas na telemetria", async () => {
+    const { r, cliente } = await rodar({ classificacao: [cls(["rastreio"])], redacao: [RUIM, RESPOSTA_OK] });
+    expect(r.fallback).toBe(false);
+    expect(r.resposta).toBe(RESPOSTA_OK.resposta);
+    expect(r.nivel).toBe(0);
+    expect(r.acao.autonomia).toBe("executa");
+    expect(r.checagem?.ok).toBe(true);
+    expect(r.tentativasRedacao).toBe(2);
+    const redacoes = cliente.pedidos.filter((p) => p.nome === "redacao");
+    expect(redacoes).toHaveLength(2);
+    // mesma entrada nas duas tentativas
+    expect(redacoes[1].sistema).toBe(redacoes[0].sistema);
+    expect(redacoes[1].usuario).toBe(redacoes[0].usuario);
+    expect(r.razoes.at(-1)).toContain("a 2ª redação passou");
+  });
+
+  it("reprova duas vezes: texto de reserva e nível 0 vira 1", async () => {
+    const { r, cliente } = await rodar({ classificacao: [cls(["rastreio"])], redacao: [RUIM, { resposta: "Garantimos!" }] });
+    expect(r.fallback).toBe(true);
+    expect(r.resposta).toBe(TEXTO_RESERVA);
+    expect(r.nivel).toBe(1);
+    expect(r.acao.autonomia).toBe("prepara_e_aguarda_aprovacao");
+    expect(r.tentativasRedacao).toBe(2);
+    expect(cliente.pedidos.filter((p) => p.nome === "redacao")).toHaveLength(2);
+    expect(r.razoes.at(-1)).toContain("em 2 redações");
+  });
+
+  it("passa na primeira: uma redação só", async () => {
+    const { r, cliente } = await rodar({ classificacao: [cls(["rastreio"])], redacao: [RESPOSTA_OK] });
+    expect(r.tentativasRedacao).toBe(1);
+    expect(cliente.pedidos.filter((p) => p.nome === "redacao")).toHaveLength(1);
+  });
+
+  it("sem tempo restante: sem nova tentativa, texto de reserva", async () => {
+    // classificação custa 1 s; a 1ª redação deixa menos que MIN_CHAMADA_MS
+    const relogio = { t: 0 };
+    const custos = [1_000, ORCAMENTO_MS - 1_000 - MIN_CHAMADA_MS + 1];
+    const base = clienteFalso({ classificacao: [cls(["rastreio"])], redacao: [RUIM, RESPOSTA_OK] });
+    const cliente: Falso = {
+      ...base,
+      pedidos: base.pedidos,
+      async gerarJson(p) {
+        relogio.t += custos.shift() ?? 0;
+        return base.gerarJson(p);
+      },
+    };
+    const r = await processarConversa({ mensagem: MSG, contexto: CTX }, { cliente, agora: () => relogio.t });
+    expect(base.pedidos.filter((p) => p.nome === "redacao")).toHaveLength(1);
+    expect(r.tentativasRedacao).toBe(1);
+    expect(r.fallback).toBe(true);
+    expect(r.resposta).toBe(TEXTO_RESERVA);
+    expect(r.nivel).toBe(1);
+    expect(r.razoes.at(-1)).toContain("em 1 redação");
+  });
+
+  it("falha do provedor na nova tentativa: vale a primeira checagem (texto de reserva), sem nível 2", async () => {
+    const { r } = await rodar({ classificacao: [cls(["rastreio"])], redacao: [RUIM, new FalhaAgente("rate_limit")] });
+    expect(r.falha).toBeNull();
+    expect(r.fallback).toBe(true);
+    expect(r.resposta).toBe(TEXTO_RESERVA);
+    expect(r.nivel).toBe(1);
+    expect(r.tentativasRedacao).toBe(1);
+  });
+
+  it("nível 2 e motivo não identificado: 0 tentativas de redação", async () => {
+    expect((await rodar({ classificacao: [cls(["reacao_adversa"])] })).r.tentativasRedacao).toBe(0);
+    expect((await rodar({ classificacao: [cls(["nao_classificado"])] }, "Olá.")).r.tentativasRedacao).toBe(0);
   });
 });

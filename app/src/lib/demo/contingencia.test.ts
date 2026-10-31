@@ -134,7 +134,7 @@ describe("rota: replay quando a rota recusa por limite", () => {
       expect(json.nivel).toBe(0);
       expect(json.falha).toBeNull();
       expect(JSON.parse(logs[0])).toMatchObject({ nivel: 0, falha: `gravada_${nome}`, chamadas: 0 });
-      expect(Object.keys(JSON.parse(logs[0])).sort()).toEqual(["chamadas", "falha", "ms", "nivel"]);
+      expect(Object.keys(JSON.parse(logs[0])).sort()).toEqual(["chamadas", "falha", "ms", "nivel", "tentativasRedacao"]);
     },
   );
 

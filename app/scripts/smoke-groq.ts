@@ -134,7 +134,7 @@ function sdkQueLeRetryAfter(chave: string): SdkChat {
 function textoDoResultado(r: ResultadoAgente): string {
   const checagem = r.checagem === null ? "n/a" : r.checagem.ok ? "ok" : `falhou: ${r.checagem.falhas.join(",")}`;
   const linhas = [
-    `  nível: ${r.nivel} | ação: ${r.acao.acao} (${r.acao.autonomia}) | motivos: ${r.motivos.join(",") || "-"} | checagem: ${checagem} | fallback: ${r.fallback ? "SIM" : "não"}`,
+    `  nível: ${r.nivel} | ação: ${r.acao.acao} (${r.acao.autonomia}) | motivos: ${r.motivos.join(",") || "-"} | checagem: ${checagem} | fallback: ${r.fallback ? "SIM" : "não"} | redações: ${r.tentativasRedacao}`,
   ];
   if (r.resposta !== null) linhas.push(`  ${r.nivel === 0 ? "resposta" : "rascunho"}: ${r.resposta}`);
   if (r.resumoInterno !== null) linhas.push(`  resumo interno:\n${r.resumoInterno.replace(/^/gm, "    ")}`);

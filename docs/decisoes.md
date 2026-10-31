@@ -229,10 +229,10 @@ O maior consumo veio da mensagem com injeção (mais raciocínio). Com folga de 
 4. `faqParaConsulta({ topico, saude })` é calculado **uma vez**, e o mesmo objeto vai para `decidirNivel` e para `acaoSugerida` (há teste com espiões).
 5. **Motivo principal:** os motivos são ordenados pelo maior `nivelMotivo` (dado o status e a FAQ), com desempate pela ordem fixa de `NIVEL_BASE`, e repetidos são removidos. Assim a ordem devolvida pelo modelo não muda o resultado: `[rastreio, reacao_adversa]` e o inverso dão o mesmo resultado.
 6. **Nível 2:** não há 2ª chamada nem resposta ao cliente. O resumo interno é montado em código (motivos, sinais, confiança, ação, razões do nível e `guiaInterno` de todos os motivos presentes).
-7. **Níveis 0 e 1:** redação (2ª chamada) com as entradas de FAQ dos motivos e os fatos do pedido, depois `verificarResposta`. Se a checagem reprovar, a resposta vira o texto de reserva; no nível 0, o nível passa a 1 e `acaoSugerida` é chamada de novo com nível 1, para ação e autonomia coerentes. O resultado marca `fallback`, e `taxaFallback(resultados)` dá a métrica (fallbacks sobre conversas com redação).
-8. **Orçamento total de 12 s.** Cada chamada usa o menor entre 8 s e o tempo restante; não se começa chamada com menos de 1,5 s. A nova tentativa (só para JSON inválido, nas duas chamadas) só ocorre se sobrar tempo.
+7. **Níveis 0 e 1:** redação (2ª chamada) com as entradas de FAQ dos motivos e os fatos do pedido, depois `verificarResposta`. Se a checagem reprovar, a resposta vira o texto de reserva; no nível 0, o nível passa a 1 e `acaoSugerida` é chamada de novo com nível 1, para ação e autonomia coerentes. O resultado marca `fallback`, e `taxaFallback(resultados)` dá a métrica (fallbacks sobre conversas com redação). Desde 31/10/2026 há uma nova redação antes do texto de reserva (ver "Nível 0 mais enxuto, ressalvas temporais e nova tentativa de redação").
+8. **Orçamento total de 12 s.** Cada chamada usa o menor entre 8 s e o tempo restante; não se começa chamada com menos de 1,5 s. A nova tentativa por JSON inválido (nas duas chamadas) e a nova redação após checagem reprovada só ocorrem se sobrar tempo.
 9. **Falhas:** qualquer erro leva a nível 2, ação `escalar_atendimento_humano`, razão "falha interna: revisão humana" e `falha.tipo` (`timeout`, `rate_limit`, `json_invalido`, `config`, `requisicao_recusada`, `indisponivel`, ou `interno` para exceção fora do cliente do modelo, como o `RangeError` da policy). O erro original não é devolvido nem logado.
-10. **Privacidade:** o resultado não contém a mensagem nem trechos dela (há teste nos caminhos de nível 0, nível 2, fallback e falha); a telemetria (`chamadas`) só traz tokens, `finish_reason`, latência e se o zod aceitou.
+10. **Privacidade:** o resultado não contém a mensagem nem trechos dela (há teste nos caminhos de nível 0, nível 2, fallback e falha); a telemetria (`chamadas`) só traz tokens, `finish_reason`, latência e se o zod aceitou; `tentativasRedacao` conta as redações checadas.
 
 ### Afirmações de ação já feita (31/10/2026)
 
@@ -278,6 +278,16 @@ Com os motivos [rastreio, atraso], o desempate põe rastreio como principal, e o
 - **Sem a palavra "status" no prompt do nível 1:** o fato do pedido passou a se chamar "Situação do pedido" (vale para os dois níveis), e há teste de que o prompt do nível 1 não contém "status" em nenhuma combinação de motivo e status.
 - **Tom:** o rascunho termina com a frase do texto de reserva ("Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui."), com tom natural e curto, evitando formas formais como "analisará" e "responderá".
 
+### Nível 0 mais enxuto, ressalvas temporais e nova tentativa de redação (31/10/2026)
+
+Na gravação anterior, a resposta de endereço em trânsito repetia a situação do pedido depois da regra da FAQ e terminava com "não é possível alterar o endereço agora", o que sugere que depois será possível; o rascunho de atraso pedia desculpas duas vezes. Correções:
+
+- **Prompt do nível 0:** no máximo 3 frases; não repetir a situação do pedido quando o texto da FAQ já responde; sem "agora", "por enquanto", "no momento", "atualmente". A regra geral do prompt de redação passou de 4 para 3 frases. **Prompt do nível 1:** um único pedido de desculpas.
+- **Checagem:** ressalvas temporais (agora, por enquanto, no momento, atualmente, "por ora") entram em `TERMOS_DE_SOLUCAO` (falha `termo_de_solucao`): só passam se estiverem nas entradas de FAQ usadas. O texto de reserva e todas as entradas de FAQ do cliente continuam passando (há teste).
+- **Nova tentativa de redação:** se a checagem reprovar, o pipeline faz **uma** nova redação com a mesma entrada (mesmo prompt), se ainda houver pelo menos 1,5 s no orçamento. Se a 2ª passar, não há fallback (e o nível 0 continua 0). Se reprovar de novo, vale o texto de reserva, e o nível 0 passa a 1. Se a nova tentativa não puder ser feita (sem tempo, falha do provedor ou JSON inválido), vale a primeira checagem: texto de reserva, sem ir a nível 2. Como a temperatura é 0, a 2ª redação pode repetir a 1ª; a medida ajuda nos casos em que o modelo varia.
+- **Telemetria:** o resultado traz `tentativasRedacao` (0 sem redação, 1 ou 2), que também entra na linha de log da rota.
+- **Sem "status" nos prompts de redação:** a descrição da ação de rastreio no nível 0 passou a "Informar ao cliente a situação do pedido em trânsito."; há teste de que nem o nível 0 nem o nível 1 contêm "status" em nenhuma combinação alcançável de motivo e status.
+
 ## 15. Rota, demonstração e painel de impacto (parte 4)
 
 ### Rota `api/agent` (`app/src/app/api/agent/route.ts` e `app/src/lib/rota/handler.ts`)
@@ -286,7 +296,7 @@ Com os motivos [rastreio, atraso], o desempate põe rastreio como principal, e o
 - **Ordem das verificações:** mesma origem (403) → tamanho do corpo, até 10 KB, lido com teto mesmo sem `Content-Length` (413) → zod: mensagem de até 2.000 caracteres, status, canal, valor de 0 a 10.000 e nº do contato de 1 a 20 (400) → limites (429) → pipeline.
 - **Mesma origem:** `Origin` precisa bater com o host (`x-forwarded-host` ou `host`), e `sec-fetch-site`, quando vem, precisa ser `same-origin`. Não é autenticação: só impede que outro site use a rota pelo navegador de um visitante.
 - **Exceção na rota:** responde 200 no formato do pipeline, com nível 2, `falha.tipo: "interno"` e a razão "falha interna: revisão humana". O erro original não é devolvido nem logado.
-- **Log:** uma linha por requisição, `{nivel, falha, ms, chamadas}`. Sem IP, mensagem nem erro.
+- **Log:** uma linha por requisição, `{nivel, falha, ms, chamadas, tentativasRedacao}`. Sem IP, mensagem nem erro.
 
 ### Limites (`app/src/lib/limites`)
 

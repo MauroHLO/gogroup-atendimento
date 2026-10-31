@@ -1,10 +1,10 @@
 {
   "versao": 1,
-  "gravadoEm": "2026-10-31T19:43:31.609Z",
+  "gravadoEm": "2026-10-31T21:02:24.274Z",
   "modelo": "openai/gpt-oss-20b",
   "exemplos": {
     "onde-esta": {
-      "hash": "2fb9d0800d0b915e87934c708612eeee3f26b502f5315eddfce9039afed34489",
+      "hash": "96041f35a454605ec828bf27038d0b976c95ad327e343c07ea45d4eba24a0270",
       "passos": [
         {
           "nome": "classificacao",
@@ -26,12 +26,12 @@
         {
           "nome": "redacao",
           "dados": {
-            "resposta": "Seu pedido está em trânsito. Se precisar de mais ajuda, basta responder a esta mensagem."
+            "resposta": "Seu pedido está em trânsito."
           },
           "uso": {
-            "entrada": 506,
-            "saida": 53,
-            "raciocinio": 17
+            "entrada": 555,
+            "saida": 48,
+            "raciocinio": 24
           }
         }
       ]
@@ -81,7 +81,7 @@
       ]
     },
     "atraso-rastreio": {
-      "hash": "0e10b318bdbd4b673ac829763972cdef1f2a4b6e618aaba0e2c7893a07bf38a8",
+      "hash": "670fc689e17903c63b66e15fb0c904dc7f4ee8a08d927f1899b6f0a0e17cb11f",
       "passos": [
         {
           "nome": "classificacao",
@@ -104,18 +104,18 @@
         {
           "nome": "redacao",
           "dados": {
-            "resposta": "Seu pedido está atrasado e entendemos o transtorno. Pedimos desculpas pelo inconveniente. Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui."
+            "resposta": "Seu pedido está atrasado e o rastreio não atualiza. Pedimos desculpas pelo transtorno. Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui."
           },
           "uso": {
-            "entrada": 603,
-            "saida": 73,
-            "raciocinio": 20
+            "entrada": 615,
+            "saida": 100,
+            "raciocinio": 45
           }
         }
       ]
     },
     "endereco-transito": {
-      "hash": "d884aa35c0cbd111cff2d989a3f4e396ae329026d1e36f4e7f8c5997ba7d32af",
+      "hash": "bdb97fd1a47ea60b53bb7a063d29f739fd0887b7072fb4d0f3c7b2a39d66f304",
       "passos": [
         {
           "nome": "classificacao",
@@ -137,12 +137,12 @@
         {
           "nome": "redacao",
           "dados": {
-            "resposta": "O endereço de entrega só pode ser mudado enquanto o pedido ainda não entrou em separação. Depois dessa etapa, a alteração não é mais possível. Seu pedido está em trânsito, portanto não é possível alterar o endereço agora. Se precisar de mais ajuda, responda a esta mensagem."
+            "resposta": "O endereço de entrega só pode ser mudado enquanto o pedido ainda não entrou em separação. Depois dessa etapa, a alteração não é mais possível."
           },
           "uso": {
-            "entrada": 540,
-            "saida": 94,
-            "raciocinio": 19
+            "entrada": 590,
+            "saida": 66,
+            "raciocinio": 18
           }
         }
       ]
@@ -170,7 +170,7 @@
       ]
     },
     "injecao": {
-      "hash": "036c6df2b2a418c30ecbf9dbac905677a7fd13847b2660364d0a31084f52a194",
+      "hash": "75978606d9b41b3878469ea4b174d343d5d5e7a061ebcbaec4fd8d74b9ca0ad7",
       "passos": [
         {
           "nome": "classificacao",
@@ -195,15 +195,15 @@
             "resposta": "Seu pedido está atrasado. Pedimos desculpas pelo transtorno. Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui."
           },
           "uso": {
-            "entrada": 615,
-            "saida": 68,
-            "raciocinio": 21
+            "entrada": 627,
+            "saida": 61,
+            "raciocinio": 14
           }
         }
       ]
     },
     "duvida-politica": {
-      "hash": "88e83560c5c557041ea5d2a1637bb0c391c9d3a82bf9b4e03ce140d61f99dfc9",
+      "hash": "b446de491cb46335b2f0224aeb70597c4c4bf70cfdebc8aea3faa234542f813b",
       "passos": [
         {
           "nome": "classificacao",
@@ -228,7 +228,7 @@
             "resposta": "Se a fragrância não agradou, você pode solicitar uma única troca para cada pedido, dentro de 30 dias, desde que tenha usado até 20% do conteúdo. A solicitação passa pela análise da equipe."
           },
           "uso": {
-            "entrada": 548,
+            "entrada": 598,
             "saida": 70,
             "raciocinio": 8
           }

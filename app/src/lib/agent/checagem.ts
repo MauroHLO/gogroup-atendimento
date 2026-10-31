@@ -80,7 +80,7 @@ export const PADROES_PROMESSA_CONTATO: readonly RegExp[] = [
   /\bequipe\b[^.!?]{0,40}?\b(vai|vao|ira|irao|analisara|verificara|acompanhara|avaliara|investigara|cuidara|resolvera|entrara|retornara)\b/,
 ];
 
-// Termos de solução, custo ou resultado, e palavras de prazo (níveis 0 e 1; falha termo_de_solucao). Cada termo só passa se o MESMO termo (a mesma família:
+// Termos de solução, custo ou resultado, palavras de prazo e ressalvas temporais (níveis 0 e 1; falha termo_de_solucao). Cada termo só passa se o MESMO termo (a mesma família:
 // "reposição" e "repor", "troca" e "trocar"...) aparecer nas entradas de FAQ usadas na redação. Assim o texto
 // pode repetir o que a política diz ("o reenvio é sem custo"), mas não inventar "reposição sem custo" ou
 // "troca gratuita". "Sem custo" e "sem nenhum custo" são termos diferentes de propósito: só a forma da FAQ passa.
@@ -111,6 +111,12 @@ export const TERMOS_DE_SOLUCAO: Readonly<Record<string, RegExp>> = {
   fim_do_dia: /\bate\s+o\s+fim\s+do\s+dia\b|\bate\s+o\s+final\s+do\s+dia\b/,
   proximas_horas: /\bnas\s+proximas\s+horas\b/,
   ainda_hoje: /\bainda\s+hoje\b/,
+  // Ressalvas temporais: mesma regra. "Não é possível alterar agora" sugere que depois será possível.
+  agora: /\bagora\b/,
+  por_enquanto: /\bpor\s+enquanto\b/,
+  no_momento: /\bno\s+momento\b/,
+  atualmente: /\batualmente\b/,
+  por_ora: /\bpor\s+ora\b/,
 };
 
 // Famílias de termos de solução presentes no texto (normalizado aqui).

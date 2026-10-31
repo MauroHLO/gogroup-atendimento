@@ -97,7 +97,7 @@ describe("sucesso", () => {
     }
     expect(JSON.stringify(json)).not.toContain(TRECHO);
     expect(logs).toHaveLength(1);
-    expect(JSON.parse(logs[0])).toEqual({ nivel: 0, falha: null, ms: 0, chamadas: 2 });
+    expect(JSON.parse(logs[0])).toEqual({ nivel: 0, falha: null, ms: 0, chamadas: 2, tentativasRedacao: 1 });
   });
 
   it("mensagem com espaços nas pontas é aceita (trim)", async () => {
@@ -273,7 +273,7 @@ describe("falhas", () => {
     expect(status).toBe(200);
     expect(json).toMatchObject({ nivel: 2, razoes: [RAZAO_FALHA], falha: { tipo: "interno" }, resposta: null, modelo: "openai/gpt-oss-20b" });
     expect(JSON.stringify(json)).not.toContain(TRECHO);
-    expect(JSON.parse(logs[0])).toEqual({ nivel: 2, falha: "interno", ms: 0, chamadas: 0 });
+    expect(JSON.parse(logs[0])).toEqual({ nivel: 2, falha: "interno", ms: 0, chamadas: 0, tentativasRedacao: 0 });
   });
 
   it("log que lança não derruba a resposta", async () => {
@@ -295,13 +295,13 @@ describe("privacidade dos logs e das respostas", () => {
     ["origem", {}, () => requisicao(undefined, { headers: { origin: "https://x.example.com" } })],
   ];
 
-  it.each(cenarios)("%s: uma linha de log só com nivel, falha, ms e chamadas", async (_nome, extra, req) => {
+  it.each(cenarios)("%s: uma linha de log só com nivel, falha, ms, chamadas e tentativasRedacao", async (_nome, extra, req) => {
     const { handler, logs } = montar(extra);
     const res = await handler(req());
     const texto = await res.text();
     expect(texto).not.toContain(TRECHO);
     expect(logs).toHaveLength(1);
-    expect(Object.keys(JSON.parse(logs[0])).sort()).toEqual(["chamadas", "falha", "ms", "nivel"]);
+    expect(Object.keys(JSON.parse(logs[0])).sort()).toEqual(["chamadas", "falha", "ms", "nivel", "tentativasRedacao"]);
     const logado = tudoQueFoiLogado(logs);
     expect(logado).not.toContain(TRECHO);
     expect(logado).not.toContain("10.0.0.1"); // sem IP
@@ -314,6 +314,6 @@ describe("privacidade dos logs e das respostas", () => {
     await handler(requisicao());
     const linhas = espioes[0].mock.calls.map((c) => String(c[0]));
     expect(linhas).toHaveLength(1);
-    expect(JSON.parse(linhas[0])).toEqual({ nivel: 0, falha: null, ms: 0, chamadas: 2 });
+    expect(JSON.parse(linhas[0])).toEqual({ nivel: 0, falha: null, ms: 0, chamadas: 2, tentativasRedacao: 1 });
   });
 });

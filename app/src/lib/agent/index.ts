@@ -1,6 +1,7 @@
 // Pipeline do agente (docs/decisoes.md, seções 4 e 14).
 // mascarar -> classificar (modelo) -> sinais -> FAQ da conversa (uma vez) -> nível (código)
-// -> ação (código, mesmo conjunto de FAQ) -> redigir (modelo, só níveis 0 e 1) -> checar (código).
+// -> ação (código, mesmo conjunto de FAQ) -> redigir (modelo, só níveis 0 e 1) -> checar (código)
+// -> se reprovar, uma nova redação (se houver tempo) -> se reprovar de novo, texto de reserva.
 // O modelo classifica e redige; quem decide nível e ação é o código. Nada aqui loga ou guarda a mensagem.
 
 import { acaoSugerida as acaoSugeridaPadrao, type AcaoSugerida } from "../acoes";
@@ -84,6 +85,7 @@ export interface ResultadoAgente {
   fallback: boolean; // texto de reserva usado porque a checagem reprovou
   falha: { tipo: TipoFalhaPipeline } | null;
   chamadas: Chamada[]; // telemetria sem texto
+  tentativasRedacao: number; // redações checadas: 0 (sem redação), 1 ou 2 (nova tentativa após reprovação)
 }
 
 const ACAO_FALHA: AcaoSugerida = {
@@ -149,6 +151,7 @@ export async function processarConversa(entrada: EntradaAgente, deps: Dependenci
   let motivos: Motivo[] = [];
   let sinais = { saude: false, ameaca: false };
   let confianca: number | null = null;
+  let tentativasRedacao = 0;
 
   const restante = () => prazo - agora();
 
@@ -242,6 +245,7 @@ export async function processarConversa(entrada: EntradaAgente, deps: Dependenci
       sinais,
       falha: null,
       chamadas,
+      tentativasRedacao: 0,
     };
 
     // 7a. Nível 2: só resumo interno, montado em código; nenhuma resposta ao cliente.
@@ -292,22 +296,34 @@ export async function processarConversa(entrada: EntradaAgente, deps: Dependenci
       entradasFaq: entradas,
       fatos,
     });
-    const red = await chamar(
-      cliente,
-      { nome: "redacao", ...pr, esquema: ESQUEMA_REDACAO, maxTokens: MAX_TOKENS_REDACAO },
-      (d) => Redacao.safeParse(d),
-      true,
-    );
+    const pedidoRedacao = { nome: "redacao" as const, ...pr, esquema: ESQUEMA_REDACAO, maxTokens: MAX_TOKENS_REDACAO };
+    const permitido = { textosFaq: entradas.map((e) => e.texto), fatos, links: linksDe(entradas), nivel };
+    const red = await chamar(cliente, pedidoRedacao, (d) => Redacao.safeParse(d), true);
     if (red === null) throw new FalhaAgente("json_invalido");
+    tentativasRedacao = 1;
 
-    const checagem = verificarResposta(red.resposta, {
-      textosFaq: entradas.map((e) => e.texto),
-      fatos,
-      links: linksDe(entradas),
-      nivel,
-    });
-    const razoes = [...decisao.razoes];
+    let checagem = verificarResposta(red.resposta, permitido);
     let resposta = red.resposta;
+    const razoes = [...decisao.razoes];
+
+    // Checagem reprovou: UMA nova redação com a mesma entrada, se houver tempo. Se a nova tentativa
+    // não puder ser feita (sem tempo, falha do provedor ou JSON inválido), vale a primeira checagem.
+    if (!checagem.ok && restante() >= MIN_CHAMADA_MS) {
+      let nova: { resposta: string } | null = null;
+      try {
+        nova = await chamar(cliente, pedidoRedacao, (d) => Redacao.safeParse(d), false);
+      } catch (e) {
+        if (!(e instanceof FalhaAgente)) throw e;
+      }
+      if (nova !== null) {
+        tentativasRedacao = 2;
+        const reprovadas = checagem.falhas.join(", ");
+        checagem = verificarResposta(nova.resposta, permitido);
+        resposta = nova.resposta;
+        if (checagem.ok) razoes.push(`checagem reprovou a 1ª redação (${reprovadas}); a 2ª redação passou`);
+      }
+    }
+
     if (!checagem.ok) {
       resposta = TEXTO_RESERVA;
       if (nivel === 0) {
@@ -315,7 +331,7 @@ export async function processarConversa(entrada: EntradaAgente, deps: Dependenci
         acao = acaoSugerida(principal, 1, contexto.statusEntrega, faq);
       }
       razoes.push(
-        `checagem do texto reprovou (${checagem.falhas.join(", ")}): texto de reserva, prepara e aguarda aprovação (nível ${nivel})`,
+        `checagem do texto reprovou (${checagem.falhas.join(", ")}) em ${tentativasRedacao === 1 ? "1 redação" : "2 redações"}: texto de reserva, prepara e aguarda aprovação (nível ${nivel})`,
       );
     }
 
@@ -329,11 +345,12 @@ export async function processarConversa(entrada: EntradaAgente, deps: Dependenci
       faqUsada: entradas.map((e) => e.id),
       checagem,
       fallback: !checagem.ok,
+      tentativasRedacao,
     };
   } catch (e) {
     // Qualquer falha: nível 2, sem resposta ao cliente e sem texto do erro original.
     const tipo: TipoFalhaPipeline = e instanceof FalhaAgente ? e.tipo : "interno";
-    return resultadoFalha(tipo, { motivos, sinais, confianca, chamadas });
+    return resultadoFalha(tipo, { motivos, sinais, confianca, chamadas, tentativasRedacao });
   }
 }
 
@@ -345,6 +362,7 @@ export function resultadoFalha(
     sinais?: { saude: boolean; ameaca: boolean };
     confianca?: number | null;
     chamadas?: Chamada[];
+    tentativasRedacao?: number;
   } = {},
 ): ResultadoAgente {
   const motivos = parcial.motivos ?? [];
@@ -367,6 +385,7 @@ export function resultadoFalha(
     fallback: false,
     falha: { tipo },
     chamadas: parcial.chamadas ?? [],
+    tentativasRedacao: parcial.tentativasRedacao ?? 0,
   };
 }
 
