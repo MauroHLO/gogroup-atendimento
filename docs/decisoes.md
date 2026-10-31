@@ -151,3 +151,26 @@ A função `acaoSugerida(motivo, nivel, statusEntrega, faqValidada?)` é pura e 
 - **Coerência de status:** item faltando, brinde, avaria, erro de personalização, troca e fragrância pressupõem o pedido entregue; com outro status, a ação é triagem para conferir o pedido.
 - **Entradas fora do tipo:** nível diferente de 0, 1 e 2 lança `RangeError` (a rota responde em nível 2); motivo desconhecido vai para triagem.
 - **Dúvida de política e direitos do titular:** só ficam em nível 0 se houver entrada de FAQ correspondente; sem ela, nível 1 (regra de `lib/policy`, seção 12).
+
+## 14. Agente (`app/src/lib/agent`)
+
+### Sinais de saúde e ameaça (`sinais.ts`)
+
+O sinal final é "ou" entre a saída do modelo e as palavras-chave. As palavras-chave são as de `RE_SAUDE` e `RE_AMEACA` de `analysis/analise_atendimento.py`, aplicadas sobre texto normalizado (minúsculas, sem acento), com estas **divergências em relação ao script Python**:
+
+- Normalização: "gravida", "bebe", "justica" e "reclamacao" sem acento também casam (no Python, só com acento).
+- "queima" foi restrita a `queimadura|queimou|queimei|queimando`, para não pegar "queima de estoque".
+- "bebê" e "fórmula" exigem palavra inteira (`\bbebes?\b`, `\bformulas?\b`), porque, sem acento, pegariam "bebeu" e "formulário".
+- Espaços entre palavras aceitam qualquer quantidade (`\s+`).
+
+Os números da análise continuam vindo do script Python; a divergência só afeta o app, e na direção mais conservadora (mais casos com sinal), exceto pelas três restrições acima, que removem falsos positivos.
+
+### Esquemas (`esquema.ts`)
+
+- O zod valida a classificação (`motivos` de 1 a 3, `topico` da FAQ ou `null`, `confianca` de 0 a 1, `saude`, `ameaca`) e a redação (`resposta` de 1 a 700 caracteres). Campos extras vindos do modelo, como `nivel` ou `acao`, são descartados: o modelo nunca decide nível nem ação.
+- O esquema JSON do modo estrito do Groq é derivado do zod com `z.toJSONSchema`, sem `$schema`, com todos os objetos fechados (`additionalProperties: false`) e todas as propriedades obrigatórias. A documentação do Groq não informa suporte a `minimum`, `maximum`, `minItems`, `maxItems`, `minLength` e `maxLength` no modo estrito; esses limites ficam **só no zod**.
+- Resposta inválida do modelo, depois da nova tentativa, vira `nao_classificado` com confiança 0 (que resulta em nível 2 pela regra de confiança).
+
+### Checagem do texto redigido (`checagem.ts`)
+
+Vale para os níveis 0 e 1. O texto reprova se tiver: número em algarismos que não esteja nas entradas de FAQ usadas nem nos fatos do contexto; número por extenso (exceto "um" e "uma"); verbo de compromisso (`PADROES_COMPROMISSO`); menção a CPF, cartão, senha, CVV ou código de segurança (conservador: até "não precisa mandar o CPF" reprova); link que não esteja nas entradas de FAQ usadas; texto vazio ou acima de 700 caracteres. Se reprovar, o pipeline usa o texto seguro de reserva, que passa em todas as checagens.
