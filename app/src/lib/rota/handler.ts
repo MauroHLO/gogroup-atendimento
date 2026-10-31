@@ -13,6 +13,11 @@ import {
   MINUTO_MS,
 } from "../limites";
 import type { Canal, StatusEntrega } from "../policy";
+import {
+  FALHAS_COM_CONTINGENCIA,
+  tentarContingencia,
+  type MotivoContingencia,
+} from "../demo/contingencia";
 
 export const LIMITE_MENSAGEM = 2_000; // caracteres
 export const LIMITE_CORPO_BYTES = 10 * 1024;
@@ -79,6 +84,7 @@ export interface DepsRota {
   agora?: () => number;
   log?: (linha: string) => void;
   processar?: typeof processarConversa;
+  contingencia?: typeof tentarContingencia; // padrão: respostas gravadas dos exemplos prontos
 }
 
 // Linha de log: só métricas, sem IP, mensagem nem erro.
@@ -148,6 +154,16 @@ export function criarHandler(deps: DepsRota): (req: Request) => Promise<Response
   const agora = deps.agora ?? Date.now;
   const log = deps.log ?? ((linha: string) => console.log(linha));
   const processar = deps.processar ?? processarConversa;
+  const contingencia = deps.contingencia ?? tentarContingencia;
+
+  // Só exemplos prontos têm gravação; qualquer erro aqui desliga a contingência, sem derrubar a rota.
+  async function gravada(c: CorpoAgente, motivo: MotivoContingencia) {
+    try {
+      return await contingencia(c.mensagem, c.contexto, motivo);
+    } catch {
+      return null;
+    }
+  }
 
   function registrar(l: LinhaLog): void {
     try {
@@ -196,6 +212,12 @@ export function criarHandler(deps: DepsRota): (req: Request) => Promise<Response
         { limitador: deps.limites.global, chave: "global", nome: "diario" },
       ]);
       if (!limite.ok) {
+        // Exemplo pronto: reproduz a gravação sem consumir cota nem chamar o Groq.
+        const replay = await gravada(corpo.data, limite.nome as NomeLimite);
+        if (replay) {
+          registrar({ nivel: replay.nivel, falha: `gravada_${limite.nome}`, ms: ms(), chamadas: 0 });
+          return json({ ...replay, modelo: replay.contingencia.modelo });
+        }
         registrar({ nivel: null, falha: `limite_${limite.nome}`, ms: ms(), chamadas: 0 });
         return json(
           { erro: MENSAGEM_LIMITE, limite: limite.nome as NomeLimite, reiniciaEm: new Date(limite.reiniciaEm).toISOString() },
@@ -207,6 +229,20 @@ export function criarHandler(deps: DepsRota): (req: Request) => Promise<Response
         { mensagem: corpo.data.mensagem, contexto: corpo.data.contexto },
         { cliente: deps.cliente },
       );
+      // Falha do provedor do modelo, ou classificação inválida mesmo após nova tentativa (json_invalido).
+      const motivoFalha: MotivoContingencia | null =
+        resultado.falha && FALHAS_COM_CONTINGENCIA.has(resultado.falha.tipo)
+          ? (resultado.falha.tipo as MotivoContingencia)
+          : !resultado.falha && !resultado.classificacaoValida
+            ? "json_invalido"
+            : null;
+      if (motivoFalha) {
+        const replay = await gravada(corpo.data, motivoFalha);
+        if (replay) {
+          registrar({ nivel: replay.nivel, falha: `gravada_${motivoFalha}`, ms: ms(), chamadas: resultado.chamadas.length });
+          return json({ ...replay, modelo: replay.contingencia.modelo });
+        }
+      }
       registrar({ nivel: resultado.nivel, falha: resultado.falha?.tipo ?? null, ms: ms(), chamadas: resultado.chamadas.length });
       return json({ ...resultado, modelo: deps.modelo ?? null });
     } catch {

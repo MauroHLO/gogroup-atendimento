@@ -68,3 +68,25 @@ export function horaBrasilia(iso: string | null): string | null {
 export function oQueOModeloViu(mensagem: string): string {
   return `${ABRE}\n${neutralizarDelimitador(mascararPii(mensagem.trim()))}\n${FECHA}`;
 }
+
+// Motivo real da contingência, exibido na faixa de resposta gravada.
+export const MOTIVO_CONTINGENCIA: Readonly<Record<string, string>> = {
+  ip_minuto: "limite por IP por minuto",
+  ip_dia: "limite diário por IP",
+  diario: "teto diário da demonstração",
+  rate_limit: "limite de uso do provedor do modelo (rate_limit)",
+  timeout: "o modelo demorou demais (timeout)",
+  indisponivel: "provedor do modelo indisponível",
+  config: "servidor sem configuração do modelo (config)",
+  requisicao_recusada: "o provedor recusou a requisição",
+  json_invalido: "o modelo respondeu fora do formato (json_invalido)",
+};
+
+export function rotuloMotivoContingencia(motivo: string): string {
+  return MOTIVO_CONTINGENCIA[motivo] ?? motivo;
+}
+
+export function dataBrasilia(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+}

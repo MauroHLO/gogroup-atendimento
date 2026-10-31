@@ -48,3 +48,22 @@ describe("rótulos", () => {
     expect(horaBrasilia("não é data")).toBeNull();
   });
 });
+
+describe("faixa da contingência", () => {
+  it("todo motivo possível tem rótulo específico (nunca genérico)", async () => {
+    const { MOTIVO_CONTINGENCIA, rotuloMotivoContingencia } = await import("./apresentacao");
+    const motivos = ["ip_minuto", "ip_dia", "diario", "rate_limit", "timeout", "indisponivel", "config", "requisicao_recusada", "json_invalido"];
+    expect(Object.keys(MOTIVO_CONTINGENCIA).sort()).toEqual([...motivos].sort());
+    const rotulos = motivos.map(rotuloMotivoContingencia);
+    expect(new Set(rotulos).size).toBe(motivos.length);
+    expect(rotuloMotivoContingencia("ip_minuto")).toBe("limite por IP por minuto");
+    expect(rotuloMotivoContingencia("diario")).toBe("teto diário da demonstração");
+    expect(rotuloMotivoContingencia("rate_limit")).toContain("rate_limit");
+  });
+
+  it("os motivos da faixa cobrem todos os que a rota pode enviar", async () => {
+    const { FALHAS_COM_CONTINGENCIA } = await import("./contingencia");
+    const { MOTIVO_CONTINGENCIA } = await import("./apresentacao");
+    for (const m of [...FALHAS_COM_CONTINGENCIA, "ip_minuto", "ip_dia", "diario"]) expect(MOTIVO_CONTINGENCIA[m]).toBeTruthy();
+  });
+});

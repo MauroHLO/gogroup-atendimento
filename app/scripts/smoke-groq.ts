@@ -3,8 +3,12 @@
 // Objetivo: confirmar que o Groq aceita o esquema estrito e calibrar max_completion_tokens.
 // Chama o pipeline real (processarConversa). Imprime só nível, motivos, ação, falha, checagem,
 // tempo e tokens por chamada. Nunca imprime a chave, a mensagem nem a resposta redigida.
-// Código de saída: 0 ok; 1 se o Groq recusar o esquema estrito; 2 se faltar configuração.
+// Código de saída: 0 ok; 1 se o Groq recusar o esquema estrito; 2 se faltar configuração;
+// 4 se a gravação (--gravar) falhar.
+// Uso para regravar as respostas da contingência: npm run smoke -- --gravar
 
+import { writeFileSync } from "node:fs";
+import path from "node:path";
 import {
   criarClienteGroq,
   FalhaAgente,
@@ -15,6 +19,8 @@ import {
 } from "../src/lib/agent/cliente";
 import { processarConversa, taxaFallback, type Chamada, type ResultadoAgente } from "../src/lib/agent";
 import type { ContextoPedido } from "../src/lib/agent/prompts";
+import { reproduzir, type Passo } from "../src/lib/demo/contingencia";
+import { EXEMPLOS } from "../src/lib/demo/exemplos";
 
 interface Caso {
   id: string;
@@ -81,6 +87,50 @@ function imprimir(caso: Caso, r: ResultadoAgente, ms: number): void {
   for (const c of r.chamadas) console.log(`    ${fmtChamada(c)}`);
 }
 
+// --gravar: roda os 8 exemplos prontos com o modelo real, guarda só as saídas do modelo e o hash do que
+// o pipeline mandou, e grava src/lib/demo/gravados.json. Não grava nada se algum exemplo falhar.
+async function gravar(cliente: ClienteLLM): Promise<number> {
+  const exemplos: Record<string, { hash: string; passos: Passo[] }> = {};
+  for (const exemplo of EXEMPLOS) {
+    const passos: Passo[] = [];
+    const gravador: ClienteLLM = {
+      modelo: cliente.modelo,
+      estrito: cliente.estrito,
+      async gerarJson(p) {
+        try {
+          const r = await cliente.gerarJson(p);
+          passos.push({ nome: p.nome, dados: r.dados, uso: r.uso });
+          return r;
+        } catch (e) {
+          if (e instanceof FalhaAgente && e.tipo === "json_invalido") passos.push({ nome: p.nome, erro: "json_invalido" });
+          throw e;
+        }
+      },
+    };
+    const vivo = await processarConversa({ mensagem: exemplo.mensagem, contexto: exemplo.contexto }, { cliente: gravador });
+    if (vivo.falha) {
+      console.error(`exemplo=${exemplo.id} falhou (${vivo.falha.tipo}); nada foi gravado.`);
+      return 4;
+    }
+    // Confere que a reprodução dá o mesmo resultado que a chamada ao vivo e calcula o hash.
+    const { resultado, hash } = await reproduzir(exemplo, passos, cliente.modelo);
+    const igual = resultado.nivel === vivo.nivel && resultado.acao.acao === vivo.acao.acao && resultado.resposta === vivo.resposta;
+    if (!igual) {
+      console.error(`exemplo=${exemplo.id}: a reprodução não bate com a chamada ao vivo; nada foi gravado.`);
+      return 4;
+    }
+    exemplos[exemplo.id] = { hash, passos };
+    console.log(
+      `exemplo=${exemplo.id} | esperado=${exemplo.esperado} | nivel=${vivo.nivel} | acao=${vivo.acao.acao} | checagem=${vivo.checagem === null ? "n/a" : vivo.checagem.ok ? "ok" : vivo.checagem.falhas.join(",")} | chamadas=${passos.length}`,
+    );
+  }
+  const arquivo = path.resolve(process.cwd(), "src/lib/demo/gravados.json");
+  const conteudo = { versao: 1, gravadoEm: new Date().toISOString(), modelo: cliente.modelo, exemplos };
+  writeFileSync(arquivo, JSON.stringify(conteudo, null, 2) + "\n", "utf8");
+  console.log(`gravado: ${Object.keys(exemplos).length} exemplos em src/lib/demo/gravados.json`);
+  return 0;
+}
+
 async function main(): Promise<number> {
   let cliente: ClienteLLM;
   try {
@@ -95,6 +145,8 @@ async function main(): Promise<number> {
   console.log(
     `modelo=${cliente.modelo} | estrito=${cliente.estrito} | max_tokens=${MAX_TOKENS_CLASSIFICACAO}/${MAX_TOKENS_REDACAO} | timeout=${TIMEOUT_CHAMADA_MS} ms`,
   );
+
+  if (process.argv.includes("--gravar")) return gravar(cliente);
 
   const resultados: ResultadoAgente[] = [];
   for (const caso of CASOS) {

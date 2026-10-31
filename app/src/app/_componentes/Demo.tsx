@@ -25,7 +25,11 @@ const CANAIS: { valor: ContextoPedido["canal"]; rotulo: string }[] = [
   { valor: "reclame_aqui", rotulo: "Reclame Aqui" },
 ];
 
-export type RespostaRota = ResultadoAgente & { modelo: string | null };
+export type RespostaRota = ResultadoAgente & {
+  modelo: string | null;
+  // Presente só quando a resposta veio da gravação (exemplos prontos), com o motivo real.
+  contingencia?: { motivo: string; gravadoEm: string; modelo: string };
+};
 
 export type Estado =
   | { tipo: "ocioso" }

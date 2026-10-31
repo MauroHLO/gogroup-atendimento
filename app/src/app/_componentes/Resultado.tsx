@@ -6,7 +6,17 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import type { Nivel } from "@/lib/policy";
-import { AUTONOMIA, CHECAGEM, FALHA, horaBrasilia, NIVEL, oQueOModeloViu, rotuloLimite } from "@/lib/demo/apresentacao";
+import {
+  AUTONOMIA,
+  CHECAGEM,
+  dataBrasilia,
+  FALHA,
+  horaBrasilia,
+  NIVEL,
+  oQueOModeloViu,
+  rotuloLimite,
+  rotuloMotivoContingencia,
+} from "@/lib/demo/apresentacao";
 import type { Estado, RespostaRota } from "./Demo";
 
 const COR_NIVEL: Record<Nivel, string> = {
@@ -29,6 +39,19 @@ function Detalhes({ r, ms, mensagemEnviada }: { r: RespostaRota; ms: number; men
   const outros = r.motivos.slice(1);
   return (
     <div className="space-y-4">
+      {r.contingencia && (
+        <div role="note" className="rounded-md border-2 border-dashed border-violet-700 bg-violet-50 px-4 py-3 text-sm text-violet-950">
+          <p className="text-base font-semibold">
+            Resposta gravada: {rotuloMotivoContingencia(r.contingencia.motivo)}
+          </p>
+          <p className="mt-1">
+            O modelo não foi chamado agora. As saídas do modelo ({r.contingencia.modelo}) foram gravadas em{" "}
+            {dataBrasilia(r.contingencia.gravadoEm)} para este exemplo pronto; a decisão abaixo (nível, ação e
+            checagens) foi calculada agora pelo código.
+          </p>
+        </div>
+      )}
+
       <div className={`rounded-md border-2 px-4 py-3 ${COR_NIVEL[r.nivel]}`}>
         <p className="text-lg font-semibold">
           <span aria-hidden="true" className="mr-2">
@@ -123,6 +146,7 @@ function Detalhes({ r, ms, mensagemEnviada }: { r: RespostaRota; ms: number; men
       <Bloco titulo="Telemetria">
         <p>
           Tempo total: {ms} ms{r.modelo ? ` · modelo ${r.modelo}` : ""}
+          {r.contingencia ? " · tokens da gravação, sem chamada agora" : ""}
         </p>
         {r.chamadas.length > 0 && (
           <ul className="mt-1 space-y-0.5 font-mono text-xs">
