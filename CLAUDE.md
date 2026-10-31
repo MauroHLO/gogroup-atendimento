@@ -20,7 +20,7 @@ Um agente que, para cada conversa de atendimento: classifica o motivo real, deci
 
 # Stack
 
-- Python 3.11 + pandas em `analysis/` (limpeza, métricas, classificação de exploração, custos).
+- Python 3.14.7 (versão do `.venv`) + pandas em `analysis/` (limpeza, métricas, classificação de exploração, custos).
 - Next.js + TypeScript em `app/` (interface e rota do agente), deploy na Vercel.
 - Groq como LLM, com saída estruturada (JSON) e validação do esquema.
 

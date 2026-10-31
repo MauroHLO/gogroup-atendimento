@@ -125,7 +125,7 @@ Os testes cobrem regra de autonomia, ação e trava, FAQ (incluindo nenhuma prom
 
 ## Como rodar localmente
 
-**App.** Node 22.13 ou mais recente na linha 22, Node 24 ou Node 26 e posteriores. Não servem Node 23 e 25. O mínimo vem do `vitest` (`^22.12.0 || ^24.0.0 || >=26.0.0`) e do `eslint-visitor-keys` (`^22.13.0` na linha 22). O Next 16 sozinho aceitaria 20.9. Versão usada no desenvolvimento: 26.13.
+**App.** Node 22.13 ou mais recente (24 também serve; 23 e 25 não).
 
 ```bash
 cd app
