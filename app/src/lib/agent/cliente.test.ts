@@ -118,18 +118,32 @@ describe("parâmetros enviados ao Groq", () => {
 describe("resposta", () => {
   it("devolve JSON interpretado e uso de tokens", async () => {
     const r = await criarClienteGroq(env(), sdkFalso(completion('{"resposta":"Olá"}')).sdk).gerarJson(pedido);
-    expect(r).toEqual({ dados: { resposta: "Olá" }, uso: { entrada: 300, saida: 40 } });
+    expect(r).toMatchObject({
+      dados: { resposta: "Olá" },
+      uso: { entrada: 300, saida: 40, raciocinio: null },
+      finishReason: "stop",
+    });
+    expect(r.ms).toBeGreaterThanOrEqual(0);
+  });
+
+  it("informa tokens de raciocínio quando a API devolve", async () => {
+    const comRaciocinio = {
+      ...completion('{"a":1}'),
+      usage: { prompt_tokens: 10, completion_tokens: 50, completion_tokens_details: { reasoning_tokens: 30 } },
+    };
+    const r = await criarClienteGroq(env(), sdkFalso(comRaciocinio).sdk).gerarJson(pedido);
+    expect(r.uso).toEqual({ entrada: 10, saida: 50, raciocinio: 30 });
   });
 
   it.each([
-    ["finish_reason length", completion('{"resposta":"Olá"}', "length")],
-    ["JSON quebrado", completion('{"resposta":')],
-    ["conteúdo nulo", completion(null)],
-    ["conteúdo vazio", completion("  ")],
-    ["sem choices", { choices: [] }],
-  ])("%s vira json_invalido", async (_nome, resposta) => {
+    ["finish_reason length", completion('{"resposta":"Olá"}', "length"), "length"],
+    ["JSON quebrado", completion('{"resposta":'), "parse"],
+    ["conteúdo nulo", completion(null), "vazio"],
+    ["conteúdo vazio", completion("  "), "vazio"],
+    ["sem choices", { choices: [] }, "vazio"],
+  ])("%s vira json_invalido (%s)", async (_nome, resposta, detalhe) => {
     const c = criarClienteGroq(env(), sdkFalso(resposta).sdk);
-    await expect(c.gerarJson(pedido)).rejects.toMatchObject({ name: "FalhaAgente", tipo: "json_invalido" });
+    await expect(c.gerarJson(pedido)).rejects.toMatchObject({ name: "FalhaAgente", tipo: "json_invalido", detalhe });
   });
 });
 

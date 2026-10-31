@@ -23,9 +23,10 @@ export const MODELOS_ESTRITOS: ReadonlySet<string> = new Set([
   "meta-models/muse-spark-open",
 ]);
 
-// Valores iniciais; calibrar com scripts/smoke-groq.ts.
-export const MAX_TOKENS_CLASSIFICACAO = 512;
-export const MAX_TOKENS_REDACAO = 600;
+// Calibrados com scripts/smoke-groq.ts em 31/10/2026 (decisoes.md, seção 14): máximo medido de 128 tokens
+// na classificação e 87 na redação, raciocínio incluído. Folga de cerca de 3x e 4,5x.
+export const MAX_TOKENS_CLASSIFICACAO = 384;
+export const MAX_TOKENS_REDACAO = 400;
 export const TIMEOUT_CHAMADA_MS = 8_000;
 
 export type TipoFalha =
@@ -36,8 +37,14 @@ export type TipoFalha =
   | "requisicao_recusada" // 400 que não é JSON inválido (ex.: esquema estrito recusado)
   | "indisponivel"; // conexão ou erro 5xx
 
+// Detalhe seguro do JSON inválido (nunca texto do SDK nem do modelo), útil para diagnóstico.
+export type DetalheJsonInvalido = "length" | "vazio" | "parse" | "api";
+
 export class FalhaAgente extends Error {
-  constructor(readonly tipo: TipoFalha) {
+  constructor(
+    readonly tipo: TipoFalha,
+    readonly detalhe?: DetalheJsonInvalido,
+  ) {
     super(`falha do agente: ${tipo}`); // nunca inclui a mensagem do SDK
     this.name = "FalhaAgente";
   }
@@ -55,11 +62,14 @@ export interface PedidoJson {
 export interface Uso {
   entrada: number;
   saida: number;
+  raciocinio: number | null; // incluído em "saida", quando a API informa
 }
 
 export interface RespostaJson {
   dados: unknown; // JSON já interpretado; a validação com zod fica no pipeline
   uso: Uso | null;
+  finishReason: string | null;
+  ms: number;
 }
 
 export interface ClienteLLM {
@@ -75,7 +85,11 @@ export interface SdkChat {
 
 interface CompletionMinima {
   choices?: { finish_reason?: string | null; message?: { content?: string | null } }[];
-  usage?: { prompt_tokens?: number; completion_tokens?: number } | null;
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    completion_tokens_details?: { reasoning_tokens?: number } | null;
+  } | null;
 }
 
 function codigoErro(e: BadRequestError): string | undefined {
@@ -132,29 +146,39 @@ export function criarClienteGroq(
         signal: AbortSignal.timeout(pedido.timeoutMs),
       };
 
+      const inicio = Date.now();
       let resposta: CompletionMinima;
       try {
         resposta = (await api.chat.completions.create(body as never, options as never)) as CompletionMinima;
       } catch (e) {
-        throw new FalhaAgente(tipoDoErro(e));
+        const tipo = tipoDoErro(e);
+        throw new FalhaAgente(tipo, tipo === "json_invalido" ? "api" : undefined);
       }
 
       const escolha = resposta.choices?.[0];
       // Resposta cortada pelo limite de tokens é tratada como JSON inválido.
-      if (!escolha || escolha.finish_reason === "length") throw new FalhaAgente("json_invalido");
-      const conteudo = escolha.message?.content;
-      if (typeof conteudo !== "string" || conteudo.trim() === "") throw new FalhaAgente("json_invalido");
+      if (escolha?.finish_reason === "length") throw new FalhaAgente("json_invalido", "length");
+      const conteudo = escolha?.message?.content;
+      if (typeof conteudo !== "string" || conteudo.trim() === "") throw new FalhaAgente("json_invalido", "vazio");
 
       let dados: unknown;
       try {
         dados = JSON.parse(conteudo);
       } catch {
-        throw new FalhaAgente("json_invalido");
+        throw new FalhaAgente("json_invalido", "parse");
       }
       const u = resposta.usage;
       return {
         dados,
-        uso: u ? { entrada: u.prompt_tokens ?? 0, saida: u.completion_tokens ?? 0 } : null,
+        uso: u
+          ? {
+              entrada: u.prompt_tokens ?? 0,
+              saida: u.completion_tokens ?? 0,
+              raciocinio: u.completion_tokens_details?.reasoning_tokens ?? null,
+            }
+          : null,
+        finishReason: escolha?.finish_reason ?? null,
+        ms: Date.now() - inicio,
       };
     },
   };

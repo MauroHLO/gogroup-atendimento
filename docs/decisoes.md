@@ -184,7 +184,7 @@ Vale para os níveis 0 e 1. O texto reprova se tiver: número em algarismos que 
 - Interface `ClienteLLM` injetável; `criarClienteGroq(env, sdk?)` lê `GROQ_API_KEY` e `GROQ_MODEL` do ambiente. Modelo padrão: `openai/gpt-oss-20b`.
 - Modo estrito (`json_schema` com `strict: true`) só nos modelos que a documentação do Groq lista com decodificação restrita (`openai/gpt-oss-20b`, `openai/gpt-oss-120b`, `qwen/qwen3.8-27b`, `meta-models/muse-spark-open`); nos demais, `json_object`, sempre com validação zod no pipeline.
 - Nos modelos gpt-oss: `reasoning_effort: "low"` e `include_reasoning: false`. `temperature: 0`.
-- Limites iniciais: `max_completion_tokens` 512 (classificação) e 600 (redação); 8 s por chamada; `maxRetries: 0` no SDK (a única nova tentativa é a do pipeline, para JSON inválido). A documentação não diz se o raciocínio conta no limite de tokens; os valores serão calibrados com o smoke test.
+- Limites iniciais: `max_completion_tokens` 512 (classificação) e 600 (redação), depois calibrados para 384 e 400 (ver "Calibração com o smoke test"); 8 s por chamada; `maxRetries: 0` no SDK (a única nova tentativa é a do pipeline, para JSON inválido). A documentação não diz se o raciocínio conta no limite de tokens; os valores serão calibrados com o smoke test.
 - `finish_reason: "length"`, conteúdo vazio ou JSON quebrado contam como `json_invalido`.
 - Erros do SDK viram `FalhaAgente` com um tipo, sem a mensagem nem a causa original: `timeout`, `rate_limit`, `json_invalido` (inclui o 400 `json_validate_failed`), `config` (401, 403, 404, chave ausente), `requisicao_recusada` (outro 400, como esquema estrito recusado) e `indisponivel` (conexão, 5xx, erro qualquer).
 
@@ -197,3 +197,27 @@ Vale para os níveis 0 e 1. O texto reprova se tiver: número em algarismos que 
 
 - Roda com `npm run smoke` (lê `app/.env.local`, fora do Git), com 5 mensagens fictícias. Fica fora do `npm test` e do CI. Imprime só nível, motivos, falha, checagem, tempo e tokens; nunca a chave nem a mensagem. Sai com código 1 se o Groq recusar o esquema estrito e 2 se faltar a chave.
 - **O `tsx` é devDependency só do smoke test** (roda TypeScript direto). O app e os testes não dependem dele.
+
+### Calibração com o smoke test (31/10/2026, `openai/gpt-oss-20b`, modo estrito)
+
+Duas rodadas com as 5 mensagens fictícias (a segunda já pelo pipeline). O Groq aceitou o esquema estrito, todas as chamadas terminaram com `finish_reason: "stop"`, todo JSON passou no zod e os 5 casos deram o nível esperado (inclusive a mensagem com injeção, que ficou em nível 1 por atraso). A API informa os tokens de raciocínio, e eles estão incluídos nos tokens de completion.
+
+| Chamada | Tokens de prompt | Tokens de completion (máx.) | Raciocínio (máx.) | Latência |
+|---|---|---|---|---|
+| Classificação | 998 a 1.016 | 68 a 128 (128) | 25 a 83 (83) | 469 a 888 ms |
+| Redação | 367 a 426 | 75 a 87 (87) | 7 a 22 (22) | 397 a 511 ms |
+
+O maior consumo veio da mensagem com injeção (mais raciocínio). Com folga de cerca de 3x e 4,5x sobre o máximo medido, `max_completion_tokens` passou de 512 para **384** (classificação) e de 600 para **400** (redação). Tempo total por conversa: de 0,5 s (nível 2, uma chamada) a 1,3 s (duas chamadas), bem abaixo do orçamento de 12 s. Taxa de fallback na amostra: 0 de 4.
+
+### Pipeline (`index.ts`, `processarConversa`)
+
+1. Mascara a mensagem (`lib/pii`); só o texto mascarado vai ao modelo.
+2. Classifica (1ª chamada). Inválida mesmo após uma nova tentativa vira `nao_classificado` com confiança 0.
+3. Sinais: "ou" entre o modelo e as palavras-chave.
+4. `faqParaConsulta({ topico, saude })` é calculado **uma vez**, e o mesmo objeto vai para `decidirNivel` e para `acaoSugerida` (há teste com espiões).
+5. **Motivo principal:** os motivos são ordenados pelo maior `nivelMotivo` (dado o status e a FAQ), com desempate pela ordem fixa de `NIVEL_BASE`, e repetidos são removidos. Assim a ordem devolvida pelo modelo não muda o resultado: `[rastreio, reacao_adversa]` e o inverso dão o mesmo resultado.
+6. **Nível 2:** não há 2ª chamada nem resposta ao cliente. O resumo interno é montado em código (motivos, sinais, confiança, ação, razões do nível e `guiaInterno` de todos os motivos presentes).
+7. **Níveis 0 e 1:** redação (2ª chamada) com as entradas de FAQ dos motivos e os fatos do pedido, depois `verificarResposta`. Se a checagem reprovar, a resposta vira o texto de reserva; no nível 0, o nível passa a 1 e `acaoSugerida` é chamada de novo com nível 1, para ação e autonomia coerentes. O resultado marca `fallback`, e `taxaFallback(resultados)` dá a métrica (fallbacks sobre conversas com redação).
+8. **Orçamento total de 12 s.** Cada chamada usa o menor entre 8 s e o tempo restante; não se começa chamada com menos de 1,5 s. A nova tentativa (só para JSON inválido, nas duas chamadas) só ocorre se sobrar tempo.
+9. **Falhas:** qualquer erro leva a nível 2, ação `escalar_atendimento_humano`, razão "falha interna: revisão humana" e `falha.tipo` (`timeout`, `rate_limit`, `json_invalido`, `config`, `requisicao_recusada`, `indisponivel`, ou `interno` para exceção fora do cliente do modelo, como o `RangeError` da policy). O erro original não é devolvido nem logado.
+10. **Privacidade:** o resultado não contém a mensagem nem trechos dela (há teste nos caminhos de nível 0, nível 2, fallback e falha); a telemetria (`chamadas`) só traz tokens, `finish_reason`, latência e se o zod aceitou.

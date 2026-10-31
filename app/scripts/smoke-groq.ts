@@ -1,26 +1,20 @@
 // Teste manual com a chave real do Groq (fora do npm test e do CI).
 // Uso: npm run smoke   (lê GROQ_API_KEY e GROQ_MODEL de app/.env.local)
 // Objetivo: confirmar que o Groq aceita o esquema estrito e calibrar max_completion_tokens.
-// Imprime só nível, motivos, falha, checagem, tempo e tokens. Nunca imprime a chave nem a mensagem.
+// Chama o pipeline real (processarConversa). Imprime só nível, motivos, ação, falha, checagem,
+// tempo e tokens por chamada. Nunca imprime a chave, a mensagem nem a resposta redigida.
 // Código de saída: 0 ok; 1 se o Groq recusar o esquema estrito; 2 se faltar configuração.
 
-import { acaoSugerida } from "../src/lib/acoes";
-import { buscarFaq, faqParaConsulta } from "../src/lib/faq";
-import { mascararPii } from "../src/lib/pii";
-import { decidirNivel } from "../src/lib/policy";
-import { verificarResposta } from "../src/lib/agent/checagem";
 import {
   criarClienteGroq,
   FalhaAgente,
   MAX_TOKENS_CLASSIFICACAO,
   MAX_TOKENS_REDACAO,
   TIMEOUT_CHAMADA_MS,
-  tipoDoErro,
   type ClienteLLM,
-  type Uso,
 } from "../src/lib/agent/cliente";
-import { Classificacao, ESQUEMA_CLASSIFICACAO, ESQUEMA_REDACAO, Redacao } from "../src/lib/agent/esquema";
-import { fatosDoPedido, promptClassificacao, promptRedacao, type ContextoPedido } from "../src/lib/agent/prompts";
+import { processarConversa, taxaFallback, type Chamada, type ResultadoAgente } from "../src/lib/agent";
+import type { ContextoPedido } from "../src/lib/agent/prompts";
 
 interface Caso {
   id: string;
@@ -63,78 +57,28 @@ const CASOS: Caso[] = [
   },
 ];
 
-function fmtUso(u: Uso | null): string {
-  return u ? `${u.entrada}+${u.saida}` : "-";
+function fmtChamada(c: Chamada): string {
+  const u = c.uso;
+  const tokens = u ? `prompt=${u.entrada} completion=${u.saida} raciocinio=${u.raciocinio ?? "n/d"}` : "tokens=n/d";
+  return `[${c.nome}] ${tokens} finish=${c.finishReason ?? "n/d"} ${c.ms}ms zod=${c.zodOk ? "ok" : "FALHOU"}`;
 }
 
-async function rodar(cliente: ClienteLLM, caso: Caso): Promise<boolean> {
-  const inicio = Date.now();
-  const texto = mascararPii(caso.mensagem);
-  let recusado = false;
-  const linha: Record<string, string> = { caso: caso.id, esperado: caso.esperado };
-
-  try {
-    const pc = promptClassificacao(texto);
-    const rc = await cliente.gerarJson({
-      nome: "classificacao",
-      ...pc,
-      esquema: ESQUEMA_CLASSIFICACAO,
-      maxTokens: MAX_TOKENS_CLASSIFICACAO,
-      timeoutMs: TIMEOUT_CHAMADA_MS,
-    });
-    linha.tokens_classificacao = fmtUso(rc.uso);
-    const cls = Classificacao.safeParse(rc.dados);
-    if (!cls.success) {
-      linha.falha = "json_invalido (zod)";
-      return false;
-    }
-    const c = cls.data;
-    linha.motivos = c.motivos.join(",");
-    linha.topico = String(c.topico);
-    linha.confianca = c.confianca.toFixed(2);
-
-    const faq = faqParaConsulta({ topico: c.topico ?? undefined, saude: c.saude });
-    const decisao = decidirNivel({ ...caso.contexto, motivos: c.motivos, saude: c.saude, ameaca: c.ameaca, confianca: c.confianca, faqValidada: faq });
-    const acao = acaoSugerida(c.motivos[0], decisao.nivel, caso.contexto.statusEntrega, faq);
-    linha.nivel = String(decisao.nivel);
-    linha.acao = acao.acao;
-
-    if (decisao.nivel < 2) {
-      const entradas = c.motivos.flatMap((m) => buscarFaq({ motivo: m, topico: c.topico ?? undefined, saude: c.saude }));
-      const fatos = fatosDoPedido(caso.contexto);
-      const pr = promptRedacao({ textoMascarado: texto, nivel: decisao.nivel, acao, entradasFaq: entradas, fatos });
-      const rr = await cliente.gerarJson({
-        nome: "redacao",
-        ...pr,
-        esquema: ESQUEMA_REDACAO,
-        maxTokens: MAX_TOKENS_REDACAO,
-        timeoutMs: TIMEOUT_CHAMADA_MS,
-      });
-      linha.tokens_redacao = fmtUso(rr.uso);
-      const red = Redacao.safeParse(rr.dados);
-      if (!red.success) {
-        linha.falha = "json_invalido (zod, redação)";
-      } else {
-        const ch = verificarResposta(red.data.resposta, {
-          textosFaq: entradas.map((e) => e.texto),
-          fatos,
-          links: entradas.flatMap((e) => e.texto.match(/https?:\/\/[^\s)]+/g) ?? []).map((l) => l.replace(/[.,;:!?]+$/, "")),
-        });
-        linha.checagem = ch.ok ? "ok" : `falhou: ${ch.falhas.join(",")}`;
-        linha.tamanho_resposta = `${red.data.resposta.length} car.`;
-      }
-    } else {
-      linha.redacao = "não chamada (nível 2)";
-    }
-  } catch (e) {
-    const tipo = tipoDoErro(e);
-    linha.falha = tipo;
-    recusado = tipo === "requisicao_recusada";
-  } finally {
-    linha.tempo = `${Date.now() - inicio} ms`;
-    console.log(Object.entries(linha).map(([k, v]) => `${k}=${v}`).join(" | "));
-  }
-  return recusado;
+function imprimir(caso: Caso, r: ResultadoAgente, ms: number): void {
+  const campos = [
+    `caso=${caso.id}`,
+    `esperado=${caso.esperado}`,
+    `nivel=${r.nivel}`,
+    `motivos=${r.motivos.join(",") || "-"}`,
+    `topico=${r.topico ?? "null"}`,
+    `confianca=${r.confianca === null ? "n/d" : r.confianca.toFixed(2)}`,
+    `acao=${r.acao.acao}/${r.acao.autonomia}`,
+    `falha=${r.falha?.tipo ?? "-"}`,
+    `checagem=${r.checagem === null ? "n/a" : r.checagem.ok ? "ok" : `falhou: ${r.checagem.falhas.join(",")}`}`,
+    `resposta=${r.resposta === null ? "nenhuma" : `${r.resposta.length} car.`}`,
+    `tempo_total=${ms}ms`,
+  ];
+  console.log(campos.join(" | "));
+  for (const c of r.chamadas) console.log(`    ${fmtChamada(c)}`);
 }
 
 async function main(): Promise<number> {
@@ -151,8 +95,18 @@ async function main(): Promise<number> {
   console.log(
     `modelo=${cliente.modelo} | estrito=${cliente.estrito} | max_tokens=${MAX_TOKENS_CLASSIFICACAO}/${MAX_TOKENS_REDACAO} | timeout=${TIMEOUT_CHAMADA_MS} ms`,
   );
-  let recusas = 0;
-  for (const caso of CASOS) if (await rodar(cliente, caso)) recusas++;
+
+  const resultados: ResultadoAgente[] = [];
+  for (const caso of CASOS) {
+    const inicio = Date.now();
+    const r = await processarConversa({ mensagem: caso.mensagem, contexto: caso.contexto }, { cliente });
+    imprimir(caso, r, Date.now() - inicio);
+    resultados.push(r);
+  }
+
+  const t = taxaFallback(resultados);
+  console.log(`fallback: ${t.fallbacks}/${t.comRedacao}`);
+  const recusas = resultados.filter((r) => r.falha?.tipo === "requisicao_recusada").length;
   if (recusas > 0) {
     console.error(`O Groq recusou a requisição em ${recusas} caso(s): verifique o esquema estrito.`);
     return 1;
