@@ -1,6 +1,6 @@
 {
   "versao": 1,
-  "gravadoEm": "2026-10-31T14:38:20.570Z",
+  "gravadoEm": "2026-10-31T14:53:19.399Z",
   "modelo": "openai/gpt-oss-20b",
   "exemplos": {
     "onde-esta": {
@@ -26,12 +26,12 @@
         {
           "nome": "redacao",
           "dados": {
-            "resposta": "Seu pedido está em trânsito. Se precisar de mais ajuda, basta responder a esta mensagem."
+            "resposta": "Olá! Seu pedido está em trânsito. Se precisar de mais ajuda, basta responder a esta mensagem."
           },
           "uso": {
             "entrada": 448,
-            "saida": 53,
-            "raciocinio": 17
+            "saida": 57,
+            "raciocinio": 19
           }
         }
       ]
@@ -104,7 +104,7 @@
         {
           "nome": "redacao",
           "dados": {
-            "resposta": "Sentimos muito pelo atraso e pela falta de atualização do rastreio. Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui."
+            "resposta": "Sentimos muito pelo atraso e pela falta de atualização no rastreio. Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui."
           },
           "uso": {
             "entrada": 547,
@@ -115,7 +115,7 @@
       ]
     },
     "endereco-transito": {
-      "hash": "8fae8550f108b8f26935bbff663b9295d697705aee7aef2a48d3fa5b647c04e9",
+      "hash": "2699a12b290f7e974416a50dc5002e4b57f4860f58243e7ccf417387720ce11e",
       "passos": [
         {
           "nome": "classificacao",
@@ -137,11 +137,11 @@
         {
           "nome": "redacao",
           "dados": {
-            "resposta": "O endereço de entrega só pode ser mudado enquanto o pedido ainda não entrou em separação. Depois dessa etapa, a alteração não é mais possível por aqui. Seu pedido está em trânsito."
+            "resposta": "O endereço de entrega só pode ser mudado enquanto o pedido ainda não entrou em separação. Depois dessa etapa, a alteração não é mais possível. Seu pedido está em trânsito, portanto não é possível alterar o endereço agora. Se precisar de mais ajuda, responda a esta mensagem."
           },
           "uso": {
-            "entrada": 484,
-            "saida": 61,
+            "entrada": 482,
+            "saida": 80,
             "raciocinio": 5
           }
         }

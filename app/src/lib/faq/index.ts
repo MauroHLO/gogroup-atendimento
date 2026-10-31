@@ -99,7 +99,7 @@ export const FAQ_POLITICA: readonly EntradaFaq[] = [
     motivos: ["endereco", "duvida_politica"],
     topico: "endereco",
     texto:
-      "O endereço de entrega só pode ser mudado enquanto o pedido ainda não entrou em separação. Depois dessa etapa, a alteração não é mais possível por aqui.",
+      "O endereço de entrega só pode ser mudado enquanto o pedido ainda não entrou em separação. Depois dessa etapa, a alteração não é mais possível.",
     fonte: FONTE_POLITICA,
     validada: true,
     uso: "cliente",
