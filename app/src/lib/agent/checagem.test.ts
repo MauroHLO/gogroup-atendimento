@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { buscarFaq, FAQ } from "../faq";
 import { MAX_RESPOSTA } from "./esquema";
-import { contemAcaoFeita, contemPromessaContato, TEXTO_RESERVA, verificarResposta, type Permitido } from "./checagem";
+import {
+  contemAcaoFeita,
+  contemPromessaContato,
+  TEXTO_RESERVA,
+  termosDeSolucao,
+  termosSemFonte,
+  verificarResposta,
+  type Permitido,
+} from "./checagem";
 
 const faqEndereco = buscarFaq({ motivo: "endereco", saude: false });
 const faqTitular = buscarFaq({ motivo: "direitos_titular", saude: false });
@@ -210,4 +218,78 @@ describe("nível 0: promessa de contato e atividade da equipe", () => {
   ])("nível 0 aceita: %s", (frase) => {
     expect(contemPromessaContato(frase)).toBe(false);
   });
+});
+
+describe("termos de solução só se estiverem na FAQ usada", () => {
+  const faqPersonalizacao = buscarFaq({ motivo: "personalizacao_erro", saude: false }).map((e) => e.texto);
+  // Rascunho de nível 1 visto em produção (capinha com modelo errado, entregue, WhatsApp).
+  const RASCUNHO_PRODUCAO =
+    "Sentimos muito que sua capinha veio com o modelo errado. Por favor, envie fotos do produto recebido para que possamos providenciar a reposição sem custo.";
+
+  it("o rascunho visto em produção reprova, com ou sem a FAQ de personalização", () => {
+    for (const textosFaq of [faqPersonalizacao, []]) {
+      const r = verificarResposta(RASCUNHO_PRODUCAO, permitido({ textosFaq, nivel: 1 }));
+      expect(r.ok).toBe(false);
+      expect(r.falhas).toContain("termo_de_solucao");
+    }
+    expect(termosSemFonte(RASCUNHO_PRODUCAO, faqPersonalizacao).sort()).toEqual(["providenciar", "reposicao"]);
+  });
+
+  it.each([
+    "Sentimos muito pelo modelo errado. A nova produção será feita sem nenhum custo para você.",
+    "Sentimos muito pelo modelo errado. Você terá direito a uma troca gratuita.",
+    "Podemos oferecer um desconto na próxima compra.",
+    "Vamos enviar um cupom para você.",
+    "Você pode devolver o produto.",
+    "O estorno sai na fatura.",
+    "Podemos reembolsar o valor.",
+    "Enviaremos outra de graça.",
+    "Vamos repor o item.",
+  ])("reprova no nível 1 com a FAQ de personalização: %s", (frase) => {
+    const r = verificarResposta(frase, permitido({ textosFaq: faqPersonalizacao, nivel: 1 }));
+    expect(r.falhas).toContain("termo_de_solucao");
+  });
+
+  it("vale também no nível 0", () => {
+    const r = verificarResposta("Você pode pedir a troca.", permitido({ textosFaq: [], nivel: 0 }));
+    expect(r.falhas).toContain("termo_de_solucao");
+  });
+
+  it("rascunho que só pede fotos passa", () => {
+    const texto =
+      "Sentimos muito que sua capinha veio com o modelo errado. Por favor, envie fotos do produto recebido. Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui.";
+    expect(verificarResposta(texto, permitido({ textosFaq: faqPersonalizacao, nivel: 1 }))).toEqual({ ok: true, falhas: [] });
+  });
+
+  it("repetir o termo que está na FAQ usada passa", () => {
+    const texto = "A nova produção é sem custo para você, mediante foto, sujeita à análise da equipe.";
+    expect(verificarResposta(texto, permitido({ textosFaq: faqPersonalizacao, nivel: 1 })).falhas).not.toContain("termo_de_solucao");
+  });
+
+  it("o termo de uma entrada não usada não vale", () => {
+    const faqFragrancia = buscarFaq({ motivo: "fragrancia", saude: false }).map((e) => e.texto);
+    expect(termosSemFonte("Você pode solicitar uma troca.", faqFragrancia)).toEqual([]);
+    expect(termosSemFonte("Você pode solicitar uma troca.", faqPersonalizacao)).toEqual(["troca"]);
+  });
+
+  it("usa fronteira de palavra e texto normalizado", () => {
+    expect(termosDeSolucao("REPOSIÇÃO e DEVOLUÇÃO")).toEqual(["reposicao", "devolucao"]);
+    expect(termosDeSolucao("resposta, trocadilho, descontrole, providências, recuperar")).toEqual([]);
+    expect(termosDeSolucao("nome ou iniciais trocados")).toEqual([]);
+    expect(termosDeSolucao("O produto será trocado.")).toEqual(["troca"]);
+  });
+
+  it("texto de reserva não tem termo de solução", () => {
+    expect(termosDeSolucao(TEXTO_RESERVA)).toEqual([]);
+  });
+
+  it.each(FAQ.filter((e) => e.uso === "cliente").map((e) => [e.id, e] as const))(
+    "entrada da FAQ %s passa quando é a entrada usada, nos níveis 0 e 1",
+    (_id, e) => {
+      for (const nivel of [0, 1] as const) {
+        expect(termosSemFonte(e.texto, [e.texto])).toEqual([]);
+        expect(verificarResposta(e.texto, permitido({ textosFaq: [e.texto], nivel })).falhas).not.toContain("termo_de_solucao");
+      }
+    },
+  );
 });

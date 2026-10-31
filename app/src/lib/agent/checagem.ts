@@ -16,7 +16,8 @@ export type FalhaChecagem =
   | "dado_sensivel"
   | "link_sem_fonte"
   | "acao_feita"
-  | "promessa_contato"; // só no nível 0
+  | "promessa_contato" // só no nível 0
+  | "termo_de_solucao"; // níveis 0 e 1
 
 export interface Permitido {
   textosFaq: readonly string[]; // textos das entradas de FAQ usadas na redação
@@ -79,6 +80,43 @@ export const PADROES_PROMESSA_CONTATO: readonly RegExp[] = [
   /\bequipe\b[^.!?]{0,40}?\b(vai|vao|ira|irao|analisara|verificara|acompanhara|avaliara|investigara|cuidara|resolvera|entrara|retornara)\b/,
 ];
 
+// Termos de solução, custo ou resultado (níveis 0 e 1). Cada termo só passa se o MESMO termo (a mesma família:
+// "reposição" e "repor", "troca" e "trocar"...) aparecer nas entradas de FAQ usadas na redação. Assim o texto
+// pode repetir o que a política diz ("o reenvio é sem custo"), mas não inventar "reposição sem custo" ou
+// "troca gratuita". "Sem custo" e "sem nenhum custo" são termos diferentes de propósito: só a forma da FAQ passa.
+// Sobre texto normalizado (sem acento, minúsculas), com fronteiras de palavra.
+export const TERMOS_DE_SOLUCAO: Readonly<Record<string, RegExp>> = {
+  reposicao: /\b(reposicao|reposicoes|repor|repomos|reporemos|reporao|repoe|repoem|reposto|repostos)\b/,
+  // O particípio só conta depois de auxiliar ("será trocado"): "iniciais trocados" (na FAQ de personalização)
+  // descreve o erro, não uma troca.
+  troca:
+    /\b(troca|trocas|trocar|trocamos|trocaremos|trocara|troque|troquem)\b|\b(ser|sera|serao|seja|sejam|for|forem|foi|foram)\s+trocad[oa]s?\b/,
+  reembolso: /\b(reembolso|reembolsos|reembolsar|reembolsaremos|reembolsara|reembolsado|reembolsada|reembolse)\b/,
+  estorno: /\b(estorno|estornos|estornar|estornaremos|estornara|estornado|estornada|estorne)\b/,
+  devolucao: /\b(devolucao|devolucoes|devolver|devolvemos|devolveremos|devolvera|devolvido|devolvida|devolva|devolvam)\b/,
+  desconto: /\b(desconto|descontos)\b/,
+  cupom: /\b(cupom|cupons)\b/,
+  sem_custo: /\bsem\s+custos?\b/,
+  sem_nenhum_custo: /\bsem\s+nenhum\s+custo\b/,
+  gratuito: /\b(gratuito|gratuita|gratuitos|gratuitas|gratuitamente|gratis)\b/,
+  de_graca: /\bde\s+graca\b/,
+  providenciar: /\b(providenciar|providenciaremos|providenciara|providenciarao|providenciando|providencie|providenciamos)\b/,
+};
+
+// Famílias de termos de solução presentes no texto (normalizado aqui).
+export function termosDeSolucao(texto: string): string[] {
+  const t = normalizar(texto);
+  return Object.entries(TERMOS_DE_SOLUCAO)
+    .filter(([, re]) => re.test(t))
+    .map(([nome]) => nome);
+}
+
+// Termos do texto que não aparecem em nenhuma das entradas de FAQ usadas.
+export function termosSemFonte(texto: string, textosFaq: readonly string[]): string[] {
+  const naFaq = new Set(textosFaq.flatMap(termosDeSolucao));
+  return termosDeSolucao(texto).filter((t) => !naFaq.has(t));
+}
+
 export function contemPromessaContato(texto: string): boolean {
   const t = normalizar(texto);
   return PADROES_PROMESSA_CONTATO.some((p) => p.test(t));
@@ -120,6 +158,7 @@ export function verificarResposta(texto: string, permitido: Permitido): Resultad
   if (RE_DADO_SENSIVEL.test(t)) falhas.push("dado_sensivel");
   if (contemAcaoFeita(texto)) falhas.push("acao_feita");
   if (permitido.nivel === 0 && contemPromessaContato(texto)) falhas.push("promessa_contato");
+  if (termosSemFonte(texto, permitido.textosFaq).length > 0) falhas.push("termo_de_solucao");
 
   return { ok: falhas.length === 0, falhas };
 }

@@ -252,6 +252,34 @@ describe("checagem reprovada", () => {
     expect(r.nivel).toBe(1);
   });
 
+  it("termo de solução fora da FAQ usada (rascunho visto em produção) cai no texto de reserva", async () => {
+    const rascunho =
+      "Sentimos muito que sua capinha veio com o modelo errado. Por favor, envie fotos do produto recebido para que possamos providenciar a reposição sem custo.";
+    const { r } = await rodar(
+      { classificacao: [cls(["personalizacao_erro"])], redacao: [{ resposta: rascunho }] },
+      "Comprei uma capinha e veio o modelo errado.",
+      { ...CTX, statusEntrega: "entregue" },
+    );
+    expect(r.nivel).toBe(1);
+    expect(r.motivos[0]).toBe("personalizacao_erro");
+    expect(r.resposta).toBe(TEXTO_RESERVA);
+    expect(r.fallback).toBe(true);
+    expect(r.checagem?.falhas).toContain("termo_de_solucao");
+  });
+
+  it("rascunho de nível 1 que só pede fotos passa sem fallback", async () => {
+    const rascunho =
+      "Sentimos muito que sua capinha veio com o modelo errado. Por favor, envie fotos do produto recebido. Uma pessoa da nossa equipe vai analisar o seu caso e responder por aqui.";
+    const { r } = await rodar(
+      { classificacao: [cls(["personalizacao_erro"])], redacao: [{ resposta: rascunho }] },
+      "Comprei uma capinha e veio o modelo errado.",
+      { ...CTX, statusEntrega: "entregue" },
+    );
+    expect(r.nivel).toBe(1);
+    expect(r.resposta).toBe(rascunho);
+    expect(r.fallback).toBe(false);
+  });
+
   it("no nível 0, ação narrada como feita também cai no texto de reserva e vai a nível 1", async () => {
     const { r } = await rodar({ classificacao: [cls(["rastreio"])], redacao: [{ resposta: "Já entramos em contato com a transportadora." }] });
     expect(r.resposta).toBe(TEXTO_RESERVA);

@@ -253,6 +253,14 @@ Na primeira gravação, os rascunhos de nível 1 dos exemplos de atraso e de inj
 
 O valor do pedido só serve ao código, para o escalonador de valor acima de R$ 200. Ele saiu dos fatos enviados ao prompt de redação (que agora traz só status e canal) e, com isso, da lista de números que a checagem aceita: uma resposta que cite o valor reprova como `numero_sem_fonte`. Motivo: na gravação anterior, a resposta de rastreio dizia "O valor total é R$ 89,90", o que não ajuda quem pergunta onde está o pedido. Regravação: 8 de 8 com o nível e a ação esperados, sem fallback.
 
+### Termos de solução só se estiverem na FAQ usada (31/10/2026)
+
+Teste ao vivo em produção: "Comprei uma capinha e veio o modelo errado." (entregue, WhatsApp) deu nível 1, `personalizacao_erro`, e o rascunho dizia "...para que possamos providenciar a reposição sem custo". A checagem aprovou, mas a FAQ usada fala em "nova produção é sem custo", não em reposição, e o rascunho prometia o desfecho. Correções:
+
+- **Checagem `termo_de_solucao`** (níveis 0 e 1, `TERMOS_DE_SOLUCAO` em `checagem.ts`, sobre texto normalizado e com fronteiras de palavra): reposição/repor, troca/trocar, reembolso/reembolsar, estorno/estornar, devolução/devolver, desconto, cupom, "sem custo", "sem nenhum custo", gratuito/gratuita/grátis, "de graça" e providenciar só passam se o **mesmo termo** (a mesma família) aparecer nas entradas de FAQ usadas na redação. "Sem custo" e "sem nenhum custo" são termos diferentes de propósito. O particípio de trocar só conta depois de auxiliar ("será trocado"), porque a FAQ de personalização diz "iniciais trocados" no sentido de erro. Há teste que passa o texto de reserva e cada entrada da FAQ de uso "cliente" (como entrada usada, nos níveis 0 e 1).
+- **Prompts de redação:** os dois níveis dizem para não prometer nem descrever solução, custo ou resultado que não esteja escrito na FAQ. O nível 1 permite pedir os dados necessários para a análise (por exemplo, fotos), sem prometer o desfecho.
+- **`--gravar` resistente a rate limit** (só ferramenta de desenvolvimento; o app não muda): pausa de 10 s entre exemplos; em `rate_limit`, espera o `retry-after` do Groq (ou 20 s) e repete só aquele exemplo, até 3 vezes; imprime o texto de cada resultado assim que ele passa. Continua tudo ou nada. Duas tentativas anteriores pararam por `rate_limit` sem gravar; a versão nova gravou os 8 na primeira passada, sem fallback.
+
 ## 15. Rota, demonstração e painel de impacto (parte 4)
 
 ### Rota `api/agent` (`app/src/app/api/agent/route.ts` e `app/src/lib/rota/handler.ts`)

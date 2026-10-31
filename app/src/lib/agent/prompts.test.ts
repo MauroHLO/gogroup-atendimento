@@ -7,6 +7,7 @@ import {
   FECHA,
   INSTRUCAO_NIVEL_0,
   INSTRUCAO_NIVEL_1,
+  REGRA_SOLUCAO,
   fatosDoPedido,
   neutralizarDelimitador,
   promptClassificacao,
@@ -118,6 +119,31 @@ describe("prompt de redação", () => {
       fatos: fatosDoPedido(contexto),
     });
     expect(pSem.sistema).toContain("nenhuma entrada de FAQ se aplica");
+  });
+});
+
+describe("solução, custo ou resultado só se estiverem na FAQ", () => {
+  it("os prompts de redação dos níveis 0 e 1 trazem a regra", () => {
+    const p0 = promptRedacao({
+      textoMascarado: MENSAGEM,
+      nivel: 0,
+      acao: acaoSugerida("endereco", 0, "em_transito"),
+      entradasFaq: buscarFaq({ motivo: "endereco", saude: false }),
+      fatos: fatosDoPedido({ ...contexto, statusEntrega: "em_transito" }),
+    });
+    expect(p0.sistema).toContain(REGRA_SOLUCAO);
+    expect(redacao(MENSAGEM).sistema).toContain(REGRA_SOLUCAO);
+    expect(REGRA_SOLUCAO).toContain("Não prometa nem descreva solução, custo ou resultado");
+    expect(REGRA_SOLUCAO).toContain("que não esteja escrito no texto da FAQ");
+    for (const termo of ["reposição", "troca", "reembolso", "estorno", "devolução", "desconto", "cupom", "sem custo"]) {
+      expect(REGRA_SOLUCAO).toContain(termo);
+    }
+  });
+
+  it("o nível 1 permite pedir dados (fotos) sem prometer o desfecho; o nível 0 não traz essa permissão", () => {
+    expect(INSTRUCAO_NIVEL_1).toContain("pedir os dados necessários para a análise (por exemplo, fotos do produto)");
+    expect(INSTRUCAO_NIVEL_1).toContain("sem prometer o desfecho");
+    expect(INSTRUCAO_NIVEL_0).not.toContain("fotos");
   });
 });
 
