@@ -223,5 +223,23 @@
         }
       }
     }
+  },
+  "revisao_humana": {
+    "itens": 24,
+    "vereditos": {
+      "REFERENCIA": 23,
+      "AMBIGUA": 1
+    },
+    "desencontros": 9,
+    "sorteados": 15,
+    "seed_sorteio": 20261102,
+    "sorteio_reproduz": true,
+    "rotulos_da_amostra": 78,
+    "rotulos_da_amostra_revisados": 22,
+    "rotulos_da_amostra_nao_revisados": 56,
+    "vereditos_na_amostra": {
+      "REFERENCIA": 22
+    },
+    "itens_do_conjunto_de_saude": 2
   }
 }

@@ -22,7 +22,8 @@ Referências:
    Acerto contra a tag = o motivo previsto é coerente com a tag.
 2. Rótulo de leitura (data/interim/avaliacao/rotulos.csv, fora do Git): motivos, tópico e sinais de cada
    mensagem da amostra, atribuídos lendo o texto ANTES de rodar o LLM, por um único anotador (o assistente
-   de IA que escreveu este script, não uma pessoa; precisa de revisão humana). A tag não define o nível
+   de IA que escreveu este script, não uma pessoa; revisão humana parcial em revisao.csv, ver resumo_revisao).
+   A tag não define o nível
    (Financeiro pode ser cobrança, nível 2, ou pagamento pendente, nível 0), por isso o nível de referência
    usa o rótulo de leitura. No conjunto de saúde, o rótulo marca os falsos positivos do regex.
 """
@@ -49,6 +50,7 @@ RE_SAUDE_AVALIACAO = re.compile(
 
 SEED = 20261101
 POR_ESTRATO = 6
+SEED_REVISAO = 20261102
 INTERIM = A.BASE / "data" / "interim" / "avaliacao"
 OUT = A.OUT
 
@@ -174,6 +176,31 @@ def ler_rotulos() -> pd.DataFrame:
     r["ameaca"] = r.ameaca == "1"
     r["ambigua"] = r.ambigua == "1"
     return r.set_index("id")
+
+
+def resumo_revisao(ids_amostra: list[str]) -> dict:
+    """Só contagens da revisão humana (data/interim/avaliacao/revisao.csv, fora do Git). A revisão não altera
+    rotulos.csv; o bloco registra o alcance dela e confere que o sorteio se reproduz com a seed."""
+    r = pd.read_csv(INTERIM / "revisao.csv", dtype=str, encoding="utf-8-sig").fillna("")
+    assert r.id.is_unique and (r.veredito_humano != "").all(), "revisao.csv incompleto ou com id repetido"
+    na_amostra = r[r.id.isin(ids_amostra)]
+    sorteados = r[r.motivo_da_inclusao.str.startswith("sorteio")]
+    fora_do_sorteio = set(na_amostra.id) - set(sorteados.id)
+    populacao = pd.Series(sorted(set(ids_amostra) - fora_do_sorteio))
+    sorteio = populacao.sample(len(sorteados), random_state=SEED_REVISAO)
+    return {
+        "itens": int(len(r)),
+        "vereditos": {v: int(c) for v, c in r.veredito_humano.value_counts().items()},
+        "desencontros": int(r.motivo_da_inclusao.str.contains("desencontro|saúde que o modelo").sum()),
+        "sorteados": int(len(sorteados)),
+        "seed_sorteio": SEED_REVISAO,
+        "sorteio_reproduz": set(sorteio) == set(sorteados.id),
+        "rotulos_da_amostra": len(ids_amostra),
+        "rotulos_da_amostra_revisados": int(len(na_amostra)),
+        "rotulos_da_amostra_nao_revisados": len(ids_amostra) - int(len(na_amostra)),
+        "vereditos_na_amostra": {v: int(c) for v, c in na_amostra.veredito_humano.value_counts().items()},
+        "itens_do_conjunto_de_saude": int((~r.id.isin(ids_amostra)).sum()),
+    }
 
 
 def etapa_metricas() -> None:
@@ -318,6 +345,7 @@ def etapa_metricas() -> None:
             },
         },
     }
+    res["revisao_humana"] = resumo_revisao([i for i, e in entrada.items() if e["conjunto"] == "amostra"])
     (OUT / "avaliacao_classificador.json").write_text(json.dumps(res, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(res, ensure_ascii=False, indent=2))
     print(pd.DataFrame(por_tag).to_string(index=False))

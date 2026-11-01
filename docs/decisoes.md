@@ -117,7 +117,7 @@ Implementação (`app/src/lib/faq`):
 
 ## 9. Avaliação
 
-Não há rótulo verdadeiro. Plano: rotular à mão ~60 conversas e medir classificação e nível de autonomia contra elas, reportando acertos e erros, em vez de confiar só nas regras usadas na exploração. A primeira medida do classificador LLM e do nível, com a tag do agente e um rótulo de leitura feito por assistente de IA, está na seção 16; a rotulagem por uma pessoa continua pendente.
+Não há rótulo verdadeiro. Plano: rotular à mão ~60 conversas e medir classificação e nível de autonomia contra elas, reportando acertos e erros, em vez de confiar só nas regras usadas na exploração. A primeira medida do classificador LLM e do nível, com a tag do agente e um rótulo de leitura feito por assistente de IA, está na seção 16; a revisão humana desses rótulos é parcial (22 dos 78 da amostra; seção 16), e os outros 56 não foram revisados por pessoa.
 
 A avaliação manual também deve ler os textos redigidos em busca do que a checagem automática não pega: sugestões de exceção ou de prazo que a FAQ não traz, como o "agora" do exemplo de endereço (seção 7).
 
@@ -132,8 +132,9 @@ A avaliação manual também deve ler os textos redigidos em busca do que a chec
 ## 11. Pendências
 
 - Preencher a FAQ de produto e promoções se houver fonte validada.
-- Rotular a amostra de avaliação por uma pessoa (a seção 16 usa a tag do agente e um rótulo de leitura feito por assistente de IA).
-- Pedido parado em trânsito (seção 16): regra no código, validada numa amostra nova.
+- Revisar por uma pessoa os 56 rótulos da amostra que faltam (revisão parcial na seção 16: 22 de 78; os rótulos são de um assistente de IA).
+- Falta na taxonomia um motivo de troca por insatisfação (achado na revisão, seção 16): hoje cai em `troca_tamanho` ou `cancelamento`. Decidir se cria o motivo, com validação em amostra nova.
+- Pedido parado em trânsito (seção 16): segue como limitação conhecida; próximo passo é uma regra no código, validada numa amostra nova.
 - Calibrar o limiar de confiança (valor inicial 0,7) com a amostra rotulada.
 - Alinhar o script Python à regra do app. Feito: `FAQ_VALIDADA` só vale para os motivos de FAQ, como no app, e o regex de saúde usa o mesmo padrão de "fórmula". Ainda diverge (ver seção 16): o classificador Python não tem `duvida_politica` nem `direitos_titular`, e os sinais do Python olham todas as mensagens do cliente na conversa, não uma mensagem só.
 
@@ -342,7 +343,7 @@ Mede a classificação do LLM de produção (Groq `openai/gpt-oss-20b`, mesmo pr
 - **Scripts:** `analysis/avaliacao_classificador.py` (amostra, classificador de regras e métricas) e `app/scripts/avaliar-classificador.ts` (`npm run avaliar-classificador`: chama o Groq, pausa de 8 s entre chamadas, espera o retry-after em `rate_limit`, retoma de onde parou). Os agregados ficam em `data/processed/avaliacao_*.csv` e `avaliacao_classificador.json`, sem texto de mensagem. Os arquivos por mensagem (entrada, saída do modelo, rótulos, detalhe) ficam em `data/interim/avaliacao/`, fora do Git.
 - **Amostra:** conversas com mensagem de abertura do cliente e tag, estratificadas pela tag do agente, 6 por tag, seed 20261101. Dentro de cada tag ficou uma conversa por texto mascarado, porque os dados sintéticos repetem modelos de frase. São 13 tags (incluindo "Outros"), todas com pelo menos 92 textos únicos, e a amostra tem 78 conversas. A estratificação é por tag, não pelos 19 motivos do app, porque a tag é a única referência que o dataset traz.
 - **Referência 1, tag do agente:** é a coluna `tag_agente` de `conversas.csv`, a categoria que o agente atribuiu ao encerrar a conversa. São 12 categorias mais "Outros", mais grossas que os motivos. Um acerto contra a tag significa que o motivo previsto é coerente com ela (`TAG_ESPERADA` do `analise_atendimento.py`, estendida com `duvida_politica`, `direitos_titular` e `nao_classificado`). "Outros" fica fora dessa conta.
-- **Referência 2, rótulo de leitura:** motivos, tópico e sinais de cada uma das 78 mensagens, atribuídos lendo o texto antes de rodar o LLM. **O anotador foi o assistente de IA que conduziu a avaliação, não uma pessoa, e foi um anotador só.** O rótulo precisa de revisão humana. Ele é necessário porque a tag não define o nível: Financeiro pode ser cobrança (nível 2) ou pagamento pendente (nível 0). 9 das 78 mensagens foram marcadas como ambíguas.
+- **Referência 2, rótulo de leitura:** motivos, tópico e sinais de cada uma das 78 mensagens, atribuídos lendo o texto antes de rodar o LLM. **O anotador foi o assistente de IA que conduziu a avaliação, não uma pessoa, e foi um anotador só.** A revisão humana foi parcial (22 de 78; ver "Revisão humana parcial"). Ele é necessário porque a tag não define o nível: Financeiro pode ser cobrança (nível 2) ou pagamento pendente (nível 0). 9 das 78 mensagens foram marcadas como ambíguas.
 - **Nível:** previsto e de referência saem do mesmo código (`ordenarMotivos`, `faqParaConsulta`, `decidirNivel`) e do mesmo contexto do pedido (status, canal, valor, nº do contato). O previsto usa os motivos, o tópico, a confiança e os sinais do modelo, combinados por "ou" com as palavras-chave do app. A referência usa o rótulo de leitura, com confiança 1.
 - **Sinais:** usam todas as mensagens de cliente do dataset (em qualquer posição da conversa) que casam com `RE_SAUDE` ou `RE_AMEACA` do script Python. Há uma chamada por texto único e o resultado é ponderado pelas repetições. As mensagens de saúde também foram lidas, para separar os falsos positivos do regex.
 - **Execução:** 141 chamadas, sem nenhum `rate_limit`. 1 classificação saiu inválida mesmo após a nova tentativa e virou `nao_classificado` com confiança 0, logo nível 2. Era uma mensagem com dois assuntos, saúde e atraso, que já iria a nível 2 pelo sinal de saúde.
@@ -392,11 +393,31 @@ Mede a classificação do LLM de produção (Groq `openai/gpt-oss-20b`, mesmo pr
 - **Defeito encontrado (corrigido em seguida; ver "Correção do regex de saúde" abaixo):** 9 das 62 mensagens que o regex marca como saúde não falam de saúde. São mensagens sobre produtos cujo nome começa com a palavra fórmula, em pedidos de rastreio, de troca ou de devolução e em frascos quebrados. O modelo não marcou saúde em nenhuma delas. Mas o regex do app (`\bformulas?\b` em `sinais.ts`) marcou as 9, e o pipeline mandaria todas ao nível 2. É sobrescalada causada pelo código, não pelo modelo.
 - **Ameaça:** o dataset tem um único texto de ameaça, que se repete 161 vezes (o cliente anuncia que vai abrir uma reclamação) e nunca aparece na mensagem de abertura. O modelo não o marcou como ameaça; o pipeline só o pega pela palavra-chave. Com um texto só, não dá para medir o recall do modelo para ameaça.
 
+### Revisão humana parcial (01/11/2026)
+
+**Escopo.** Revisão humana **parcial**, feita por Mauro, que discutiu os casos com um assistente de IA. Cobriu 24 itens: os 9 desencontros (7 da amostra e 2 textos de saúde que o modelo não marcou), mais 15 mensagens sorteadas com seed 20261102 entre as outras 71 da amostra. Desses 24, 23 confirmaram o rótulo e 1 ficou ambíguo; nenhum rótulo foi derrubado.
+
+**Alcance.** A revisão cobriu **22 dos 78 rótulos da amostra (28,2%)**: 7 desencontros e 15 sorteados, todos confirmados. Os 2 itens restantes pertencem ao conjunto de saúde, e o ambíguo é um deles. **Os demais 56 rótulos da amostra não foram revisados por pessoa.** Quem revisou via o rótulo e a previsão do modelo, então isto é uma confirmação, não uma segunda rotulagem independente, e não permite medir concordância entre anotadores.
+
+**Efeito nos números: nenhum.** `rotulos.csv` não mudou. As métricas foram recalculadas sem chamar o modelo (`npm run avaliar-classificador -- --recalcular` e `python analysis/avaliacao_classificador.py metricas`), e todos os valores anteriores de `avaliacao_classificador.json` ficaram iguais. O arquivo só ganhou o bloco `revisao_humana`, com as contagens acima. O texto ambíguo continua contado como saúde, por decisão de projeto de errar para o lado seguro.
+
+| Medida | Antes | Depois |
+| --- | --- | --- |
+| Motivo principal igual ao rótulo de leitura (78) | 91,0% | 91,0% |
+| Nível na amostra (78) | igual 76, abaixo 1, acima 1 | igual 76, abaixo 1, acima 1 |
+| Recall de saúde pela leitura, modelo sozinho (53 textos) | 96,2% | 96,2% |
+| Recall de saúde pela leitura, pipeline (53 textos) | 100% | 100% |
+
+**Lacunas achadas na revisão:**
+
+- **A taxonomia não tem motivo de troca por insatisfação.** Hoje esse pedido cai em `troca_tamanho` ou `cancelamento`. Nada foi alterado; a decisão está nas pendências (seção 11).
+- **O pedido parado em trânsito segue como limitação conhecida** (ver Limitações). A revisão confirmou o rótulo atraso nesses casos; a regra no código continua sem ser feita.
+
 ### Limitações
 
 - **Amostra pequena:** 78 conversas, 6 por tag e de 1 a 15 por motivo. Os intervalos de confiança são largos, e uma mensagem muda vários pontos percentuais.
 - **Dados sintéticos e repetitivos:** o desempenho em texto real pode ser diferente, provavelmente pior para as regras.
-- **Referência fraca:** a tag do agente é ruidosa, e o rótulo de leitura foi feito por um assistente de IA, um anotador só, sem revisão humana. **A avaliação manual por uma pessoa continua pendente.**
+- **Referência fraca:** a tag do agente é ruidosa, e o rótulo de leitura foi feito por um assistente de IA, um anotador só, com revisão humana parcial. **Dos 78 rótulos da amostra, 56 não foram revisados por pessoa.**
 - **Escopo:** só a classificação. Fallback de redação, checagem e falhas do provedor não entram. Houve uma execução, com temperatura 0.
 - **Limitação conhecida, pedido parado com status em trânsito:** uma queixa de pedido sem movimentação há dias pode ser classificada como rastreio. Com status em trânsito, rastreio é nível 0, e foi a única subescalada da amostra (1 → 0).
   - *Mitigação atual:* no nível 0, a resposta só pode conter os fatos do pedido e o texto da FAQ, sem prometer contato, retorno ou prazo (`INSTRUCAO_NIVEL_0` e as checagens `promessa_contato` e `termo_de_solucao`). O pior caso é informar o status sem tratar a demora, não prometer algo.
