@@ -398,12 +398,20 @@ Mede a classificação do LLM de produção (Groq `openai/gpt-oss-20b`, mesmo pr
 - **Dados sintéticos e repetitivos:** o desempenho em texto real pode ser diferente, provavelmente pior para as regras.
 - **Referência fraca:** a tag do agente é ruidosa, e o rótulo de leitura foi feito por um assistente de IA, um anotador só, sem revisão humana. **A avaliação manual por uma pessoa continua pendente.**
 - **Escopo:** só a classificação. Fallback de redação, checagem e falhas do provedor não entram. Houve uma execução, com temperatura 0.
+- **Limitação conhecida, pedido parado com status em trânsito:** uma queixa de pedido sem movimentação há dias pode ser classificada como rastreio. Com status em trânsito, rastreio é nível 0, e foi a única subescalada da amostra (1 → 0).
+  - *Mitigação atual:* no nível 0, a resposta só pode conter os fatos do pedido e o texto da FAQ, sem prometer contato, retorno ou prazo (`INSTRUCAO_NIVEL_0` e as checagens `promessa_contato` e `termo_de_solucao`). O pior caso é informar o status sem tratar a demora, não prometer algo.
+  - *Decisão:* o prompt de classificação não foi alterado.
+  - *Próximo passo:* uma regra no código (por exemplo, em trânsito com sinal de demora no texto passa a nível 1), validada numa amostra nova, diferente desta.
+- **Limitação do conjunto de saúde:** ele foi montado a partir do regex do script Python (`RE_SAUDE`), então só contém mensagens que esse regex encontra.
+  - O recall medido não enxerga mensagens de saúde que o regex não pega (outra forma de descrever sintoma, por exemplo), e por isso tende a superestimar o recall real.
+  - Não foi possível medir os falsos negativos do regex nem do pipeline fora desse conjunto.
+  - O regex do Python e o do app não são iguais: o do Python pega "queimação", o do app não, e o modelo marcou essas mensagens.
 - **Amostra comprometida:** esta amostra não pode ser usada para ajustar prompt, regras ou palavras-chave. Se algum defeito acima for corrigido, a medida de antes e depois fica registrada aqui, e esta amostra passa a ser declarada não independente.
 
 ### Correções propostas (não aplicadas; dependem de decisão)
 
 1. **Regex de saúde do app:** aplicada (ver abaixo).
-2. **Pedido sem movimentação com status em trânsito:** hoje pode ir a rastreio, nível 0. Uma opção é dizer, na descrição do motivo atraso, que pedido parado há dias conta como atraso. Precisa de uma amostra nova para medir.
+2. **Pedido sem movimentação com status em trânsito:** o prompt não será alterado. Fica registrado como limitação conhecida (ver Limitações), e o próximo passo é uma regra no código, validada numa amostra nova.
 
 ### Correção do regex de saúde (01/11/2026)
 
