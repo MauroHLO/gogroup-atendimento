@@ -455,7 +455,7 @@ def main():
     titulo("3. Qualidade da tag manual (tag do agente x motivo inferido)")
     tags, conc, n = analise_tags(df)
     print(tags)
-    print(f"\nConcordância geral: {conc:.1%} em {n} conversas  |  divergência (teto): {1 - conc:.1%}")
+    print(f"\nConcordância geral: {conc:.1%} em {n} conversas  |  divergência (erro da tag ou das regras): {1 - conc:.1%}")
     tags.to_csv(OUT / "concordancia_tags.csv")
     metricas["concordancia_tag_geral"] = round(conc, 3)
     res = df[df.motivo != "sem_mensagem_cliente"].copy()

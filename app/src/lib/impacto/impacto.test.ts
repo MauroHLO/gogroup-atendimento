@@ -21,8 +21,8 @@ import {
 const PASTA = fileURLToPath(new URL("../../../../data/processed/", import.meta.url));
 const existe = existsSync(`${PASTA}metricas.json`);
 
-function lerJson(): unknown {
-  return JSON.parse(readFileSync(`${PASTA}metricas.json`, "utf-8"));
+function lerJson(arquivo: Arquivo): unknown {
+  return JSON.parse(readFileSync(`${PASTA}${arquivo}`, "utf-8"));
 }
 
 function lerCsv(arquivo: Arquivo): Map<string, Record<string, string>> {
@@ -39,8 +39,8 @@ function lerCsv(arquivo: Arquivo): Map<string, Record<string, string>> {
 }
 
 function valorNoArquivo(arquivo: Arquivo, chave: string): unknown {
-  if (arquivo === "metricas.json") {
-    return chave.split(".").reduce<unknown>((o, p) => (o as Record<string, unknown> | undefined)?.[p], lerJson());
+  if (arquivo.endsWith(".json")) {
+    return chave.split(".").reduce<unknown>((o, p) => (o as Record<string, unknown> | undefined)?.[p], lerJson(arquivo));
   }
   const ponto = chave.lastIndexOf(".");
   const linha = lerCsv(arquivo).get(chave.slice(0, ponto));
@@ -88,7 +88,8 @@ describe("derivados", () => {
     expect(DERIVADOS.falhaProcessoPct).toBe(36.1);
     expect(DERIVADOS.comunicacaoProativaPct).toBe(37.4);
     expect(DERIVADOS.concordanciaPct).toBe(71.3);
-    expect(DERIVADOS.divergenciaTetoPct).toBe(28.7);
+    expect(DERIVADOS.divergenciaPct).toBe(28.7);
+    expect(DERIVADOS.tagIncoerentesPct).toBe(36);
     expect(DERIVADOS.reacaoConcordanciaPct).toBe(20);
     expect(DERIVADOS.rotaExpressLogisticaPct).toBe(62.8);
     expect(DERIVADOS.rotaExpressReferenciaPct).toBe(20.4);

@@ -40,8 +40,8 @@ Os recontatos somam R$ 28.343 do custo estimado. É uma associação, não uma e
 
 **Como defendemos as conclusões:**
 - base validada: 4.000 conversas, 14.559 mensagens, 3.237 pedidos, nenhuma duplicada;
-- a tag manual do atendente bate com o motivo inferido em 71,3% das conversas: divergência de até 28,7%, um teto;
-- nas 40 conversas de reação adversa, a tag concorda em 20%, nenhuma tem tag própria, o atendente oferece troca em todas e nenhuma cita registro ou lote;
+- a tag manual e o classificador por regras divergem em 28,7% das conversas; parte é erro da tag e parte das regras (numa amostra estratificada por tag, 36% das tags não batem com nenhum motivo lido no texto);
+- nas 40 conversas de reação adversa, a tag manual e o classificador por regras concordam em só 20% (parte é erro da tag e parte das regras), nenhuma tem tag própria, o atendente oferece troca em todas e nenhuma cita registro ou lote;
 - 174 mensagens de clientes têm CPF, 91 telefone e 45 cartão (de 5.684), o que justifica o mascaramento.
 
 Origem de cada número: `data/processed/metricas.json` e os CSVs da mesma pasta. O painel mostra o arquivo e a chave, e `app/src/lib/impacto/impacto.test.ts` confere cada número com o arquivo.

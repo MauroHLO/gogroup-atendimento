@@ -12,12 +12,13 @@ export type Arquivo =
   | "grupos_evitaveis.csv"
   | "concordancia_tags.csv"
   | "sla.csv"
-  | "transportadoras.csv";
+  | "transportadoras.csv"
+  | "avaliacao_classificador.json";
 
 export interface Agregado {
   valor: number;
   arquivo: Arquivo;
-  // metricas.json: caminho com pontos. CSV: "<valor da 1ª coluna>.<coluna>".
+  // JSON (metricas.json, avaliacao_classificador.json): caminho com pontos. CSV: "<valor da 1ª coluna>.<coluna>".
   chave: string;
 }
 
@@ -77,6 +78,10 @@ export const AGREGADOS = {
 
   // como defendemos as conclusões
   concordanciaGeral: de(J, "concordancia_tag_geral", 0.713),
+  // Avaliação do classificador (analysis/avaliacao_classificador.py, docs/decisoes.md seção 16): amostra
+  // estratificada por tag; tags sem nenhum motivo lido no texto que seja coerente com elas.
+  tagIncoerentes: de("avaliacao_classificador.json", "contra_tag.tag_questionavel", 26),
+  tagAvaliadas: de("avaliacao_classificador.json", "contra_tag.n", 72),
   reacaoConversas: de(J, "reacao_adversa.conversas", 40),
   reacaoConcordancia: de("concordancia_tags.csv", "reacao_adversa.concordancia", 0.2),
   reacaoTagPropria: de(J, "reacao_adversa.com_tag_especifica", 0),
