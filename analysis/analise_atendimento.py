@@ -1,5 +1,5 @@
 """
-Análise de Atendimento (Gocase e GoBeauté) - Desafio AI-First GoGroup.
+Análise de Atendimento (Gocase e GoBeaute) - Desafio AI-First GoGroup.
 
 Uso (na raiz do repositório):
     python analysis/analise_atendimento.py

@@ -1,8 +1,8 @@
-# Relatório de impacto e rigor: agente de atendimento Gocase e GoBeauté
+# Relatório de impacto e rigor: agente de atendimento Gocase e GoBeaute
 
 ## Em 30 segundos
 
-- **O que é:** agente que classifica cada conversa de atendimento da Gocase e da GoBeauté e devolve uma ação com justificativa.
+- **O que é:** agente que classifica cada conversa de atendimento da Gocase e da GoBeaute e devolve uma ação com justificativa.
 - **Princípio:** o modelo interpreta e escreve; nível e ação saem de regra em código.
 - **Problema:** R$ 108.299 de custo [E]; Reclame Aqui com 10,2% das conversas [M] e 47,4% do custo [E].
 - **Autonomia:** nível 0 em 14,5%, nível 1 em 57,1% e nível 2 em 28,4% das conversas simuladas [M].

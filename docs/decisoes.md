@@ -1,4 +1,4 @@
-# Decisões de projeto: Agente de Atendimento (Gocase e GoBeauté)
+# Decisões de projeto: Agente de Atendimento (Gocase e GoBeaute)
 
 Status: desenho aprovado, números preliminares. Os valores abaixo são estimativas feitas com um classificador por regras sobre a amostra do desafio (1 em cada 3 clientes). Serão revalidados em `analysis/`.
 

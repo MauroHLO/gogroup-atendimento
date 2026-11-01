@@ -1,6 +1,6 @@
 # Contexto
 
-Desafio AI-First da GoGroup, Problema 1 (Atendimento: Gocase e GoBeauté). Entrega: link público (Vercel, sem login) e repositório público no GitHub. O desenho completo e as decisões estão em `docs/decisoes.md`: leia antes de propor mudanças.
+Desafio AI-First da GoGroup, Problema 1 (Atendimento: Gocase e GoBeaute). Entrega: link público (Vercel, sem login) e repositório público no GitHub. O desenho completo e as decisões estão em `docs/decisoes.md`: leia antes de propor mudanças.
 
 # O que estamos construindo
 

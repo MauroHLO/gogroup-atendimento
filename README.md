@@ -1,4 +1,4 @@
-# Agente de atendimento: Gocase e GoBeauté
+# Agente de atendimento: Gocase e GoBeaute
 
 Agente que lê cada conversa de atendimento, identifica o motivo real e decide, por uma regra em código, se resolve sozinho, se prepara a ação para uma pessoa aprovar ou se passa o caso a um humano. Desafio AI-First do GoGroup, Problema 1.
 

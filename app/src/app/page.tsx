@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-10">
       <header className="space-y-3">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Agente de atendimento: Gocase e GoBeauté</h1>
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Agente de atendimento: Gocase e GoBeaute</h1>
         <ul className="space-y-1 text-base text-zinc-800">
           <li>
             <strong>Problema:</strong> por que os clientes procuram o atendimento e quanto disso precisa de uma pessoa.
