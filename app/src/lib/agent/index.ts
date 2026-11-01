@@ -13,7 +13,7 @@ import {
   type Motivo,
   type Nivel,
 } from "../policy";
-import { TEXTO_RESERVA, verificarResposta, type ResultadoChecagem } from "./checagem";
+import { categoriaDoTermo, TEXTO_RESERVA, termosSemFonte, verificarResposta, type ResultadoChecagem } from "./checagem";
 import {
   FalhaAgente,
   MAX_TOKENS_CLASSIFICACAO,
@@ -33,7 +33,14 @@ import {
   MOTIVOS,
   Redacao,
 } from "./esquema";
-import { assuntoDoContato, fatosDoPedido, promptClassificacao, promptRedacao, type ContextoPedido } from "./prompts";
+import {
+  assuntoDoContato,
+  fatosDoPedido,
+  promptClassificacao,
+  promptNovaTentativa,
+  promptRedacao,
+  type ContextoPedido,
+} from "./prompts";
 import { detectarSinais } from "./sinais";
 
 export { FalhaAgente, criarClienteGroq, type ClienteLLM } from "./cliente";
@@ -306,12 +313,15 @@ export async function processarConversa(entrada: EntradaAgente, deps: Dependenci
     let resposta = red.resposta;
     const razoes = [...decisao.razoes];
 
-    // Checagem reprovou: UMA nova redação com a mesma entrada, se houver tempo. Se a nova tentativa
-    // não puder ser feita (sem tempo, falha do provedor ou JSON inválido), vale a primeira checagem.
+    // Checagem reprovou: UMA nova redação com a mesma entrada, se houver tempo. O prompt é o da 1ª tentativa
+    // mais uma linha com o tipo da reprovação (sem o texto recusado). Se a nova tentativa não puder ser
+    // feita (sem tempo, falha do provedor ou JSON inválido), vale a primeira checagem.
     if (!checagem.ok && restante() >= MIN_CHAMADA_MS) {
+      const categorias = termosSemFonte(red.resposta, permitido.textosFaq).map(categoriaDoTermo);
+      const pedidoNovo = { ...pedidoRedacao, ...promptNovaTentativa(pr, checagem.falhas, categorias) };
       let nova: { resposta: string } | null = null;
       try {
-        nova = await chamar(cliente, pedidoRedacao, (d) => Redacao.safeParse(d), false);
+        nova = await chamar(cliente, pedidoNovo, (d) => Redacao.safeParse(d), false);
       } catch (e) {
         if (!(e instanceof FalhaAgente)) throw e;
       }

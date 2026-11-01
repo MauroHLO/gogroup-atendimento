@@ -6,6 +6,9 @@ import {
   ABRE,
   FECHA,
   INSTRUCAO_NIVEL_0,
+  avisoNovaTentativa,
+  motivosDaRecusa,
+  promptNovaTentativa,
   REGRA_SOLUCAO,
   assuntoDoContato,
   instrucaoNivel1,
@@ -364,5 +367,40 @@ describe("nível 0 enxuto, um só pedido de desculpas e nenhum \"status\" nos pr
 
   it("a descrição da ação de rastreio no nível 0 não usa \"status\"", () => {
     expect(acaoSugerida("rastreio", 0, "em_transito", faqCompleta).descricao).not.toMatch(/status/i);
+  });
+});
+
+describe("aviso da nova tentativa de redação", () => {
+  it("descreve cada tipo de falha em linguagem simples", () => {
+    expect(avisoNovaTentativa(["termo_de_solucao"], ["ressalva_temporal"])).toBe(
+      "A resposta anterior foi recusada por conter ressalva temporal; reescreva sem isso, seguindo as mesmas regras.",
+    );
+    expect(avisoNovaTentativa(["numero_sem_fonte", "termo_de_solucao"], ["prazo", "solucao", "prazo"])).toBe(
+      "A resposta anterior foi recusada por citar número que não está na FAQ nem nos fatos do pedido, citar prazo que não está na FAQ e prometer ou descrever solução, custo ou resultado que não está na FAQ; reescreva sem isso, seguindo as mesmas regras.",
+    );
+  });
+
+  it("todas as falhas têm descrição", () => {
+    const todas = [
+      "formato",
+      "numero_sem_fonte",
+      "numero_por_extenso",
+      "compromisso",
+      "dado_sensivel",
+      "link_sem_fonte",
+      "acao_feita",
+      "promessa_contato",
+      "termo_de_solucao",
+    ] as const;
+    for (const f of todas) expect(motivosDaRecusa([f], []).every((d) => d.length > 0), f).toBe(true);
+    expect(motivosDaRecusa(["termo_de_solucao"], [])).toEqual(["prometer ou descrever solução, custo ou resultado que não está na FAQ"]);
+  });
+
+  it("promptNovaTentativa só acrescenta a linha do aviso; o usuário não muda", () => {
+    const p = { sistema: "SISTEMA", usuario: "USUARIO" };
+    expect(promptNovaTentativa(p, ["acao_feita"], [])).toEqual({
+      sistema: "SISTEMA\n\nA resposta anterior foi recusada por dizer que uma ação já foi feita; reescreva sem isso, seguindo as mesmas regras.",
+      usuario: "USUARIO",
+    });
   });
 });

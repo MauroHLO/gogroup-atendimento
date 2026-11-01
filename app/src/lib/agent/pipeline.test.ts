@@ -14,7 +14,9 @@ import {
   type ContextoPedido,
   type ResultadoAgente,
 } from "./index";
-import { ABRE, FECHA } from "./prompts";
+import { ABRE, FECHA, fatosDoPedido, promptRedacao } from "./prompts";
+import { normalizar } from "./sinais";
+import { buscarFaq } from "../faq";
 
 // ---------- cliente falso ----------
 
@@ -541,9 +543,13 @@ describe("nova tentativa de redação quando a checagem reprova", () => {
     expect(r.tentativasRedacao).toBe(2);
     const redacoes = cliente.pedidos.filter((p) => p.nome === "redacao");
     expect(redacoes).toHaveLength(2);
-    // mesma entrada nas duas tentativas
-    expect(redacoes[1].sistema).toBe(redacoes[0].sistema);
+    // mesma entrada nas duas tentativas; a 2ª só acrescenta a linha com o tipo da reprovação
     expect(redacoes[1].usuario).toBe(redacoes[0].usuario);
+    expect(redacoes[1].sistema).toBe(
+      `${redacoes[0].sistema}\n\nA resposta anterior foi recusada por citar prazo que não está na FAQ; reescreva sem isso, seguindo as mesmas regras.`,
+    );
+    expect(redacoes[1].sistema).not.toContain(RUIM.resposta);
+    expect(normalizar(redacoes[1].sistema)).not.toMatch(/\bamanha\b/);
     expect(r.razoes.at(-1)).toContain("a 2ª redação passou");
   });
 
@@ -598,5 +604,45 @@ describe("nova tentativa de redação quando a checagem reprova", () => {
   it("nível 2 e motivo não identificado: 0 tentativas de redação", async () => {
     expect((await rodar({ classificacao: [cls(["reacao_adversa"])] })).r.tentativasRedacao).toBe(0);
     expect((await rodar({ classificacao: [cls(["nao_classificado"])] }, "Olá.")).r.tentativasRedacao).toBe(0);
+  });
+});
+
+describe("nova tentativa informa o tipo da reprovação", () => {
+  const CTX_END = { ...CTX, statusEntrega: "em_transito" as const };
+  const MSG_END = "Quero mudar o endereço de entrega.";
+  const RECUSADO = "Não é possível alterar o endereço agora. Já encaminhamos o seu pedido.";
+
+  it("a 2ª tentativa traz os tipos de falha em linguagem simples, sem o texto recusado", async () => {
+    const { cliente } = await rodar(
+      { classificacao: [cls(["endereco"])], redacao: [{ resposta: RECUSADO }, RESPOSTA_OK] },
+      MSG_END,
+      CTX_END,
+    );
+    const [primeira, segunda] = cliente.pedidos.filter((p) => p.nome === "redacao");
+    const aviso = segunda.sistema.slice(primeira.sistema.length);
+    expect(segunda.sistema.startsWith(primeira.sistema)).toBe(true);
+    expect(aviso).toContain("A resposta anterior foi recusada por");
+    expect(aviso).toContain("dizer que uma ação já foi feita");
+    expect(aviso).toContain("conter ressalva temporal");
+    expect(aviso).toContain("reescreva sem isso");
+    expect(segunda.sistema).not.toContain(RECUSADO);
+    expect(normalizar(aviso)).not.toMatch(/\bagora\b|encaminhamos/);
+  });
+
+  it("o prompt da 1ª tentativa é idêntico ao montado por promptRedacao (sem aviso)", async () => {
+    const { r, cliente } = await rodar({ classificacao: [cls(["rastreio"])], redacao: [RESPOSTA_OK] });
+    const esperado = promptRedacao({
+      textoMascarado: MSG,
+      nivel: 0,
+      acao: r.acao,
+      motivo: "rastreio",
+      statusEntrega: CTX.statusEntrega,
+      entradasFaq: buscarFaq({ motivo: "rastreio", saude: false }),
+      fatos: fatosDoPedido(CTX),
+    });
+    const [primeira] = cliente.pedidos.filter((p) => p.nome === "redacao");
+    expect(primeira.sistema).toBe(esperado.sistema);
+    expect(primeira.usuario).toBe(esperado.usuario);
+    expect(primeira.sistema).not.toContain("recusada");
   });
 });

@@ -5,6 +5,7 @@
 import type { AcaoSugerida } from "../acoes";
 import type { EntradaFaq, TopicoPolitica } from "../faq";
 import type { Canal, Motivo, Nivel, StatusEntrega } from "../policy";
+import type { CategoriaTermo, FalhaChecagem } from "./checagem";
 
 export const ABRE = "<mensagem_cliente>";
 export const FECHA = "</mensagem_cliente>";
@@ -235,4 +236,48 @@ Regras:
 Responda somente com um objeto JSON com o campo resposta.`;
 
   return { sistema, usuario: delimitar(d.textoMascarado) };
+}
+
+// Nova tentativa de redação (só depois de a checagem reprovar): o prompt ganha uma linha com o TIPO da
+// reprovação, em linguagem simples, sem repetir o texto recusado. A primeira tentativa não muda.
+const DESCRICAO_FALHA: Readonly<Record<Exclude<FalhaChecagem, "termo_de_solucao">, string>> = {
+  formato: "estar vazia ou longa demais",
+  numero_sem_fonte: "citar número que não está na FAQ nem nos fatos do pedido",
+  numero_por_extenso: "citar número por extenso",
+  compromisso: "fazer promessa ou garantia",
+  dado_sensivel: "mencionar CPF, cartão ou senha",
+  link_sem_fonte: "conter link que não está na FAQ",
+  acao_feita: "dizer que uma ação já foi feita",
+  promessa_contato: "prometer contato ou retorno, ou dizer o que a equipe está fazendo",
+};
+const DESCRICAO_TERMO: Readonly<Record<CategoriaTermo, string>> = {
+  solucao: "prometer ou descrever solução, custo ou resultado que não está na FAQ",
+  prazo: "citar prazo que não está na FAQ",
+  ressalva_temporal: "conter ressalva temporal",
+};
+
+export function motivosDaRecusa(falhas: readonly FalhaChecagem[], categorias: readonly CategoriaTermo[]): string[] {
+  const itens: string[] = [];
+  for (const f of falhas) {
+    if (f === "termo_de_solucao") {
+      const cats = [...new Set(categorias)];
+      itens.push(...(cats.length ? cats.map((c) => DESCRICAO_TERMO[c]) : [DESCRICAO_TERMO.solucao]));
+    } else {
+      itens.push(DESCRICAO_FALHA[f]);
+    }
+  }
+  return [...new Set(itens)];
+}
+
+function juntar(itens: readonly string[]): string {
+  return itens.length <= 1 ? (itens[0] ?? "") : `${itens.slice(0, -1).join(", ")} e ${itens.at(-1)}`;
+}
+
+export function avisoNovaTentativa(falhas: readonly FalhaChecagem[], categorias: readonly CategoriaTermo[]): string {
+  return `A resposta anterior foi recusada por ${juntar(motivosDaRecusa(falhas, categorias))}; reescreva sem isso, seguindo as mesmas regras.`;
+}
+
+// Prompt da 2ª tentativa: o da 1ª, sem mudança, mais a linha do aviso no fim do sistema.
+export function promptNovaTentativa(primeiro: Prompt, falhas: readonly FalhaChecagem[], categorias: readonly CategoriaTermo[]): Prompt {
+  return { sistema: `${primeiro.sistema}\n\n${avisoNovaTentativa(falhas, categorias)}`, usuario: primeiro.usuario };
 }

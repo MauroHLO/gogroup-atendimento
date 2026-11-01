@@ -119,6 +119,27 @@ export const TERMOS_DE_SOLUCAO: Readonly<Record<string, RegExp>> = {
   por_ora: /\bpor\s+ora\b/,
 };
 
+// Categoria de cada família, para dizer à nova tentativa de redação o tipo da reprovação.
+export type CategoriaTermo = "solucao" | "prazo" | "ressalva_temporal";
+const FAMILIAS_PRAZO = new Set([
+  "amanha",
+  "hoje",
+  "depois_de_amanha",
+  "nesta_semana",
+  "proxima_semana",
+  "dia_da_semana",
+  "fim_do_dia",
+  "proximas_horas",
+  "ainda_hoje",
+]);
+const FAMILIAS_RESSALVA = new Set(["agora", "por_enquanto", "no_momento", "atualmente", "por_ora"]);
+
+export function categoriaDoTermo(familia: string): CategoriaTermo {
+  if (FAMILIAS_PRAZO.has(familia)) return "prazo";
+  if (FAMILIAS_RESSALVA.has(familia)) return "ressalva_temporal";
+  return "solucao";
+}
+
 // Famílias de termos de solução presentes no texto (normalizado aqui).
 export function termosDeSolucao(texto: string): string[] {
   const t = normalizar(texto);
