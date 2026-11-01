@@ -135,7 +135,7 @@ A avaliação manual também deve ler os textos redigidos em busca do que a chec
 - Rotular a amostra de avaliação por uma pessoa (a seção 16 usa a tag do agente e um rótulo de leitura feito por assistente de IA).
 - Pedido parado em trânsito (seção 16): regra no código, validada numa amostra nova.
 - Calibrar o limiar de confiança (valor inicial 0,7) com a amostra rotulada.
-- Alinhar o script Python à regra do app: hoje `FAQ_VALIDADA` zera qualquer motivo, e o script não tem `duvida_politica` nem `direitos_titular` (que no app exigem entrada de FAQ para nível 0).
+- Alinhar o script Python à regra do app. Feito: `FAQ_VALIDADA` só vale para os motivos de FAQ, como no app, e o regex de saúde usa o mesmo padrão de "fórmula". Ainda diverge (ver seção 16): o classificador Python não tem `duvida_politica` nem `direitos_titular`, e os sinais do Python olham todas as mensagens do cliente na conversa, não uma mensagem só.
 
 ## 12. Implementação da regra (`app/src/lib/policy`)
 
@@ -406,6 +406,10 @@ Mede a classificação do LLM de produção (Groq `openai/gpt-oss-20b`, mesmo pr
   - O recall medido não enxerga mensagens de saúde que o regex não pega (outra forma de descrever sintoma, por exemplo), e por isso tende a superestimar o recall real.
   - Não foi possível medir os falsos negativos do regex nem do pipeline fora desse conjunto.
   - O regex do Python e o do app não são iguais: o do Python pega "queimação", o do app não, e o modelo marcou essas mensagens.
+- **Regra do Python ainda não alinhada à do app:** duas diferenças afetam a simulação de autonomia do painel.
+  - O classificador por regras não tem `duvida_politica` nem `direitos_titular`, que no app vão a nível 0 com a FAQ. Alinhar exigiria regras novas de classificação e mudaria os números por motivo, então não foi feito.
+  - Os sinais de saúde e ameaça do Python olham todas as mensagens do cliente na conversa; o app olha uma mensagem. Os dois regex também diferem em detalhes de fronteira de palavra e contexto (listados em `sinais.ts`).
+  - Já alinhado: o padrão de "fórmula", "queimação" e `FAQ_VALIDADA` restrito aos motivos de FAQ.
 - **Amostra comprometida:** esta amostra não pode ser usada para ajustar prompt, regras ou palavras-chave. Se algum defeito acima for corrigido, a medida de antes e depois fica registrada aqui, e esta amostra passa a ser declarada não independente.
 
 ### Correções propostas (não aplicadas; dependem de decisão)

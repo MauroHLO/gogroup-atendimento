@@ -33,6 +33,8 @@ SLA_MIN = {"whatsapp": 30, "email": 24 * 60, "reclame_aqui": 48 * 60}
 HORARIO = (8, 20)  # agentes atendem das 8h às 20h
 LIMITE_VALOR = 200.0  # R$; cobre ~95% dos pedidos
 FAQ_VALIDADA = set()  # motivos com entrada validada na FAQ (hoje nenhum)
+# Como em app/src/lib/policy (MOTIVOS_FAQ): só estes motivos podem ir a nível 0 por FAQ validada.
+MOTIVOS_FAQ = {"duvida_produto", "promo_cupom", "duvida_politica", "direitos_titular"}
 
 # Mapa motivo -> tags do agente consideradas coerentes
 TAG_ESPERADA = {
@@ -169,7 +171,7 @@ NIVEL_BASE = {
 
 
 def nivel_motivo(motivo: str, status_entrega: str) -> int:
-    if motivo in FAQ_VALIDADA:
+    if motivo in FAQ_VALIDADA and motivo in MOTIVOS_FAQ:
         return 0
     if motivo == "rastreio" and status_entrega != "em_transito":
         return 1  # pedido já entregue ou parado: verificar
