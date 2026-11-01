@@ -93,3 +93,11 @@ export function dataBrasilia(iso: string): string {
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
 }
+
+// Bloco "Checagens do texto" quando não houve checagem: nível 2 não tem texto ao cliente; no nível 0 ou 1
+// sem checagem (motivo não identificado), o texto é o de reserva, sem redação do modelo.
+export function checagemNaoAplicavel(nivel: Nivel): string {
+  return nivel === 2
+    ? "Não se aplica: no nível 2 não há texto ao cliente."
+    : "Não se aplica: texto de reserva, sem redação do modelo.";
+}

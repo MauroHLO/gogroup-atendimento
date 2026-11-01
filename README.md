@@ -102,7 +102,7 @@ Modelo padrão: `openai/gpt-oss-20b` no Groq, com temperatura 0. Uma conversa fa
 
 ```bash
 cd app
-npm test          # 1.342 testes (vitest)
+npm test          # 1.344 testes (vitest)
 npx tsc --noEmit
 npm run lint
 npm run build

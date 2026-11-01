@@ -9,6 +9,7 @@ import type { Nivel } from "@/lib/policy";
 import {
   AUTONOMIA,
   CHECAGEM,
+  checagemNaoAplicavel,
   dataBrasilia,
   FALHA,
   horaBrasilia,
@@ -128,7 +129,7 @@ function Detalhes({ r, ms, mensagemEnviada }: { r: RespostaRota; ms: number; men
 
       <Bloco titulo="Checagens do texto">
         {r.checagem === null ? (
-          <p>Não se aplica: no nível 2 não há texto ao cliente.</p>
+          <p>{checagemNaoAplicavel(r.nivel)}</p>
         ) : r.checagem.ok ? (
           <p>
             <span aria-hidden="true">✓ </span>Aprovado: sem números sem fonte, promessas, pedido de dados sensíveis ou
