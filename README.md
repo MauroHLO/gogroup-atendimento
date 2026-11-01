@@ -2,7 +2,7 @@
 
 Agente que lê cada conversa de atendimento, identifica o motivo real e decide, por uma regra em código, se resolve sozinho, se prepara a ação para uma pessoa aprovar ou se passa o caso a um humano. Desafio AI-First do GoGroup, Problema 1.
 
-**Demo pública (sem login):** https://gogroup-atendimento.vercel.app
+**Demo pública (sem login):** https://gogroup-atendimento.vercel.app · **Repositório:** https://github.com/MauroHLO/gogroup-atendimento
 
 > Os dados do desafio são sintéticos, e os exemplos da demo e dos testes foram escritos por nós. Não digite dados reais na demo.
 
