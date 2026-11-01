@@ -334,6 +334,14 @@ Na gravação anterior, a resposta de endereço em trânsito repetia a situaçã
 - **Variável nova ou alterada só vale depois de um Redeploy.**
 - Sem chave, a rota responde com falha `config` em nível 2, e os exemplos prontos usam a contingência.
 
+### Regressão final na versão publicada (01/11/2026)
+
+Registro informado por Mauro, que revisou os resultados; as mensagens foram digitadas na demo por uma IA com acesso ao navegador. O texto das mensagens não é guardado.
+
+- **Escopo:** 15 mensagens fictícias: os exemplos 1, 4, 5, 7 e 8, mais 10 mensagens livres (pagamento pendente; cancelamento com pedido entregue; fora de assunto; endereço em separação; capinha com modelo errado; cupom; rastreio em trânsito; ameaça jurídica; reação na pele; CPF e e-mail com instrução embutida).
+- **Resultado:** nível esperado em todas. CPF e e-mail chegaram ao modelo mascarados, e a instrução não alterou a resposta. A mensagem fora de assunto virou não classificada, com texto de reserva e uma chamada ao modelo. No cupom, a checagem reprovou a redação duas vezes e entrou o texto de reserva, em nível 1. Ameaça e saúde foram a nível 2, só com resumo interno.
+- **Fora desta regressão:** os exemplos 2, 3 e 6 (nível 2), exercitados em baterias anteriores.
+
 ## 16. Avaliação do classificador (01/11/2026)
 
 Mede a classificação do LLM de produção (Groq `openai/gpt-oss-20b`, mesmo prompt e mesmo mascaramento de PII) e o nível final que o código decidiria com ela. Só a etapa de classificação: a redação e a checagem não entram, então o nível 0 que cairia para 1 por fallback não aparece aqui. Nada de prompt, regra ou escalador foi alterado com base nesta amostra.

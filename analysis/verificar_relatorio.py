@@ -108,6 +108,8 @@ def limpar_corpo(corpo: str) -> str:
     t = re.sub(r"[Nn]íve(l|is)\s+\d(\s+(ou|e)\s+\d)?", " ", t)
     t = re.sub(r"[Ss]eç(ão|ões)\s+\d+", " ", t)
     t = re.sub(r"defeitos \d e \d", " ", t)
+    t = re.sub(r"exemplos (prontos )?\d(, \d)* e \d", " ", t)  # numeração dos exemplos da demo
+    t = re.sub(r"\b[a-z]{3}/\d{4}", " ", t)  # mês/ano
     t = re.sub(r"1 em cada 3|× 3", " ", t)  # definição da amostra
     t = re.sub(r"IC 95%", "IC", t)
     t = re.sub(r"Problema 1\b", " ", t)

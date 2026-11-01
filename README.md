@@ -4,6 +4,8 @@ Agente que lê cada conversa de atendimento, identifica o motivo real e decide, 
 
 **Demo pública (sem login):** https://gogroup-atendimento.vercel.app · **Repositório:** https://github.com/MauroHLO/gogroup-atendimento · **Relatório de impacto e rigor:** [docs/relatorio.md](docs/relatorio.md)
 
+**Leia primeiro:** [docs/relatorio.md](docs/relatorio.md) (começa com um resumo de 30 segundos)
+
 > Os dados do desafio são sintéticos, e os exemplos da demo e dos testes foram escritos por nós. Não digite dados reais na demo.
 
 ## Como testar em 2 minutos

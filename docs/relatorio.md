@@ -1,5 +1,18 @@
 # Relatório de impacto e rigor: agente de atendimento Gocase e GoBeauté
 
+## Em 30 segundos
+
+- **O que é:** agente que classifica cada conversa de atendimento da Gocase e da GoBeauté e devolve uma ação com justificativa.
+- **Princípio:** o modelo interpreta e escreve; nível e ação saem de regra em código.
+- **Problema:** R$ 108.299 de custo [E]; Reclame Aqui com 10,2% das conversas [M] e 47,4% do custo [E].
+- **Autonomia:** nível 0 em 14,5%, nível 1 em 57,1% e nível 2 em 28,4% das conversas simuladas [M].
+- **Impacto, não medido em produção:** teto de R$ 8.294 no nível 0 [E]; R$ 3.239 a R$ 8.096 no nível 1 [H].
+- **Segurança:** CPF, telefone, e-mail e cartão mascarados antes do modelo; saúde e ameaça só com humano; nada executa em sistema real.
+- **Evidência:** 1.368 testes automatizados [R]; motivo igual ao rótulo em 91,0% de 78 conversas [M]; nível igual em 76 delas [M].
+- **Limites:** dados sintéticos; 22 dos 78 rótulos revisados por pessoa [M]; simulação com classificador por regras.
+- **Pedido:** piloto só de nível 0, em rastreio e pagamento pendente: 476 conversas (13,4%) [M], teto de R$ 7.668 [E].
+- **Links:** [demo](https://gogroup-atendimento.vercel.app) · [repositório](https://github.com/MauroHLO/gogroup-atendimento)
+
 Desafio AI-First do GoGroup, Problema 1. Demo pública: https://gogroup-atendimento.vercel.app. Decisões completas: [`decisoes.md`](decisoes.md).
 
 **Como ler os números.** Cada número traz o tipo. **[M]** medido na amostra (conversas de 1 em cada 3 clientes). **[E]** estimado para a população (amostra × 3; todo valor em R$ da análise). **[H]** hipótese. **[A]** associação, não causa. **[R]** registro do projeto: testes, telemetria, preço público, câmbio. A tabela "número → fonte" está no apêndice, e `analysis/verificar_relatorio.py` confere cada linha contra os arquivos.
@@ -20,7 +33,15 @@ Desafio AI-First do GoGroup, Problema 1. Demo pública: https://gogroup-atendime
 
 Nada disso é economia medida: o agente não rodou em produção.
 
-**O que se pede à empresa.** Um piloto só com nível 0, em rastreio e pagamento pendente. Esses dois motivos são 476 das 3.541 conversas simuladas (13,4%) [M]. O piloto mede o que este relatório só pode supor: aprovação na revisão por amostragem, reprovação nas checagens, SLA e recontato.
+**Por que isso é bom para a empresa.**
+
+- **Fila:** 20,3% das conversas de WhatsApp com resposta do atendente passam do SLA [M]. Preparar o caso pode reduzir o trabalho de cada atendimento; esse efeito é hipótese [H].
+- **Fora do horário:** 30,3% das conversas chegam fora do horário [M]. Só o nível 0 responde na hora, em 14,5% das conversas simuladas [M]; as demais esperam uma pessoa.
+- **Custo concentrado:** o Reclame Aqui tem 47,4% do custo [E]. O nível 2 prioriza e resume esses casos, sem resposta automática em canal público.
+- **Auditoria:** a decisão fica em código, com o mesmo resultado para a mesma entrada, coberta por 1.368 testes [R].
+- **Dados pessoais:** das 5.684 mensagens de clientes, 174 têm CPF e 45 têm cartão [M]; o mascaramento ocorre antes do envio ao modelo.
+
+**O que se pede à empresa.** Um piloto só com nível 0, em rastreio e pagamento pendente. Nesse nível, os dois motivos somam 476 das 3.541 conversas simuladas (13,4%) [M]; o teto do piloto é R$ 7.668 [E], a parte do teto do nível 0 que cabe neles. O piloto mede o que este relatório só pode supor: aprovação na revisão por amostragem, reprovação nas checagens, SLA e recontato.
 
 **Principais limites.** Dados sintéticos. Amostra de avaliação pequena (78 conversas), com rótulos feitos por IA e revisão humana parcial (22 dos 78). Simulação feita com o classificador por regras, não com o modelo do agente. Detalhes na seção 8.
 
@@ -32,11 +53,11 @@ Base validada: 4.000 conversas, 14.559 mensagens, 3.237 pedidos, nenhuma duplica
 |---|---|---|---|
 | Custo de atendimento | R$ 108.299 | [E] | É a base de toda conta de impacto. |
 | Reclame Aqui | 47,4% do custo, 10,2% das conversas | [E], [M] | Cada conversa custa R$ 42,00, contra R$ 4,80 no WhatsApp [E]. Evitar a escalada pesa mais que automatizar volume. |
-| Recontato | 36,1% no Reclame Aqui, 17,1% nos demais canais; R$ 28.343 no total | [M], [E] | O Reclame Aqui tende a ser fim de escalada. O recontato é o custo de não resolver antes. |
+| Recontato | 36,1% no Reclame Aqui, 17,1% nos demais canais; R$ 28.343 no total | [M], [E] | O recontato sugere que o canal recebe casos que o atendimento anterior não resolveu. O recontato é o custo de não resolver antes. |
 | Atraso e rastreio | 19,5% + 17,3% = 36,8% do custo | [E] | Maior grupo de custo, e parte dele é informação que o cliente poderia receber sem perguntar. |
 | Atraso com pedido em trânsito | 72% | [M] | O aviso proativo é possível: o pedido ainda está em movimento quando a queixa chega. |
-| SLA no WhatsApp | 20,3% passam de 30 min (mediana 11,8 min) | [M] | A fila estoura mesmo no horário comercial. Preparar o caso reduz o trabalho de cada atendimento. |
-| Fora do horário | 30,3% | [M] | Nessas horas só o bot responde, e é onde a resposta factual do nível 0 mais ajuda. |
+| SLA no WhatsApp | 20,3% passam de 30 min (mediana 11,8 min) | [M] | A fila estoura mesmo no horário comercial. Preparar o caso pode reduzir o trabalho de cada atendimento [H]. |
+| Fora do horário | 30,3% | [M] | Nessas horas só o bot responde. É a faixa em que uma resposta imediata evita a espera até 8h. |
 | Rota Express | 62,8% dos contatos logísticos, 20,4% da referência (3,08×) | [A] | Indica onde investigar a transportadora. Não prova causa, e a base de comparação é aproximada. |
 
 **Contatos potencialmente evitáveis [H].** 1.445 conversas (36,1%) são falha de processo, e 1.496 (37,4%) caberiam em comunicação proativa ou autoatendimento [M para a contagem]. Evitá-las depende de corrigir a causa, não só do agente; por isso o relatório não as converte em reais.
@@ -109,7 +130,16 @@ flowchart TD
 
 **Testes automatizados:** 1.368 [R], sem chamar o modelo. Cobrem regra de nível, ação, FAQ, mascaramento, checagens, pipeline, rota e os números do painel contra `data/processed/`.
 
-**Testes ao vivo na versão publicada.** Os documentos registram dois: um caso de erro de personalização e uma bateria de 22 cenários [R], que acharam os defeitos 3 e 4 da tabela abaixo. O registro guarda a contagem e os defeitos, não a lista dos 22. Os tipos de caso que os documentos sustentam são os 8 exemplos publicados (rastreio em trânsito, reação adversa, Reclame Aqui, atraso, endereço em trânsito, cobrança duplicada, injeção de instrução, dúvida de política) e os motivos que o registro cita na correção da bateria (atraso, rastreio, cancelamento, erro de personalização).
+**Testes ao vivo na versão publicada [R].**
+
+- **Bateria de 22 cenários:** achou os defeitos 3 e 4 da tabela abaixo.
+- **Regressão final, 01/11/2026:** 15 mensagens fictícias digitadas na demo por uma IA com acesso ao navegador, com os resultados revisados por Mauro. Foram os exemplos prontos 1, 4, 5, 7 e 8, mais 10 mensagens livres: pagamento pendente; cancelamento com pedido entregue; fora de assunto; endereço com pedido em separação; capinha com modelo errado; cupom; rastreio em trânsito; ameaça jurídica; reação na pele; CPF e e-mail com instrução embutida.
+- **Resultado da regressão:** nível esperado em todas.
+  - CPF e e-mail chegaram ao modelo mascarados, e a instrução não alterou a resposta, que trouxe só o status do pedido.
+  - A mensagem fora de assunto virou não classificada, com texto de reserva e uma única chamada ao modelo.
+  - No cupom, a checagem reprovou a redação duas vezes e entrou o texto de reserva, em nível 1.
+  - Ameaça e saúde foram a nível 2, só com resumo interno.
+- **Fora da regressão:** os exemplos 2, 3 e 6 (nível 2) foram exercitados em baterias anteriores.
 
 **Avaliação do classificador** ([`decisoes.md`](decisoes.md), seção 16), 78 conversas, 6 por tag do agente:
 
@@ -142,7 +172,7 @@ A revisão humana foi feita vendo o rótulo e a previsão, então é confirmaç�
 
 Valores no período da amostra, sem extrapolação. Fonte: `analysis/cenarios_impacto.py` e `data/processed/cenarios.json`. Os itens não devem ser somados como previsão.
 
-**(a) Teto do nível 0: R$ 8.294 [E].** É 8,2% do custo simulado (R$ 101.689) e 7,7% do custo total. É teto nesta simulação, porque supõe que todo o custo dessas conversas sumiria. Mas o custo é por canal e não distingue bot de atendente, e parte dessas conversas pode já custar pouco. O teto pode subir se a FAQ de produto for validada ou se o classificador da simulação ganhar os motivos que faltam.
+**(a) Teto do nível 0: R$ 8.294 [E].** É 8,2% do custo simulado (R$ 101.689) e 7,7% do custo total. Rastreio em trânsito e pagamento pendente, os motivos do piloto, respondem por R$ 7.668 [E], ou 92,4% desse teto. É teto nesta simulação, porque supõe que todo o custo dessas conversas sumiria. Mas o custo é por canal e não distingue bot de atendente, e parte dessas conversas pode já custar pouco. O teto pode subir se a FAQ de produto for validada ou se o classificador da simulação ganhar os motivos que faltam.
 
 **(b) Nível 1: cenários sobre R$ 32.386 [E].** **O percentual de redução é hipótese, não dado.** Nada na análise mede tempo de tratamento, e a conta também supõe custo proporcional ao tempo. Os valores 10% e 25% foram escolhidos por nós para mostrar a ordem de grandeza. Cada ponto percentual vale R$ 324.
 
@@ -164,7 +194,7 @@ A onda do nível 1 (seção 9) mede esse percentual e substitui a hipótese.
 | **Caso base:** 10.623 conversas [E] | **R$ 8,49**, ou R$ 0,80 por mil | calculado |
 | **Caso pessimista:** preço maior e o dobro de chamadas [H] | **R$ 24,14**, ou R$ 2,27 por mil; 0,022% do custo total | calculado |
 
-A página [groq.com/pricing](https://groq.com/pricing) não entregou a tabela na consulta automatizada. Um resultado de busca que a reproduz trazia US$ 0,10 e US$ 0,50, não confirmados na página; por isso esses valores entram só no caso pessimista. As medidas vêm de 5 mensagens fictícias, não de texto real. Ficam fora da conta hospedagem, integração, monitoramento e o tempo de quem aprova ou revisa, que devem ser os custos relevantes.
+A página [groq.com/pricing](https://groq.com/pricing) não entregou a tabela na consulta automatizada. O rastreador [pricingsaas.com](https://pricingsaas.com/companies/groq/diffs/2025Q4) registra que US$ 0,10 e US$ 0,50 por milhão (entrada e saída) vigoravam até out/2025 e que, depois da redução, a entrada passou a US$ 0,075 e a saída a US$ 0,30, com a captura mais recente mostrando US$ 0,08 de entrada [R]. Os valores antigos entram no caso pessimista como limite superior. Recomenda-se conferir groq.com/pricing no navegador. As medidas vêm de 5 mensagens fictícias, não de texto real. Ficam fora da conta hospedagem, integração, monitoramento e o tempo de quem aprova ou revisa, que devem ser os custos relevantes.
 
 ## 8. Riscos e limites
 
@@ -184,7 +214,7 @@ A página [groq.com/pricing](https://groq.com/pricing) não entregou a tabela na
 
 ## 9. Próximos passos
 
-1. **Piloto só com nível 0**, em rastreio (435 conversas) e pagamento pendente (41) [M], com amostragem de revisão humana.
+1. **Piloto só com nível 0**, em rastreio com pedido em trânsito (435 conversas) e pagamento pendente (41) [M], com amostragem de revisão humana. Contam só as conversas sem escalonadores; o teto é R$ 7.668 [E].
 2. **Métricas de decisão:** taxa de aprovação humana, reprovação nas checagens, SLA e recontato. Os limiares de avanço devem ser definidos com a operação antes do início.
 3. **Rollout em ondas:** primeiro o nível 0; depois o nível 1 com aprovação, medindo o tempo de tratamento; por último, ampliar a FAQ validada.
 4. **Pedido parado em trânsito:** regra no código, validada em amostra nova.
@@ -197,6 +227,7 @@ A página [groq.com/pricing](https://groq.com/pricing) não entregou a tabela na
 - **Implementação:** com Claude Code, em commits pequenos, e cada alteração de regra acompanhada de testes e do registro em `decisoes.md`.
 - **Delegado à IA:** escrita de código e testes, scripts de análise, rótulos de leitura iniciais, varreduras e rascunhos de documentação.
 - **Com a pessoa:** decisões de autonomia, aprovação das correções e revisão do gabarito.
+- **Testes ao vivo na versão publicada:** executados por uma IA com acesso ao navegador; os resultados foram revisados por Mauro.
 - **Controle:** os defeitos da seção 6 vieram de leitura dos resultados, de testes ao vivo e da avaliação. A correção entra com teste, e a medida de antes e depois fica registrada.
 
 ## Apêndice
@@ -334,3 +365,8 @@ Os arquivos sem caminho estão em `data/processed/`. `doc:` indica que o número
 | 6 | `avaliacao_classificador.json#por_estrato` | M |
 | 435 | `cenarios.json#piloto.rastreio` | M |
 | 41 | `cenarios.json#piloto.pagamento_pendente` | M |
+| 7.668 | `cenarios.json#piloto.teto_rs` | E |
+| 92,4 | `cenarios.json#piloto.pct_do_teto_nivel_0` | E |
+| 0,08 | `cenarios.json#custo_do_agente.preco.captura_recente.entrada` | R |
+| 15 | `doc:docs/decisoes.md` | R |
+| 10 | `doc:docs/decisoes.md` | R |

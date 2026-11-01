@@ -32,9 +32,11 @@ PRECO_MODELO = {
     "modelo": "openai/gpt-oss-20b",
     "consulta": "2026-11-01",
     "documentacao": {"entrada": 0.075, "saida": 0.30, "fonte": "https://console.groq.com/docs/models"},
-    # A tabela de https://groq.com/pricing não veio na consulta automatizada; um resultado de busca que
-    # reproduz essa página trazia estes valores, possivelmente antigos. Entram só no caso pessimista.
-    "referencia_alta": {"entrada": 0.10, "saida": 0.50, "fonte": "resultado de busca de groq.com/pricing, não confirmado na página"},
+    # A tabela de https://groq.com/pricing não veio na consulta automatizada. O rastreador abaixo registra estes
+    # valores como vigentes até out/2025, antes da redução. Entram só no caso pessimista, como limite superior.
+    "referencia_alta": {"entrada": 0.10, "saida": 0.50, "fonte": "https://pricingsaas.com/companies/groq/diffs/2025Q4"},
+    # Captura mais recente do mesmo rastreador. Só registro: não entra em nenhuma conta.
+    "captura_recente": {"entrada": 0.08, "saida": 0.30, "fonte": "https://pricingsaas.com/companies/groq/diffs/2025Q4"},
 }
 
 # Câmbio: PTAX de venda de 30/10/2026, API de dados abertos do Banco Central (CotacaoDolarDia).
@@ -105,6 +107,7 @@ def main() -> None:
     autonomia = ler_csv("autonomia.csv")
     canais = ler_csv("canais_custos.csv")
     por_motivo = ler_csv("autonomia_por_motivo.csv")
+    custo_por_motivo = ler_csv("autonomia_custo_por_motivo.csv")
     telemetria = json.loads((PROCESSED / "telemetria_smoke.json").read_text(encoding="utf-8"))
 
     custo_total = metricas["resumo"]["custo_estimado_populacao_rs"]
@@ -121,6 +124,8 @@ def main() -> None:
     custo_pessimista = custo_agente(tokens, alta, com_redacao, sem_redacao, MULTIPLICADOR_CHAMADAS_PESSIMISTA)
 
     piloto = int(por_motivo["rastreio"]["0"] + por_motivo["pagamento_pendente"]["0"])
+    # Coluna "0": só as conversas que a regra deixa em nível 0 (rastreio em trânsito, sem escalonadores).
+    teto_piloto = custo_por_motivo["rastreio"]["0"] + custo_por_motivo["pagamento_pendente"]["0"]
 
     avaliacao = json.loads((PROCESSED / "avaliacao_classificador.json").read_text(encoding="utf-8"))
     motivos = ler_csv("motivos_custos.csv")
@@ -180,6 +185,8 @@ def main() -> None:
             "pct_das_simuladas": round(100 * piloto / conversas_simuladas, 1),
             "rastreio": int(por_motivo["rastreio"]["0"]),
             "pagamento_pendente": int(por_motivo["pagamento_pendente"]["0"]),
+            "teto_rs": round(teto_piloto, 1),
+            "pct_do_teto_nivel_0": round(100 * teto_piloto / n0["custo_rs"], 1),
         },
     }
     (PROCESSED / "cenarios.json").write_text(json.dumps(res, ensure_ascii=False, indent=2), encoding="utf-8")

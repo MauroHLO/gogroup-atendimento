@@ -499,6 +499,9 @@ def main():
     aut.to_csv(OUT / "autonomia.csv")
     print("\nPor motivo x nível:\n", pd.crosstab(com_msg.motivo, com_msg.nivel))
     pd.crosstab(com_msg.motivo, com_msg.nivel).to_csv(OUT / "autonomia_por_motivo.csv")
+    pd.crosstab(com_msg.motivo, com_msg.nivel, values=com_msg.custo, aggfunc="sum").fillna(0).round(1).to_csv(
+        OUT / "autonomia_custo_por_motivo.csv"
+    )
 
     titulo("9. Contatos evitáveis (hipótese de trabalho por grupo)")
     grupos = analise_grupos(df)
