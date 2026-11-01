@@ -38,6 +38,14 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import analise_atendimento as A  # noqa: E402
+import re  # noqa: E402
+
+# Regex de saúde com que o conjunto de sinais da avaliação foi montado (01/11/2026), congelado para a etapa
+# "amostra" continuar reproduzível. Depois disso, A.RE_SAUDE passou a exigir artigo feminino antes de
+# "fórmula" (seção 16); com o regex novo, o conjunto teria 9 textos a menos (os falsos positivos).
+RE_SAUDE_AVALIACAO = re.compile(
+    r"gravidez|grávida|gestante|amament|bebê|minha filha|meu filho|alerg|inchad|coceira|queima|bolinhas|fórmula", re.I
+)
 
 SEED = 20261101
 POR_ESTRATO = 6
@@ -95,7 +103,7 @@ def etapa_amostra() -> None:
             "tag": r.tag_agente,
             "contexto": contexto(r),
             "regras": A.classificar_abertura(r.abertura),
-            "saude_ref": bool(A.RE_SAUDE.search(r.abertura)),
+            "saude_ref": bool(RE_SAUDE_AVALIACAO.search(r.abertura)),
             "ameaca_ref": bool(A.RE_AMEACA.search(r.abertura)),
         })
 
@@ -105,7 +113,7 @@ def etapa_amostra() -> None:
     cli["mascarada"] = cli.texto.fillna("").map(A.mascarar_pii)
     ctx = df.set_index("conversation_id")
     contagem_sinais = {}
-    for nome, rx in (("saude", A.RE_SAUDE), ("ameaca", A.RE_AMEACA)):
+    for nome, rx in (("saude", RE_SAUDE_AVALIACAO), ("ameaca", A.RE_AMEACA)):
         s = cli[cli.texto.str.contains(rx, na=False)]
         contagem_sinais[nome] = {"mensagens": int(len(s)), "textos_unicos": int(s.mascarada.nunique()),
                                  "conversas": int(s.conversation_id.nunique())}

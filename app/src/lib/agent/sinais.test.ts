@@ -28,6 +28,9 @@ describe("saúde", () => {
     "queimou minha pele",
     "queimei o rosto",
     "está queimando",
+    "senti uma queimação forte no couro cabeludo",
+    "deu queimacao na pele",
+    "tive queimações depois do creme",
     "apareceram bolinhas na pele",
     "bolinhas no rosto depois do creme",
     "bolinhas pelo corpo",
@@ -50,6 +53,8 @@ describe("saúde", () => {
     "qual a gravidade do atraso?",
     "Gravidade: alta",
     "a promoção é uma queima total",
+    "a queima de estoque acabou ontem",
+    "queimaram o meu pedido de prioridade", // verbo queimar em outro sentido, sem "queimação"
     "ele bebeu água",
     "preenchi o formulário",
     // nomes de produto com Fórmula: moldes sintéticos dos 9 falsos positivos da seção 16 (produtos inventados)

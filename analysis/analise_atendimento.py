@@ -155,7 +155,9 @@ def classificar_abertura(texto) -> list:
 # --------------------------------------------------------------------------
 # Regra de autonomia (versão Python de exploração; a oficial ficará em app/lib/policy)
 # --------------------------------------------------------------------------
-RE_SAUDE = re.compile(r"gravidez|grávida|gestante|amament|bebê|minha filha|meu filho|alerg|inchad|coceira|queima|bolinhas|fórmula", re.I)
+# "fórmula" só depois de artigo feminino, como em app/src/lib/agent/sinais.ts: nomes de produto que começam
+# com Fórmula vêm com artigo masculino e não são assunto de saúde (docs/decisoes.md, seção 16).
+RE_SAUDE = re.compile(r"gravidez|grávida|gestante|amament|bebê|minha filha|meu filho|alerg|inchad|coceira|queima|bolinhas|\b(?:na|da|a|nas|das|as)\s+f[óo]rmulas?\b", re.I)
 RE_AMEACA = re.compile(r"procon|advogad|processo judicial|justiça|abrir reclamação|reclame aqui", re.I)
 NIVEL_BASE = {
     "rastreio": 0, "pagamento_pendente": 0, "elogio": 0,
