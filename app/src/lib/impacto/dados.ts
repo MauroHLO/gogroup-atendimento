@@ -65,15 +65,15 @@ export const AGREGADOS = {
   atrasoEmTransito: de(J, "pct_atraso_com_status_em_transito", 72.0),
 
   // simulação de autonomia (classificador por regras do script)
-  nivel0Conversas: de("autonomia.csv", "0.conversas", 513),
+  nivel0Conversas: de("autonomia.csv", "0.conversas", 514),
   nivel0PctConversas: de("autonomia.csv", "0.pct_conversas", 14.5),
-  nivel0PctCusto: de("autonomia.csv", "0.pct_custo", 8.1),
-  nivel1Conversas: de("autonomia.csv", "1.conversas", 2017),
-  nivel1PctConversas: de("autonomia.csv", "1.pct_conversas", 57.0),
-  nivel1PctCusto: de("autonomia.csv", "1.pct_custo", 31.7),
-  nivel2Conversas: de("autonomia.csv", "2.conversas", 1011),
-  nivel2PctConversas: de("autonomia.csv", "2.pct_conversas", 28.6),
-  nivel2PctCusto: de("autonomia.csv", "2.pct_custo", 60.1),
+  nivel0PctCusto: de("autonomia.csv", "0.pct_custo", 8.2),
+  nivel1Conversas: de("autonomia.csv", "1.conversas", 2023),
+  nivel1PctConversas: de("autonomia.csv", "1.pct_conversas", 57.1),
+  nivel1PctCusto: de("autonomia.csv", "1.pct_custo", 31.8),
+  nivel2Conversas: de("autonomia.csv", "2.conversas", 1004),
+  nivel2PctConversas: de("autonomia.csv", "2.pct_conversas", 28.4),
+  nivel2PctCusto: de("autonomia.csv", "2.pct_custo", 60.0),
 
   // como defendemos as conclusões
   concordanciaGeral: de(J, "concordancia_tag_geral", 0.713),

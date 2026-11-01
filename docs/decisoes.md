@@ -73,7 +73,7 @@ O agente também sinaliza **risco de escalada para o Reclame Aqui** (recontato, 
 
 **Princípio:** explicar política é nível 0; executar ou aprovar (reenvio, cancelamento, reembolso, troca) é nível 1, porque exige fatos que o agente não tem (foto, data de recebimento).
 
-Simulação preliminar (3.541 conversas com mensagem do cliente), com a FAQ de produto e promoção pendente: nível 0 ≈ 14,5%, nível 1 ≈ 57%, nível 2 ≈ 28,6%. O nível 2 concentra ~60% do custo por causa do Reclame Aqui. O efeito de preencher a FAQ pode ser simulado ajustando `FAQ_VALIDADA` no script.
+Simulação preliminar (3.541 conversas com mensagem do cliente), com a FAQ de produto e promoção pendente: nível 0 ≈ 14,5%, nível 1 ≈ 57,1%, nível 2 ≈ 28,4% (valores depois do alinhamento do regex de saúde, seção 16; antes: 14,5%, 57,0%, 28,6%). O nível 2 concentra ~60% do custo por causa do Reclame Aqui. O efeito de preencher a FAQ pode ser simulado ajustando `FAQ_VALIDADA` no script.
 
 ## 6. Regras específicas
 
@@ -323,7 +323,7 @@ Na gravação anterior, a resposta de endereço em trânsito repetia a situaçã
 - Os números vêm de `data/processed/` (`metricas.json` e os CSVs gerados por `analysis/analise_atendimento.py`), copiados para `dados.ts` com arquivo e chave de origem. O teste compara cada número com o arquivo, quando ele existe, e confere as somas (níveis = 3.541 conversas com mensagem do cliente; grupos = 4.000; canais = custo estimado).
 - Cada número é rotulado: "na amostra", "estimado para a população" (todo valor em R$), "hipótese" ou "associação, não causa". O texto não diz "no período de 90 dias": o período não está nos agregados, então fala em "no período da amostra".
 - "Contatos evitados" não foi medido. O painel mostra contatos **potencialmente evitáveis (hipótese)**, pelos grupos de motivo do script, mais o recontato e o atraso com pedido em trânsito. O custo dos recontatos aparece só como associação.
-- A simulação de autonomia traz o aviso de que usa o classificador por regras do script Python, não o LLM. A leitura: o nível 0 cobre 14,5% das conversas, mas só 8,1% do custo; o valor está em preparar o nível 1 (31,7% do custo) e priorizar o nível 2 (60,1%, com humano).
+- A simulação de autonomia traz o aviso de que usa o classificador por regras do script Python, não o LLM. A leitura: o nível 0 cobre 14,5% das conversas, mas só 8,2% do custo; o valor está em preparar o nível 1 (31,8% do custo) e priorizar o nível 2 (60,0%, com humano).
 - O bloco do problema inclui Rota Express (3,08×, rotulado como associação, não causa), o estouro de SLA no WhatsApp (20,3%) e o recontato no Reclame Aqui (36,1% contra 17,1% nos demais canais). "Dados sintéticos" vem do dicionário de dados do desafio.
 
 ### Deploy na Vercel
@@ -431,3 +431,13 @@ Mede a classificação do LLM de produção (Groq `openai/gpt-oss-20b`, mesmo pr
 | Nível na amostra (78) | igual 76, abaixo 1, acima 1 | igual 76, abaixo 1, acima 1 |
 
 Os 53 textos verdadeiros de saúde continuam em nível 2.
+
+**Alinhamento do Python (01/11/2026).** O `RE_SAUDE` do `analise_atendimento.py` passou a usar o mesmo padrão de "fórmula" do app, e o app ganhou "queimação", que o Python já pegava. A simulação de autonomia foi refeita, e 7 conversas mudaram de nível:
+
+| Nível | Conversas (antes → depois) | % das conversas | % do custo |
+| --- | --- | --- | --- |
+| 0 | 513 → 514 | 14,5% → 14,5% | 8,1% → 8,2% |
+| 1 | 2.017 → 2.023 | 57,0% → 57,1% | 31,7% → 31,8% |
+| 2 | 1.011 → 1.004 | 28,6% → 28,4% | 60,1% → 60,0% |
+
+O conjunto de saúde desta avaliação foi montado com o regex anterior, que fica congelado em `avaliacao_classificador.py` (`RE_SAUDE_AVALIACAO`) para a etapa `amostra` continuar reproduzível.

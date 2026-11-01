@@ -228,7 +228,8 @@ const AUTONOMIA_SIMULADA: BlocoImpacto = {
       pctCusto: v("nivel2PctCusto"),
     },
   ],
-  conclusao: `O nível 0 cobre ${fmtPct(v("nivel0PctConversas"))} das conversas, mas só ${fmtPct(v("nivel0PctCusto"))} do custo. O valor está em preparar o nível 1 (${fmtPct(v("nivel1PctCusto"))} do custo) e priorizar o nível 2 (${fmtPct(v("nivel2PctCusto"))} do custo, com humano).`,
+  // fmtPct1: mesma casa decimal da tabela (60.0 → "60,0%").
+  conclusao: `O nível 0 cobre ${fmtPct1(v("nivel0PctConversas"))} das conversas, mas só ${fmtPct1(v("nivel0PctCusto"))} do custo. O valor está em preparar o nível 1 (${fmtPct1(v("nivel1PctCusto"))} do custo) e priorizar o nível 2 (${fmtPct1(v("nivel2PctCusto"))} do custo, com humano).`,
 };
 
 const DEFESA: BlocoImpacto = {

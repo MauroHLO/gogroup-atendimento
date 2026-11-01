@@ -62,11 +62,11 @@ Os níveis acima são o ponto de partida de cada motivo (`NIVEL_BASE` e `nivelMo
 
 | Nível | Conversas | % das conversas | % do custo |
 |---|---|---|---|
-| 0 | 513 | 14,5% | 8,1% |
-| 1 | 2.017 | 57,0% | 31,7% |
-| 2 | 1.011 | 28,6% | 60,1% |
+| 0 | 514 | 14,5% | 8,2% |
+| 1 | 2.023 | 57,1% | 31,8% |
+| 2 | 1.004 | 28,4% | 60,0% |
 
-O nível 0 cobre 14,5% das conversas, mas só 8,1% do custo. O valor está em preparar o nível 1 (31,7% do custo) e priorizar o nível 2 (60,1% do custo, com humano). A simulação usa o classificador por regras do script Python, não o LLM do agente.
+O nível 0 cobre 14,5% das conversas, mas só 8,2% do custo. O valor está em preparar o nível 1 (31,8% do custo) e priorizar o nível 2 (60,0% do custo, com humano). A simulação usa o classificador por regras do script Python, não o LLM do agente.
 
 ## Arquitetura
 

@@ -143,7 +143,7 @@ describe("textos do painel", () => {
     expect(bloco.aviso).toContain("classificador por regras do script Python");
     expect(bloco.aviso).toContain("não o LLM");
     expect(bloco.conclusao).toBe(
-      "O nível 0 cobre 14,5% das conversas, mas só 8,1% do custo. O valor está em preparar o nível 1 (31,7% do custo) e priorizar o nível 2 (60,1% do custo, com humano).",
+      "O nível 0 cobre 14,5% das conversas, mas só 8,2% do custo. O valor está em preparar o nível 1 (31,8% do custo) e priorizar o nível 2 (60,0% do custo, com humano).",
     );
   });
 
