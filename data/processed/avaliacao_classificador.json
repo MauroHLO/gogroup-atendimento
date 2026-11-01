@@ -134,18 +134,18 @@
       },
       "final_pipeline": {
         "textos_unicos": {
-          "acertos": 62,
+          "acertos": 53,
           "n": 62,
-          "pct": 100.0,
-          "ic95_inf": 94.2,
-          "ic95_sup": 100.0
+          "pct": 85.5,
+          "ic95_inf": 74.7,
+          "ic95_sup": 92.2
         },
         "mensagens": {
-          "acertos": 70,
+          "acertos": 61,
           "n": 70,
-          "pct": 100.0,
-          "ic95_inf": 94.8,
-          "ic95_sup": 100.0
+          "pct": 87.1,
+          "ic95_inf": 77.3,
+          "ic95_sup": 93.1
         }
       }
     },
@@ -186,8 +186,8 @@
     "saude_falso_positivo_do_regex": {
       "textos": 9,
       "modelo_marcou_saude": 0,
-      "regex_do_app_marcou_saude": 9,
-      "final_marcou_saude": 9
+      "regex_do_app_marcou_saude": 0,
+      "final_marcou_saude": 0
     },
     "ameaca_regex_python": {
       "modelo": {

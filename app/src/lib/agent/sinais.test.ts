@@ -36,6 +36,10 @@ describe("saúde", () => {
     "minha filha, usou e pronto",
     "qual é a fórmula?",
     "as formulas mudaram?",
+    "o que tem na fórmula?",
+    "quais os ingredientes da fórmula?",
+    "a fórmula tem parabeno?",
+    "mudaram a fórmula do creme?",
   ])("detecta: %s", (texto) => {
     expect(detectarSinais(texto).saude).toBe(true);
   });
@@ -48,6 +52,16 @@ describe("saúde", () => {
     "a promoção é uma queima total",
     "ele bebeu água",
     "preenchi o formulário",
+    // nomes de produto com Fórmula: moldes sintéticos dos 9 falsos positivos da seção 16 (produtos inventados)
+    "Comprei o Fórmula Brilho Extra há dez dias e nada chegou. Cadê?",
+    "Meu pedido do Fórmula Sono Leve ainda não chegou",
+    "O frasco do Fórmula Pele Nova chegou rachado",
+    "Qual a validade do Fórmula Brilho Extra depois de aberto?",
+    "Como devolvo o Fórmula Sono Leve?",
+    "Quero trocar o Fórmula Pele Nova, não gostei",
+    "cadê o Fórmula Cabelo Forte que comprei?",
+    "o Fórmula Unhas Fortes veio com a tampa quebrada",
+    "devolver os Fórmulas Vitais que pedi",
     "minha capinha veio errada",
     "comprei a capinha de bolinhas",
     "apareceram bolinhas",
@@ -78,6 +92,11 @@ describe("ameaça", () => {
   it.each(["quero trocar o tamanho", "obrigada pelo atendimento", "abri o pacote", "que injustiça!", "isso é uma injustica"])("não detecta: %s", (texto) => {
     expect(detectarSinais(texto).ameaca).toBe(false);
   });
+});
+
+it("resíduo conhecido: nome de produto precedido de artigo feminino ainda marca saúde", () => {
+  expect(detectarSinais("comprei a Fórmula Brilho Extra").saude).toBe(true);
+  expect(detectarSinais("a tampa da Fórmula Sono Leve quebrou").saude).toBe(true);
 });
 
 it("saúde e ameaça são independentes", () => {

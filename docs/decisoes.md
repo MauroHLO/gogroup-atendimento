@@ -133,7 +133,7 @@ A avaliação manual também deve ler os textos redigidos em busca do que a chec
 
 - Preencher a FAQ de produto e promoções se houver fonte validada.
 - Rotular a amostra de avaliação por uma pessoa (a seção 16 usa a tag do agente e um rótulo de leitura feito por assistente de IA).
-- Decidir as correções propostas na seção 16 (regex de saúde com "fórmula"; pedido parado em trânsito).
+- Pedido parado em trânsito (seção 16): regra no código, validada numa amostra nova.
 - Calibrar o limiar de confiança (valor inicial 0,7) com a amostra rotulada.
 - Alinhar o script Python à regra do app: hoje `FAQ_VALIDADA` zera qualquer motivo, e o script não tem `duvida_politica` nem `direitos_titular` (que no app exigem entrada de FAQ para nível 0).
 
@@ -389,7 +389,7 @@ Mede a classificação do LLM de produção (Groq `openai/gpt-oss-20b`, mesmo pr
 | Ameaça | regex Python: 1 texto único (161 mensagens) | 0 de 1 | 1 de 1 |
 
 - **O modelo deixou passar 2 textos de saúde,** e as palavras-chave do app pegaram os dois. O primeiro é uma pergunta preocupada sobre o que tem na fórmula de um produto, que se repete 8 vezes no dataset; por isso o recall por mensagem cai para 85%. O segundo é uma pergunta sobre uso na gravidez junto com uma queixa de atraso, e é a mesma mensagem que deu classificação inválida.
-- **Defeito encontrado (não corrigido):** 9 das 62 mensagens que o regex marca como saúde não falam de saúde. São mensagens sobre produtos cujo nome começa com a palavra fórmula, em pedidos de rastreio, de troca ou de devolução e em frascos quebrados. O modelo não marcou saúde em nenhuma delas. Mas o regex do app (`\bformulas?\b` em `sinais.ts`) marcou as 9, e o pipeline mandaria todas ao nível 2. É sobrescalada causada pelo código, não pelo modelo.
+- **Defeito encontrado (corrigido em seguida; ver "Correção do regex de saúde" abaixo):** 9 das 62 mensagens que o regex marca como saúde não falam de saúde. São mensagens sobre produtos cujo nome começa com a palavra fórmula, em pedidos de rastreio, de troca ou de devolução e em frascos quebrados. O modelo não marcou saúde em nenhuma delas. Mas o regex do app (`\bformulas?\b` em `sinais.ts`) marcou as 9, e o pipeline mandaria todas ao nível 2. É sobrescalada causada pelo código, não pelo modelo.
 - **Ameaça:** o dataset tem um único texto de ameaça, que se repete 161 vezes (o cliente anuncia que vai abrir uma reclamação) e nunca aparece na mensagem de abertura. O modelo não o marcou como ameaça; o pipeline só o pega pela palavra-chave. Com um texto só, não dá para medir o recall do modelo para ameaça.
 
 ### Limitações
@@ -402,5 +402,24 @@ Mede a classificação do LLM de produção (Groq `openai/gpt-oss-20b`, mesmo pr
 
 ### Correções propostas (não aplicadas; dependem de decisão)
 
-1. **Regex de saúde do app:** trocar `\bformulas?\b` por `\b(na|da|a)\s+formulas?\b`. Nos nomes de produto, a palavra vem depois de artigo masculino; na pergunta sobre ingredientes, depois de artigo feminino. Isso tiraria os 9 falsos positivos e manteria o caso verdadeiro.
+1. **Regex de saúde do app:** aplicada (ver abaixo).
 2. **Pedido sem movimentação com status em trânsito:** hoje pode ir a rastreio, nível 0. Uma opção é dizer, na descrição do motivo atraso, que pedido parado há dias conta como atraso. Precisa de uma amostra nova para medir.
+
+### Correção do regex de saúde (01/11/2026)
+
+- **Mudança:** em `sinais.ts`, `\bformulas?\b` passou a `\b(na|da|a|nas|das|as)\s+formulas?\b`, sobre texto normalizado (minúsculas, sem acento), como os outros padrões. Os plurais entraram para manter o caso "as fórmulas" que já tinha teste.
+- **Por quê:** nos nomes de produto, a palavra fórmula vem depois de artigo masculino; na pergunta sobre ingredientes, vem depois de artigo feminino.
+- **Testes:** frases sintéticas no molde dos 9 falsos positivos, com produtos inventados, não marcam saúde; "na fórmula", "da fórmula", "a fórmula" e "as fórmulas" continuam marcando.
+- **Resíduo conhecido:** um nome de produto precedido de artigo feminino ("comprei a Fórmula ...", "a tampa da Fórmula ...") ainda marca saúde. Há teste que documenta isso.
+- **Sem efeito na demo:** o prompt não muda (os hashes das gravações continuam iguais), e os 8 exemplos prontos não citam fórmula.
+- **Antes e depois, no mesmo conjunto da avaliação.** O conjunto é o mesmo usado para achar o defeito, então **não é independente**. A saída do modelo não mudou; só as palavras-chave foram recalculadas (`npm run avaliar-classificador -- --recalcular`, sem chamar o modelo).
+
+| Medida | Antes | Depois |
+| --- | --- | --- |
+| Falsos positivos do regex (9 textos) marcados como saúde pelo pipeline | 9 (todos em nível 2) | 0 (6 em nível 1, 2 em nível 2 por outros escaladores, 1 em nível 0) |
+| Recall do pipeline, saúde pela leitura (53 textos / 61 mensagens) | 100% / 100% | 100% / 100% |
+| Recall do pipeline, saúde pelo regex Python (62 textos / 70 mensagens) | 100% / 100% | 85,5% / 87,1% (a queda são justamente os 9 falsos positivos) |
+| Recall do modelo sozinho, saúde pela leitura | 96,2% dos textos | 96,2% (sem mudança) |
+| Nível na amostra (78) | igual 76, abaixo 1, acima 1 | igual 76, abaixo 1, acima 1 |
+
+Os 53 textos verdadeiros de saúde continuam em nível 2.

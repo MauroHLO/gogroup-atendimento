@@ -102,7 +102,7 @@ Modelo padrão: `openai/gpt-oss-20b` no Groq, com temperatura 0. Uma conversa fa
 
 ```bash
 cd app
-npm test          # 1.344 testes (vitest)
+npm test          # 1.358 testes (vitest)
 npx tsc --noEmit
 npm run lint
 npm run build
@@ -115,7 +115,7 @@ Os testes cobrem regra de autonomia, ação e trava, FAQ (incluindo nenhuma prom
 ## Limitações
 
 - Os dados são sintéticos; com texto real, o desempenho pode ser menor.
-- Não há rótulo verdadeiro. O motivo da análise vem de um classificador por regras. A primeira avaliação do classificador LLM (`docs/decisoes.md`, seção 16) usou uma amostra de 78 conversas, 6 por tag do agente. Contra a tag, o LLM acerta só 54% (regras: 65%), mas a tag é ruim: em 36% da amostra ela não bate com o texto. Contra um rótulo de leitura feito pelo assistente de IA que conduziu a avaliação (não por uma pessoa), o LLM acerta 91% (IC 95%: 83–96%). O nível final ficou igual em 76 de 78: 1 caso abaixo do correto (1 → 0, pedido parado em trânsito tratado como rastreio) e 1 acima. O modelo sozinho pega 96% dos textos de saúde, e com as palavras-chave o pipeline pega 100%. Mas o regex de saúde do app manda ao nível 2 nove mensagens que só têm "Fórmula" no nome do produto (defeito registrado, ainda não corrigido). A amostra é pequena por classe, e a avaliação manual por uma pessoa continua pendente.
+- Não há rótulo verdadeiro. O motivo da análise vem de um classificador por regras. A primeira avaliação do classificador LLM (`docs/decisoes.md`, seção 16) usou uma amostra de 78 conversas, 6 por tag do agente. Contra a tag, o LLM acerta só 54% (regras: 65%), mas a tag é ruim: em 36% da amostra ela não bate com o texto. Contra um rótulo de leitura feito pelo assistente de IA que conduziu a avaliação (não por uma pessoa), o LLM acerta 91% (IC 95%: 83–96%). O nível final ficou igual em 76 de 78: 1 caso abaixo do correto (1 → 0, pedido parado em trânsito tratado como rastreio) e 1 acima. O modelo sozinho pega 96% dos textos de saúde, e com as palavras-chave o pipeline pega 100%. O regex de saúde do app mandava ao nível 2 nove mensagens que só tinham "Fórmula" no nome do produto; foi corrigido, com a medida de antes e depois no mesmo conjunto (não independente). A amostra é pequena por classe, e a avaliação manual por uma pessoa continua pendente.
 - A simulação de autonomia usa esse classificador por regras, que ainda não tem os motivos dúvida de política e direitos do titular.
 - O custo por conversa é por canal: não distingue conversa resolvida pelo bot de conversa com atendente.
 - A FAQ de produto e promoções está pendente (cupom, frete, ficha de produto); sem entrada validada, a conversa vai para o nível 1.

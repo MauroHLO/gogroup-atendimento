@@ -11,10 +11,11 @@
 //   confiança 1, mesmo contexto do pedido.
 // Grava data/interim/avaliacao/llm.jsonl (fora do Git), uma linha por mensagem, SEM texto de mensagem.
 // Retoma de onde parou: itens já presentes em llm.jsonl não são chamados de novo.
+// Com --recalcular, não chama o modelo: só refaz palavras-chave, sinais finais e níveis (mudança de código).
 // Pausa entre chamadas; em rate_limit, espera o retry-after (ou 20 s) e repete, até 5 vezes.
 // Nunca imprime a chave nem o texto das mensagens.
 
-import { appendFileSync, existsSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { setTimeout as esperar } from "node:timers/promises";
 import Groq from "groq-sdk";
@@ -137,7 +138,35 @@ function nivelDe(motivos: readonly Motivo[], topico: string | undefined, saude: 
   return { ordenados, nivel: d.nivel };
 }
 
+// --recalcular: sem chamar o modelo, recalcula as palavras-chave do app, os sinais finais e os níveis a partir
+// da saída do modelo já gravada em llm.jsonl (usado quando muda só o código, ex.: o regex de saúde).
+function recalcular(): number {
+  const itens = new Map<string, Item>(
+    readFileSync(ENTRADA, "utf-8").trim().split(/\r?\n/).map((l) => [JSON.parse(l).id, JSON.parse(l)] as [string, Item]),
+  );
+  const rotulos = lerRotulos();
+  const linhas = readFileSync(SAIDA, "utf-8").trim().split(/\r?\n/).filter(Boolean).map((l) => JSON.parse(l));
+  const novas = linhas.map((r) => {
+    const item = itens.get(r.id)!;
+    const re = detectarSinais(mascararPii(item.texto));
+    const saudeFinal = r.saudeModelo || re.saude;
+    const ameacaFinal = r.ameacaModelo || re.ameaca;
+    const prev = nivelDe(r.motivos, r.topico ?? undefined, saudeFinal, ameacaFinal, r.confianca, item.contexto);
+    const linha = { ...r, saudeRegexApp: re.saude, ameacaRegexApp: re.ameaca, saudeFinal, ameacaFinal, nivelPrevisto: prev.nivel, motivos: prev.ordenados, motivoPrincipal: prev.ordenados[0] };
+    const rot = item.conjunto === "amostra" ? rotulos.get(r.id) : undefined;
+    if (rot && rot.motivos.length > 0) {
+      const ref = nivelDe(rot.motivos, rot.topico, rot.saude, rot.ameaca, 1, item.contexto);
+      Object.assign(linha, { motivosRef: ref.ordenados, motivoRef: ref.ordenados[0], nivelRef: ref.nivel });
+    }
+    return JSON.stringify(linha);
+  });
+  writeFileSync(SAIDA, novas.join("\n") + "\n", "utf-8");
+  console.log(`recalculado: ${novas.length} linhas, sem chamar o modelo`);
+  return 0;
+}
+
 async function main(): Promise<number> {
+  if (process.argv.includes("--recalcular")) return recalcular();
   const chave = process.env.GROQ_API_KEY?.trim();
   if (!chave) {
     console.error("GROQ_API_KEY ausente em app/.env.local");

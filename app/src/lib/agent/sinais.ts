@@ -5,7 +5,10 @@
 // Divergências em relação ao Python (todas registradas na seção 14):
 // - o texto é normalizado, então "gravida", "bebe" e "justica" também casam;
 // - "queima" virou queimadura|queimou|queimei|queimando (não pega "queima de estoque");
-// - "grávida", "bebê" e "fórmula" exigem palavra inteira (não pegam "gravidade", "bebeu" nem "formulário");
+// - "grávida" e "bebê" exigem palavra inteira (não pegam "gravidade" nem "bebeu");
+// - "fórmula" só depois de artigo feminino ("na fórmula", "da fórmula", "a fórmula" e plurais): não pega
+//   "formulário" nem nomes de produto que começam com Fórmula, que vêm com artigo masculino
+//   (docs/decisoes.md, seção 16). Resíduo conhecido: nome de produto precedido de "a", "da" ou "na" ainda casa;
 // - "bolinhas" só com contexto de pele (não pega "capinha de bolinhas");
 // - "meu filho" e "minha filha" exigem fim de palavra (não pegam "meu filhote");
 // - "justiça" exige palavra inteira (não pega "injustiça");
@@ -18,7 +21,7 @@ export function normalizar(texto: string): string {
 }
 
 export const RE_SAUDE =
-  /gravidez|\bgravidas?\b|gestante|amament|\bbebes?\b|minha\s+filha\b|meu\s+filho\b|alerg|inchad|coceira|queimadura|queimou|queimei|queimando|bolinhas\s+(na|no|pela|pelo|em)\s+(pele|rosto|corpo|braco|perna)\b|\bformulas?\b/;
+  /gravidez|\bgravidas?\b|gestante|amament|\bbebes?\b|minha\s+filha\b|meu\s+filho\b|alerg|inchad|coceira|queimadura|queimou|queimei|queimando|bolinhas\s+(na|no|pela|pelo|em)\s+(pele|rosto|corpo|braco|perna)\b|\b(na|da|a|nas|das|as)\s+formulas?\b/;
 
 export const RE_AMEACA = /procon|advogad|processo\s+judicial|\bjustica\b|abrir\s+reclamacao|reclame\s+aqui/;
 
