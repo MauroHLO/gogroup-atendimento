@@ -47,6 +47,7 @@ export const DERIVADOS = {
   concordanciaPct: arred1(v("concordanciaGeral") * 100),
   divergenciaPct: arred1(100 - v("concordanciaGeral") * 100),
   tagIncoerentesPct: Math.round((v("tagIncoerentes") / v("tagAvaliadas")) * 100),
+  rotulosRevisadosPct: Math.round((v("rotulosRevisados") / v("rotulosAmostra")) * 1000) / 10,
   reacaoConcordanciaPct: arred1(v("reacaoConcordancia") * 100),
   rotaExpressLogisticaPct: arred1(v("rotaExpressLogistica")),
   rotaExpressReferenciaPct: arred1(v("rotaExpressReferencia")),
@@ -269,7 +270,8 @@ const LIMITES: BlocoImpacto = {
   limites: [
     "Os dados do desafio são sintéticos.",
     "A amostra é de 1 em cada 3 clientes; os valores em R$ são a amostra multiplicada por 3.",
-    "O motivo vem de um classificador por regras sobre a mensagem de abertura, sem rótulo verdadeiro; a avaliação manual com conversas rotuladas está pendente.",
+    "O motivo da análise vem de um classificador por regras sobre a mensagem de abertura, sem rótulo verdadeiro.",
+    `O classificador do agente foi avaliado em ${fmtInt(v("rotulosAmostra"))} conversas rotuladas por leitura de uma IA, com revisão humana parcial (${fmtInt(v("rotulosRevisados"))} dos ${fmtInt(v("rotulosAmostra"))} rótulos, ${fmtPct1(d.rotulosRevisadosPct)}) e sem independência total; detalhes em docs/decisoes.md, seção 16.`,
     "O custo por conversa é por canal: não distingue conversa resolvida pelo bot de conversa com atendente.",
     "A FAQ de produto e promoções está pendente; com ela validada, parte do nível 1 poderia ir ao nível 0.",
     `Ameaça seguida de Reclame Aqui é só indício: com ameaça, a próxima conversa do pedido é no Reclame Aqui em ${fmtPct(d.proximaRaComAmeacaPct)} dos casos, contra ${fmtPct(d.proximaRaSemAmeacaPct)} sem ameaça, em apenas ${fmtInt(v("casosComAmeaca"))} casos.`,

@@ -57,6 +57,15 @@ describe("agregados copiados conferem com data/processed", () => {
   });
 });
 
+describe("limites do painel", () => {
+  const limites = PAINEL.flatMap((b) => b.limites ?? []);
+
+  it("descreve a avaliação com o alcance da revisão humana, sem dizer que está pendente", () => {
+    expect(limites.some((l) => l.includes("78 conversas") && l.includes("22 dos 78 rótulos, 28,2%") && l.includes("seção 16"))).toBe(true);
+    expect(limites.join(" ")).not.toMatch(/avaliação manual/);
+  });
+});
+
 describe("consistência entre os agregados", () => {
   const v = (k: ChaveAgregado) => AGREGADOS[k].valor;
 

@@ -82,6 +82,9 @@ export const AGREGADOS = {
   // estratificada por tag; tags sem nenhum motivo lido no texto que seja coerente com elas.
   tagIncoerentes: de("avaliacao_classificador.json", "contra_tag.tag_questionavel", 26),
   tagAvaliadas: de("avaliacao_classificador.json", "contra_tag.n", 72),
+  // Rótulos de leitura da amostra e quantos deles passaram por revisão humana (seção 16).
+  rotulosAmostra: de("avaliacao_classificador.json", "revisao_humana.rotulos_da_amostra", 78),
+  rotulosRevisados: de("avaliacao_classificador.json", "revisao_humana.rotulos_da_amostra_revisados", 22),
   reacaoConversas: de(J, "reacao_adversa.conversas", 40),
   reacaoConcordancia: de("concordancia_tags.csv", "reacao_adversa.concordancia", 0.2),
   reacaoTagPropria: de(J, "reacao_adversa.com_tag_especifica", 0),
