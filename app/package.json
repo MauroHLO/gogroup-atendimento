@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "smoke": "tsx --env-file=.env.local scripts/smoke-groq.ts"
+    "smoke": "tsx --env-file=.env.local scripts/smoke-groq.ts",
+    "avaliar-classificador": "tsx --env-file=.env.local scripts/avaliar-classificador.ts"
   },
   "dependencies": {
     "groq-sdk": "^1.6.0",

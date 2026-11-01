@@ -1,0 +1,227 @@
+{
+  "seed": 20261101,
+  "por_estrato": 6,
+  "amostra_total": 78,
+  "llm_classificacao_invalida": 1,
+  "contra_tag": {
+    "n": 72,
+    "tag_questionavel": 26,
+    "llm_principal": {
+      "acertos": 39,
+      "n": 72,
+      "pct": 54.2,
+      "ic95_inf": 42.7,
+      "ic95_sup": 65.2
+    },
+    "llm_algum_motivo": {
+      "acertos": 45,
+      "n": 72,
+      "pct": 62.5,
+      "ic95_inf": 50.9,
+      "ic95_sup": 72.8
+    },
+    "regras_principal": {
+      "acertos": 47,
+      "n": 72,
+      "pct": 65.3,
+      "ic95_inf": 53.8,
+      "ic95_sup": 75.2
+    },
+    "regras_algum_motivo": {
+      "acertos": 47,
+      "n": 72,
+      "pct": 65.3,
+      "ic95_inf": 53.8,
+      "ic95_sup": 75.2
+    },
+    "so_tags_coerentes_com_a_leitura": {
+      "n": 46,
+      "llm_principal": {
+        "acertos": 39,
+        "n": 46,
+        "pct": 84.8,
+        "ic95_inf": 71.8,
+        "ic95_sup": 92.4
+      },
+      "regras_principal": {
+        "acertos": 46,
+        "n": 46,
+        "pct": 100.0,
+        "ic95_inf": 92.3,
+        "ic95_sup": 100.0
+      }
+    }
+  },
+  "contra_rotulo_de_leitura": {
+    "n": 78,
+    "ambiguas": 9,
+    "llm_principal": {
+      "acertos": 71,
+      "n": 78,
+      "pct": 91.0,
+      "ic95_inf": 82.6,
+      "ic95_sup": 95.6
+    },
+    "llm_algum_motivo": {
+      "acertos": 71,
+      "n": 78,
+      "pct": 91.0,
+      "ic95_inf": 82.6,
+      "ic95_sup": 95.6
+    },
+    "regras_principal": {
+      "acertos": 67,
+      "n": 78,
+      "pct": 85.9,
+      "ic95_inf": 76.5,
+      "ic95_sup": 91.9
+    },
+    "regras_algum_motivo": {
+      "acertos": 74,
+      "n": 78,
+      "pct": 94.9,
+      "ic95_inf": 87.5,
+      "ic95_sup": 98.0
+    },
+    "llm_e_regras_acertam": 63,
+    "so_llm_acerta": 8,
+    "so_regras_acertam": 4,
+    "nenhum_acerta": 3
+  },
+  "nivel": {
+    "n": 78,
+    "igual": 76,
+    "abaixo_do_correto": 1,
+    "acima_do_correto": 1,
+    "abaixo_detalhe": {
+      "1->0": 1
+    },
+    "acima_detalhe": {
+      "0->1": 1
+    },
+    "pct_abaixo": {
+      "acertos": 1,
+      "n": 78,
+      "pct": 1.3,
+      "ic95_inf": 0.2,
+      "ic95_sup": 6.9
+    },
+    "pct_acima": {
+      "acertos": 1,
+      "n": 78,
+      "pct": 1.3,
+      "ic95_inf": 0.2,
+      "ic95_sup": 6.9
+    }
+  },
+  "sinais": {
+    "saude_regex_python": {
+      "modelo": {
+        "textos_unicos": {
+          "acertos": 51,
+          "n": 62,
+          "pct": 82.3,
+          "ic95_inf": 71.0,
+          "ic95_sup": 89.8
+        },
+        "mensagens": {
+          "acertos": 52,
+          "n": 70,
+          "pct": 74.3,
+          "ic95_inf": 63.0,
+          "ic95_sup": 83.1
+        }
+      },
+      "final_pipeline": {
+        "textos_unicos": {
+          "acertos": 62,
+          "n": 62,
+          "pct": 100.0,
+          "ic95_inf": 94.2,
+          "ic95_sup": 100.0
+        },
+        "mensagens": {
+          "acertos": 70,
+          "n": 70,
+          "pct": 100.0,
+          "ic95_inf": 94.8,
+          "ic95_sup": 100.0
+        }
+      }
+    },
+    "saude_leitura": {
+      "modelo": {
+        "textos_unicos": {
+          "acertos": 51,
+          "n": 53,
+          "pct": 96.2,
+          "ic95_inf": 87.2,
+          "ic95_sup": 99.0
+        },
+        "mensagens": {
+          "acertos": 52,
+          "n": 61,
+          "pct": 85.2,
+          "ic95_inf": 74.3,
+          "ic95_sup": 92.0
+        }
+      },
+      "final_pipeline": {
+        "textos_unicos": {
+          "acertos": 53,
+          "n": 53,
+          "pct": 100.0,
+          "ic95_inf": 93.2,
+          "ic95_sup": 100.0
+        },
+        "mensagens": {
+          "acertos": 61,
+          "n": 61,
+          "pct": 100.0,
+          "ic95_inf": 94.1,
+          "ic95_sup": 100.0
+        }
+      }
+    },
+    "saude_falso_positivo_do_regex": {
+      "textos": 9,
+      "modelo_marcou_saude": 0,
+      "regex_do_app_marcou_saude": 9,
+      "final_marcou_saude": 9
+    },
+    "ameaca_regex_python": {
+      "modelo": {
+        "textos_unicos": {
+          "acertos": 0,
+          "n": 1,
+          "pct": 0.0,
+          "ic95_inf": 0.0,
+          "ic95_sup": 79.3
+        },
+        "mensagens": {
+          "acertos": 0,
+          "n": 161,
+          "pct": 0.0,
+          "ic95_inf": 0.0,
+          "ic95_sup": 2.3
+        }
+      },
+      "final_pipeline": {
+        "textos_unicos": {
+          "acertos": 1,
+          "n": 1,
+          "pct": 100.0,
+          "ic95_inf": 20.6,
+          "ic95_sup": 100.0
+        },
+        "mensagens": {
+          "acertos": 161,
+          "n": 161,
+          "pct": 100.0,
+          "ic95_inf": 97.7,
+          "ic95_sup": 100.0
+        }
+      }
+    }
+  }
+}

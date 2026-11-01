@@ -1,0 +1,13 @@
+tag,n,tag_coerente_com_a_leitura,llm_acertos,regras_acertos
+Atraso,6,6,6,6
+Avaria,6,5,4,5
+Cancelamento,6,1,0,1
+Dúvida,6,5,3,5
+Elogio,6,1,1,1
+Endereço,6,3,2,3
+Financeiro,6,5,5,5
+Produto faltando,6,6,5,6
+Promoção,6,0,0,0
+Rastreio,6,5,5,5
+Reclamação produto,6,6,6,6
+Troca,6,3,2,4
