@@ -1,0 +1,61 @@
+{
+  "origem": "npm run smoke (5 mensagens fictícias)",
+  "data": "2026-11-01",
+  "modelo": "openai/gpt-oss-20b",
+  "chamadas": [
+    {
+      "chamada": "classificacao",
+      "prompt": 998,
+      "completion": 72,
+      "raciocinio": 29
+    },
+    {
+      "chamada": "redacao",
+      "prompt": 555,
+      "completion": 38,
+      "raciocinio": 14
+    },
+    {
+      "chamada": "classificacao",
+      "prompt": 999,
+      "completion": 68,
+      "raciocinio": 25
+    },
+    {
+      "chamada": "redacao",
+      "prompt": 634,
+      "completion": 63,
+      "raciocinio": 20
+    },
+    {
+      "chamada": "classificacao",
+      "prompt": 1001,
+      "completion": 79,
+      "raciocinio": 30
+    },
+    {
+      "chamada": "classificacao",
+      "prompt": 1002,
+      "completion": 79,
+      "raciocinio": 30
+    },
+    {
+      "chamada": "redacao",
+      "prompt": 615,
+      "completion": 87,
+      "raciocinio": 21
+    },
+    {
+      "chamada": "classificacao",
+      "prompt": 1016,
+      "completion": 128,
+      "raciocinio": 83
+    },
+    {
+      "chamada": "redacao",
+      "prompt": 629,
+      "completion": 70,
+      "raciocinio": 23
+    }
+  ]
+}

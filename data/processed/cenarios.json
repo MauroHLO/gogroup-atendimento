@@ -1,0 +1,110 @@
+{
+  "aviso": "Teto, cenário e hipótese. Nada aqui é economia medida; o agente não rodou em produção.",
+  "base_de_custo": {
+    "custo_total_rs": 108299,
+    "custo_simulado_rs": 101689.2,
+    "custo_so_bot_rs": 6609.8,
+    "conversas_simuladas_amostra": 3541,
+    "conversas_simuladas_populacao": 10623
+  },
+  "custo_por_conversa_rs": {
+    "email": 7.2,
+    "reclame_aqui": 42.0,
+    "whatsapp": 4.8
+  },
+  "teto_nivel_0": {
+    "rs": 8294.4,
+    "pct_do_custo_simulado": 8.2,
+    "pct_do_custo_total": 7.7
+  },
+  "nivel_1": {
+    "custo_rs": 32385.6,
+    "tipo": "hipótese: redução do tempo de tratamento, com custo proporcional ao tempo",
+    "rs_por_ponto_percentual": 323.9,
+    "cenarios": {
+      "conservador": {
+        "reducao_pct": 10,
+        "rs": 3238.6,
+        "pct_do_custo_total": 3.0
+      },
+      "base": {
+        "reducao_pct": 25,
+        "rs": 8096.4,
+        "pct_do_custo_total": 7.5
+      }
+    }
+  },
+  "nivel_2": {
+    "custo_rs": 61009.2,
+    "pct_do_custo_simulado": 60.0
+  },
+  "custo_do_agente": {
+    "tokens": {
+      "classificacao": {
+        "chamadas_medidas": 5,
+        "prompt_medio": 1003.2,
+        "completion_medio": 85.2,
+        "prompt_max": 1016,
+        "completion_max": 128
+      },
+      "redacao": {
+        "chamadas_medidas": 4,
+        "prompt_medio": 608.2,
+        "completion_medio": 64.5,
+        "prompt_max": 634,
+        "completion_max": 87
+      }
+    },
+    "preco": {
+      "modelo": "openai/gpt-oss-20b",
+      "consulta": "2026-11-01",
+      "documentacao": {
+        "entrada": 0.075,
+        "saida": 0.3,
+        "fonte": "https://console.groq.com/docs/models"
+      },
+      "referencia_alta": {
+        "entrada": 0.1,
+        "saida": 0.5,
+        "fonte": "resultado de busca de groq.com/pricing, não confirmado na página"
+      }
+    },
+    "cambio": {
+      "rs_por_usd": 5.4212,
+      "data": "2026-10-30",
+      "fonte": "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/"
+    },
+    "conversas_com_redacao_populacao": 7611,
+    "conversas_sem_redacao_populacao": 3012,
+    "base": {
+      "usd_por_conversa_niveis_0_1": 0.000166,
+      "usd_por_conversa_nivel_2": 0.000101,
+      "total_usd": 1.57,
+      "total_rs": 8.49,
+      "rs_por_mil_conversas": 0.8
+    },
+    "pessimista": {
+      "multiplicador_chamadas": 2,
+      "usd_por_conversa_niveis_0_1": 0.000472,
+      "usd_por_conversa_nivel_2": 0.000286,
+      "total_usd": 4.45,
+      "total_rs": 24.14,
+      "rs_por_mil_conversas": 2.27
+    },
+    "pct_do_custo_total_pessimista": 0.022,
+    "fora_da_conta": "hospedagem, integração, monitoramento e o tempo de quem aprova ou revisa"
+  },
+  "derivados": {
+    "atraso_mais_rastreio_pct": 36.8,
+    "falha_processo_pct": 36.1,
+    "proativa_pct": 37.4,
+    "rotulos_revisados_pct": 28.2,
+    "tag_ruidosa_pct": 36
+  },
+  "piloto": {
+    "conversas_amostra": 476,
+    "pct_das_simuladas": 13.4,
+    "rastreio": 435,
+    "pagamento_pendente": 41
+  }
+}
