@@ -1,3 +1,5 @@
+<p><img src="docs/img/gogroup-logo.png" alt="GoGroup" height="28"> &nbsp; Projeto do Desafio AI-First. Não é um produto oficial da GoGroup.</p>
+
 # Agente de atendimento: Gocase e GoBeaute
 
 Agente que lê cada conversa de atendimento, identifica o motivo real e decide, por uma regra em código, se resolve sozinho, se prepara a ação para uma pessoa aprovar ou se passa o caso a um humano. Desafio AI-First do GoGroup, Problema 1.
@@ -5,6 +7,10 @@ Agente que lê cada conversa de atendimento, identifica o motivo real e decide, 
 **Demo pública (sem login):** https://gogroup-atendimento.vercel.app · **Repositório:** https://github.com/MauroHLO/gogroup-atendimento · **Relatório de impacto e rigor:** [docs/relatorio.md](docs/relatorio.md)
 
 **Leia primeiro:** [docs/relatorio.md](docs/relatorio.md) (começa com um resumo de 30 segundos)
+
+![Duas barras empilhadas a 100%. Conversas: nível 0 14,5%, nível 1 57,1%, nível 2 28,4%. Custo: nível 0 8,2%, nível 1 31,8%, nível 2 60,0%.](docs/img/conversas-vs-custo.svg)
+
+*Conversas vs custo por nível. Fonte: `data/processed/autonomia.csv`.*
 
 > Os dados do desafio são sintéticos, e os exemplos da demo e dos testes foram escritos por nós. Não digite dados reais na demo.
 
@@ -18,7 +24,7 @@ Agente que lê cada conversa de atendimento, identifica o motivo real e decide, 
 
 ## O problema em números
 
-Análise de 4.000 conversas, numa amostra de 1 em cada 3 clientes, no período da amostra (`analysis/analise_atendimento.py`). Contagens e percentuais de conversas são da amostra; valores em R$ são estimativas para a população (amostra × 3).
+Amostra de 4.000 conversas, de 1 em cada 3 clientes (`analysis/analise_atendimento.py`). Valores em R$ são estimados para a população (amostra × 3).
 
 | Número | O que é | Tipo |
 |---|---|---|
@@ -30,31 +36,29 @@ Análise de 4.000 conversas, numa amostra de 1 em cada 3 clientes, no período d
 | 30,3% | das conversas abertas fora das 8h às 20h | na amostra |
 | 3,08× | Rota Express está em 62,8% dos contatos de rastreio e atraso, contra 20,4% dos pedidos dos demais contatos | associação, não causa |
 
-Recontato no Reclame Aqui: 36,1% das conversas do canal são o 2º contato ou mais sobre o mesmo pedido, contra 17,1% nos demais canais.
+**Contatos potencialmente evitáveis (hipótese, nada medido em produção):** 1.445 conversas (36,1%) de falha de processo e 1.496 (37,4%) que caberiam em comunicação proativa ou autoatendimento.
 
-**Contatos potencialmente evitáveis (hipótese).** O agente não rodou em produção, então nada aqui é contato evitado medido:
-- 1.445 conversas (36,1%) de **falha de processo** (atraso, avaria, item faltando, brinde, erro de personalização), evitáveis corrigindo a causa;
-- 1.496 (37,4%) caberiam em **comunicação proativa ou autoatendimento** (rastreio, pagamento pendente, cancelamento, endereço, promoção, dúvida de produto);
-- 19,1% das conversas são o 2º contato ou mais sobre o mesmo pedido;
+<details><summary>Recontato e como defendemos as conclusões</summary>
+
+- Recontato: 19,1% das conversas são o 2º contato ou mais sobre o mesmo pedido; no Reclame Aqui, 36,1%, contra 17,1% nos demais canais. Somam R$ 28.343 do custo estimado: associação, não economia garantida.
 - 72% das reclamações de atraso chegam com o pedido ainda em trânsito.
-
-Os recontatos somam R$ 28.343 do custo estimado. É uma associação, não uma economia garantida.
-
-**Como defendemos as conclusões:**
-- base validada: 4.000 conversas, 14.559 mensagens, 3.237 pedidos, nenhuma duplicada;
-- a tag manual e o classificador por regras divergem em 28,7% das conversas; parte é erro da tag e parte das regras (numa amostra estratificada por tag, 36% das tags não batem com nenhum motivo lido no texto);
-- nas 40 conversas de reação adversa, a tag manual e o classificador por regras concordam em só 20% (parte é erro da tag e parte das regras), nenhuma tem tag própria, o atendente oferece troca em todas e nenhuma cita registro ou lote;
+- Falha de processo: atraso, avaria, item faltando, brinde, erro de personalização. Proativa ou autoatendimento: rastreio, pagamento pendente, cancelamento, endereço, promoção, dúvida de produto.
+- Base validada: 4.000 conversas, 14.559 mensagens, 3.237 pedidos, nenhuma duplicada.
+- A tag manual e o classificador por regras divergem em 28,7% das conversas; parte é erro da tag e parte das regras (numa amostra estratificada por tag, 36% das tags não batem com nenhum motivo lido no texto).
+- Nas 40 conversas de reação adversa, a tag manual e o classificador por regras concordam em só 20% (parte é erro da tag e parte das regras), nenhuma tem tag própria, o atendente oferece troca em todas e nenhuma cita registro ou lote.
 - 174 mensagens de clientes têm CPF, 91 telefone e 45 cartão (de 5.684), o que justifica o mascaramento.
 
 Origem de cada número: `data/processed/metricas.json` e os CSVs da mesma pasta. O painel mostra o arquivo e a chave, e `app/src/lib/impacto/impacto.test.ts` confere cada número com o arquivo.
+
+</details>
 
 ## Níveis de autonomia
 
 | Nível | O agente… | Exemplos |
 |---|---|---|
-| **0: executa** | responde sozinho, só com fatos do pedido e texto da FAQ | rastreio com pedido em trânsito, pagamento pendente, elogio; dúvida de política e direitos do titular **quando há entrada na FAQ** (sem entrada, nível 1); recusa explicada de mudança de endereço quando o pedido já está em trânsito, atrasado ou entregue |
-| **1: prepara e aguarda aprovação** | propõe a ação e um rascunho; uma pessoa aprova | atraso, avaria, item faltando, brinde, erro de personalização, cancelamento ou arrependimento, troca de tamanho, troca por fragrância, mudança de endereço com o pedido em separação, rastreio com pedido que não está em trânsito, dúvida de produto ou cupom (FAQ de produto pendente), mensagem não classificada |
-| **2: humano obrigatório** | só resume e prioriza; não responde ao cliente | reação adversa (sempre); cobrança duplicada, indevida ou não reconhecida |
+| 🟢 **Nível 0: executa** | responde sozinho, só com fatos do pedido e texto da FAQ | rastreio com pedido em trânsito, pagamento pendente, elogio; dúvida de política e direitos do titular **quando há entrada na FAQ** (sem entrada, nível 1); recusa explicada de mudança de endereço quando o pedido já está em trânsito, atrasado ou entregue |
+| 🟡 **Nível 1: prepara e aguarda aprovação** | propõe a ação e um rascunho; uma pessoa aprova | atraso, avaria, item faltando, brinde, erro de personalização, cancelamento ou arrependimento, troca de tamanho, troca por fragrância, mudança de endereço com o pedido em separação, rastreio com pedido que não está em trânsito, dúvida de produto ou cupom (FAQ de produto pendente), mensagem não classificada |
+| 🔴 **Nível 2: humano obrigatório** | só resume e prioriza; não responde ao cliente | reação adversa (sempre); cobrança duplicada, indevida ou não reconhecida |
 
 Os níveis acima são o ponto de partida de cada motivo (`NIVEL_BASE` e `nivelMotivo` em `app/src/lib/policy`). Com vários motivos, vale o mais restritivo.
 
@@ -64,9 +68,9 @@ Os níveis acima são o ponto de partida de cada motivo (`NIVEL_BASE` e `nivelMo
 
 | Nível | Conversas | % das conversas | % do custo |
 |---|---|---|---|
-| 0 | 514 | 14,5% | 8,2% |
-| 1 | 2.023 | 57,1% | 31,8% |
-| 2 | 1.004 | 28,4% | 60,0% |
+| 🟢 Nível 0 | 514 | 14,5% | 8,2% |
+| 🟡 Nível 1 | 2.023 | 57,1% | 31,8% |
+| 🔴 Nível 2 | 1.004 | 28,4% | 60,0% |
 
 O nível 0 cobre 14,5% das conversas, mas só 8,2% do custo. O valor está em preparar o nível 1 (31,8% do custo) e priorizar o nível 2 (60,0% do custo, com humano). A simulação usa o classificador por regras do script Python, não o LLM do agente.
 
@@ -116,6 +120,11 @@ Os testes cobrem regra de autonomia, ação e trava, FAQ (incluindo nenhuma prom
 
 ## Limitações
 
+Dados sintéticos e avaliação pequena: 78 conversas, com revisão humana de 22 rótulos; a simulação usa o classificador por regras, não o LLM.
+A demo não executa nada em sistema real, e a FAQ de produto e promoções está pendente.
+
+<details><summary>Todas as limitações</summary>
+
 - Os dados são sintéticos; com texto real, o desempenho pode ser menor.
 - Não há rótulo verdadeiro. O motivo da análise vem de um classificador por regras. A primeira avaliação do classificador LLM (`docs/decisoes.md`, seção 16) usou uma amostra de 78 conversas, 6 por tag do agente. Contra a tag, o LLM acerta só 54% (regras: 65%), mas a tag é ruim: em 36% da amostra ela não bate com o texto. Contra um rótulo de leitura feito pelo assistente de IA que conduziu a avaliação (não por uma pessoa), o LLM acerta 91% (IC 95%: 83–96%). O nível final ficou igual em 76 de 78: 1 caso abaixo do correto (1 → 0, pedido parado em trânsito tratado como rastreio) e 1 acima. O modelo sozinho pega 96% dos textos de saúde, e com as palavras-chave o pipeline pega 100%. O regex de saúde do app mandava ao nível 2 nove mensagens que só tinham "Fórmula" no nome do produto; foi corrigido, com a medida de antes e depois no mesmo conjunto (não independente). A amostra é pequena por classe. A revisão humana é parcial: feita por Mauro, que discutiu os casos com um assistente de IA, cobriu 24 itens (os desencontros, mais 15 mensagens sorteadas com seed 20261102), dos quais 23 confirmaram o rótulo e 1 ficou ambíguo. Ela alcança 22 dos 78 rótulos da amostra (os outros 2 itens são do conjunto de saúde); os demais 56 não foram revisados por pessoa, e os números não mudaram. A revisão achou duas lacunas: a taxonomia não tem motivo de troca por insatisfação (hoje cai em troca de tamanho ou cancelamento), e o pedido parado em trânsito segue como limitação conhecida.
 - A simulação de autonomia usa esse classificador por regras, que ainda não tem os motivos dúvida de política e direitos do titular.
@@ -126,6 +135,8 @@ Os testes cobrem regra de autonomia, ação e trava, FAQ (incluindo nenhuma prom
 - Os limites de requisição são por instância.
 - A demo responde em português mesmo quando a mensagem vem em outro idioma.
 - "Executa" é a ação sugerida pelo agente: a demo não se integra a sistema de pedidos nem a CRM, então nada é executado de fato.
+
+</details>
 
 ## Como rodar localmente
 

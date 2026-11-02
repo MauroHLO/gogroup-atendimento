@@ -41,7 +41,7 @@ export type Estado =
 const CONTEXTO_INICIAL: ContextoPedido = EXEMPLOS[0].contexto;
 
 const campo =
-  "w-full rounded-md border border-zinc-400 bg-white px-3 py-2 text-base text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-1";
+  "w-full rounded-md border border-zinc-400 bg-white px-3 py-2 text-base text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-marca focus-visible:ring-offset-1";
 
 export function Demo() {
   const [mensagem, setMensagem] = useState("");
@@ -108,7 +108,7 @@ export function Demo() {
                   type="button"
                   onClick={() => usarExemplo(e)}
                   title={e.esperado}
-                  className="rounded-full border border-zinc-400 bg-zinc-50 px-3 py-1.5 text-sm text-zinc-900 hover:bg-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-700"
+                  className="rounded-full border border-zinc-400 bg-zinc-50 px-3 py-1.5 text-sm text-zinc-900 hover:bg-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-marca"
                 >
                   {e.rotulo}
                 </button>
@@ -221,7 +221,7 @@ export function Demo() {
           type="submit"
           disabled={carregando || mensagem.trim() === ""}
           aria-disabled={carregando || mensagem.trim() === ""}
-          className="w-full rounded-md bg-blue-700 px-4 py-3 text-base font-semibold text-white hover:bg-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-400 sm:w-auto"
+          className="w-full rounded-md bg-marca px-4 py-3 text-base font-semibold text-white hover:bg-marca/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-marca focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-400 sm:w-auto"
         >
           {carregando ? "Analisando…" : "Analisar mensagem"}
         </button>

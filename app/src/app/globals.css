@@ -4,12 +4,15 @@
 :root {
   --background: #fafafa;
   --foreground: #18181b;
+  /* Azul da logo (#1a5da8). Contraste AA: branco sobre ele e ele sobre o fundo claro. */
+  --marca: #1a5da8;
   color-scheme: light;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-marca: var(--marca);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
