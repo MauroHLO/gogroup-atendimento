@@ -8,6 +8,7 @@ Verificações:
 3. Toda linha da tabela é usada no corpo e tem tipo válido.
 4. Nenhum termo proibido (promessa de economia), id de conversa ou mensagem, nem trecho de mensagem de cliente
    (este último só se data/interim/avaliacao/entrada.jsonl existir; ele fica fora do Git).
+5. Cada imagem de docs/relatorio.md e do README existe e tem texto alternativo; cada SVG traz <title> e <desc>.
 
 Sai com código 1 se houver divergência. Só imprime números, chaves e o termo encontrado; nunca o texto de uma
 mensagem.
@@ -26,10 +27,13 @@ from pathlib import Path
 
 BASE = Path(__file__).resolve().parent.parent
 RELATORIO = BASE / "docs" / "relatorio.md"
+README = BASE / "README.md"
 PROCESSED = BASE / "data" / "processed"
 TIPOS = {"M", "E", "H", "A", "R"}
 TERMOS_PROIBIDOS = ["garantid", "com certeza", "certamente", "sem risco", "vai economizar", "economia de r$", "economizará"]
 RE_ID = re.compile(r"\b(CV\d{5,}|M\d{6,})\b")
+RE_IMG_MD = re.compile(r"!\[([^\]]*)\]\(([^)\s]+)\)")
+RE_IMG_HTML = re.compile(r"<img\b[^>]*>", re.I)
 RE_NUMERO = re.compile(r"(?<![\w.,])\d+(?:[.,]\d+)*")
 TITULO_TABELA = "### Número → fonte"
 
@@ -93,6 +97,29 @@ def conferir_tabela(linhas: list[tuple[str, str, str]], rodar_testes: bool) -> l
     return erros
 
 
+def conferir_imagens(documento: Path) -> tuple[int, list[str]]:
+    """Toda imagem referenciada existe, tem alt e, se for SVG, traz <title> e <desc>."""
+    texto = re.sub(r"```.*?```", " ", documento.read_text(encoding="utf-8"), flags=re.S)
+    imagens = RE_IMG_MD.findall(texto)
+    for tag in RE_IMG_HTML.findall(texto):
+        alt = re.search(r'\balt="([^"]*)"', tag)
+        src = re.search(r'\bsrc="([^"]*)"', tag)
+        imagens.append((alt.group(1) if alt else "", src.group(1) if src else ""))
+    erros = []
+    for alt, destino in imagens:
+        rotulo = f"{documento.name}: imagem {destino or '(sem src)'}"
+        if not alt.strip():
+            erros.append(f"{rotulo} sem texto alternativo")
+        caminho = documento.parent / destino
+        if not destino or not caminho.is_file():
+            erros.append(f"{rotulo} não existe")
+        elif caminho.suffix == ".svg":
+            svg = caminho.read_text(encoding="utf-8")
+            if "<title" not in svg or "<desc" not in svg:
+                erros.append(f"{rotulo} sem <title> ou <desc>")
+    return len(imagens), erros
+
+
 def limpar_corpo(corpo: str) -> str:
     """Tira o que não é número de conteúdo: código, links e contextos estruturais."""
     t = re.sub(r"```.*?```", " ", corpo, flags=re.S)
@@ -113,6 +140,7 @@ def limpar_corpo(corpo: str) -> str:
     t = re.sub(r"1 em cada 3|× 3", " ", t)  # definição da amostra
     t = re.sub(r"IC 95%", "IC", t)
     t = re.sub(r"Problema 1\b", " ", t)
+    t = re.sub(r"Figura \d+", " ", t)  # numeração das figuras
     t = re.sub(r"\d+h\b", " ", t)  # horário comercial (8h às 20h)
     return t
 
@@ -163,6 +191,13 @@ def main() -> int:
     if trechos:
         erros.append(f"trechos de mensagem de cliente no relatório: {trechos}")
 
+    total_imagens = 0
+    for documento in (RELATORIO, README):
+        quantas, erros_imagem = conferir_imagens(documento)
+        total_imagens += quantas
+        erros += erros_imagem
+
+    print(f"imagens conferidas: {total_imagens}")
     print(f"linhas da tabela: {len(linhas)} | números distintos no corpo: {len(set(no_corpo))} | trechos de cliente: {trechos}")
     for e in erros:
         print("DIVERGÊNCIA:", e)

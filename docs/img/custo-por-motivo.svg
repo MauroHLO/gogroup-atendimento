@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="500" viewBox="0 0 720 500" role="img" aria-labelledby="t d" font-family="'Segoe UI', Helvetica, Arial, sans-serif">
+<title id="t">Custo por motivo [E]</title>
+<desc id="d">Barras horizontais ordenadas por percentual do custo. Atraso 19,5%; Rastreio 17,3%; Cobrança 8,2%; Avaria 6,6%; Sem mensagem do cliente 6,1%; Item faltando 5,6%; Cancelamento 5,4%; Dúvida de produto 5,1%; Brinde 4,3%; Troca de tamanho 4,0%; Erro de personalização 3,9%; Promoção e cupom 3,6%; Fragrância 3,5%; Endereço 2,6%; Pagamento pendente 1,7%; Elogio 1,3%; Reação adversa 1,2%; Não classificado 0,0%.</desc>
+<rect x="0.5" y="0.5" width="719" height="499" rx="12" fill="#fbfbfa" stroke="#d4d4d8"/>
+<text x="24" y="34" font-size="19" fill="#111111" font-weight="600" text-anchor="start">Custo por motivo [E]</text>
+<text x="24" y="56" font-size="13.5" fill="#52525b" font-weight="400" text-anchor="start">Atraso e rastreio somam 36,8% do custo.</text>
+<text x="24" y="84.5" font-size="13" fill="#111111" font-weight="700" text-anchor="start">Atraso</text>
+<rect x="190" y="72" width="460" height="16" rx="3" fill="#2a78d6" />
+<text x="656" y="84.5" font-size="12.5" fill="#111111" font-weight="700" text-anchor="start">19,5%</text>
+<text x="24" y="106.5" font-size="13" fill="#111111" font-weight="700" text-anchor="start">Rastreio</text>
+<rect x="190" y="94" width="408.103" height="16" rx="3" fill="#2a78d6" />
+<text x="604.103" y="106.5" font-size="12.5" fill="#111111" font-weight="700" text-anchor="start">17,3%</text>
+<text x="24" y="128.5" font-size="13" fill="#27272a" font-weight="400" text-anchor="start">Cobrança</text>
+<rect x="190" y="116" width="193.436" height="16" rx="3" fill="#2a78d6" fill-opacity="0.4"/>
+<text x="389.436" y="128.5" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="start">8,2%</text>
+<text x="24" y="150.5" font-size="13" fill="#27272a" font-weight="400" text-anchor="start">Avaria</text>
+<rect x="190" y="138" width="155.692" height="16" rx="3" fill="#2a78d6" fill-opacity="0.4"/>
+<text x="351.692" y="150.5" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="start">6,6%</text>
+<text x="24" y="172.5" font-size="13" fill="#27272a" font-weight="400" text-anchor="start">Sem mensagem do cliente</text>
+<rect x="190" y="160" width="143.897" height="16" rx="3" fill="#2a78d6" fill-opacity="0.4"/>
+<text x="339.897" y="172.5" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="start">6,1%</text>
+<text x="24" y="194.5" font-size="13" fill="#27272a" font-weight="400" text-anchor="start">Item faltando</text>
+<rect x="190" y="182" width="132.103" height="16" rx="3" fill="#2a78d6" fill-opacity="0.4"/>
+<text x="328.103" y="194.5" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="start">5,6%</text>
+<text x="24" y="216.5" font-size="13" fill="#27272a" font-weight="400" text-anchor="start">Cancelamento</text>
+<rect x="190" y="204" width="127.385" height="16" rx="3" fill="#2a78d6" fill-opacity="0.4"/>
+<text x="323.385" y="216.5" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="start">5,4%</text>
+<text x="24" y="238.5" font-size="13" fill="#27272a" font-weight="400" text-anchor="start">Dúvida de produto</text>
+<rect x="190" y="226" width="120.308" height="16" rx="3" fill="#2a78d6" fill-opacity="0.4"/>
+<text x="316.308" y="238.5" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="start">5,1%</text>
+<text x="24" y="260.5" font-size="13" fill="#27272a" font-weight="400" text-anchor="start">Brinde</text>
+<rect x="190" y="248" width="101.436" height="16" rx="3" fill="#2a78d6" fill-opacity="0.4"/>
+<text x="297.436" y="260.5" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="start">4,3%</text>
+<text x="24" y="282.5" font-size="13" fill="#27272a" font-weight="400" text-anchor="start">Troca de tamanho</text>
+<rect x="190" y="270" width="94.359" height="16" rx="3" fill="#2a78d6" fill-opacity="0.4"/>
+<text x="290.359" y="282.5" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="start">4,0%</text>
+<text x="24" y="304.5" font-size="13" fill="#27272a" font-weight="400" text-anchor="start">Erro de personalização</text>
+<rect x="190" y="292" width="92" height="16" rx="3" fill="#2a78d6" fill-opacity="0.4"/>
+<text x="288" y="304.5" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="start">3,9%</text>
+<text x="24" y="326.5" font-size="13" fill="#27272a" font-weight="400" text-anchor="start">Promoção e cupom</text>
+<rect x="190" y="314" width="84.9231" height="16" rx="3" fill="#2a78d6" fill-opacity="0.4"/>
+<text x="280.923" y="326.5" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="start">3,6%</text>
+<text x="24" y="348.5" font-size="13" fill="#27272a" font-weight="400" text-anchor="start">Fragrância</text>
+<rect x="190" y="336" width="82.5641" height="16" rx="3" fill="#2a78d6" fill-opacity="0.4"/>
+<text x="278.564" y="348.5" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="start">3,5%</text>
+<text x="24" y="370.5" font-size="13" fill="#27272a" font-weight="400" text-anchor="start">Endereço</text>
+<rect x="190" y="358" width="61.3333" height="16" rx="3" fill="#2a78d6" fill-opacity="0.4"/>
+<text x="257.333" y="370.5" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="start">2,6%</text>
+<text x="24" y="392.5" font-size="13" fill="#27272a" font-weight="400" text-anchor="start">Pagamento pendente</text>
+<rect x="190" y="380" width="40.1026" height="16" rx="3" fill="#2a78d6" fill-opacity="0.4"/>
+<text x="236.103" y="392.5" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="start">1,7%</text>
+<text x="24" y="414.5" font-size="13" fill="#27272a" font-weight="400" text-anchor="start">Elogio</text>
+<rect x="190" y="402" width="30.6667" height="16" rx="3" fill="#2a78d6" fill-opacity="0.4"/>
+<text x="226.667" y="414.5" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="start">1,3%</text>
+<text x="24" y="436.5" font-size="13" fill="#27272a" font-weight="400" text-anchor="start">Reação adversa</text>
+<rect x="190" y="424" width="28.3077" height="16" rx="3" fill="#2a78d6" fill-opacity="0.4"/>
+<text x="224.308" y="436.5" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="start">1,2%</text>
+<text x="24" y="458.5" font-size="13" fill="#27272a" font-weight="400" text-anchor="start">Não classificado</text>
+<rect x="190" y="446" width="0.5" height="16" rx="3" fill="#2a78d6" fill-opacity="0.4"/>
+<text x="196" y="458.5" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="start">0,0%</text>
+<text x="24" y="484" font-size="11.5" fill="#52525b" font-weight="400" text-anchor="start">Fonte: data/processed/motivos_custos.csv</text>
+</svg>

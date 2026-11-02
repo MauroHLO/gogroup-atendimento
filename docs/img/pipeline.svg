@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="560" viewBox="0 0 720 560" role="img" aria-labelledby="t d" font-family="'Segoe UI', Helvetica, Arial, sans-serif">
+<title id="t">Pipeline do agente: o LLM entende e redige, o código decide</title>
+<desc id="d">Fluxo: mascarar, classificar, sinais, regra de nível. A regra abre três caminhos. Nível 0: redigir, checar, responde ao cliente. Nível 1: redigir, checar, rascunho que uma pessoa aprova. Nível 2: sem redação do LLM, resumo interno e humano obrigatório.</desc>
+<rect x="0.5" y="0.5" width="719" height="559" rx="12" fill="#fbfbfa" stroke="#d4d4d8"/>
+<text x="24" y="34" font-size="19" fill="#111111" font-weight="600" text-anchor="start">Pipeline do agente: o LLM entende e redige, o código decide</text>
+<text x="24" y="56" font-size="13.5" fill="#52525b" font-weight="400" text-anchor="start">Três caminhos saem da regra de nível, cada um na cor do nível.</text>
+<rect x="24" y="72" width="208" height="52" rx="8" fill="#ffffff" stroke="#1a5da8" stroke-width="2"/>
+<text x="128" y="97" font-size="14" fill="#111111" font-weight="600" text-anchor="middle">Mascarar</text>
+<text x="128" y="113" font-size="11.5" fill="#52525b" font-weight="400" text-anchor="middle">código</text>
+<rect x="256" y="72" width="208" height="52" rx="8" fill="#ffffff" stroke="#1a5da8" stroke-width="2"/>
+<text x="360" y="97" font-size="14" fill="#111111" font-weight="600" text-anchor="middle">Classificar</text>
+<text x="360" y="113" font-size="11.5" fill="#52525b" font-weight="400" text-anchor="middle">LLM, JSON validado</text>
+<rect x="488" y="72" width="208" height="52" rx="8" fill="#ffffff" stroke="#1a5da8" stroke-width="2"/>
+<text x="592" y="97" font-size="14" fill="#111111" font-weight="600" text-anchor="middle">Sinais</text>
+<text x="592" y="113" font-size="11.5" fill="#52525b" font-weight="400" text-anchor="middle">palavra-chave e LLM</text>
+<path d="M232 98L249 98" stroke="#1a5da8" stroke-width="2" fill="none"/><path d="M255 98L246.6 92L246.6 104Z" fill="#1a5da8"/>
+<path d="M464 98L481 98" stroke="#1a5da8" stroke-width="2" fill="none"/><path d="M487 98L478.6 92L478.6 104Z" fill="#1a5da8"/>
+<path d="M592 124L592 143" stroke="#1a5da8" stroke-width="2" fill="none"/><path d="M592 149L586 140.6L598 140.6Z" fill="#1a5da8"/>
+<rect x="24" y="150" width="672" height="52" rx="8" fill="#ffffff" stroke="#1a5da8" stroke-width="2"/>
+<text x="360" y="175" font-size="14" fill="#111111" font-weight="600" text-anchor="middle">Regra de nível</text>
+<text x="360" y="191" font-size="11.5" fill="#52525b" font-weight="400" text-anchor="middle">código determinístico, com testes</text>
+<path d="M128 202L128 222" stroke="#1baf7a" stroke-width="3" fill="none"/><path d="M128 228L122 219.6L134 219.6Z" fill="#1baf7a"/>
+<circle cx="96" cy="246" r="6" fill="#1baf7a"/>
+<text x="108" y="251" font-size="14" fill="#111111" font-weight="700" text-anchor="start">Nível 0</text>
+<path d="M360 202L360 222" stroke="#eda100" stroke-width="3" fill="none"/><path d="M360 228L354 219.6L366 219.6Z" fill="#eda100"/>
+<path d="M328 239L335 246L328 253L321 246Z" fill="#eda100"/>
+<text x="340" y="251" font-size="14" fill="#111111" font-weight="700" text-anchor="start">Nível 1</text>
+<path d="M592 202L592 222" stroke="#e34948" stroke-width="3" fill="none"/><path d="M592 228L586 219.6L598 219.6Z" fill="#e34948"/>
+<path d="M560 239L567 252L553 252Z" fill="#e34948"/>
+<text x="572" y="251" font-size="14" fill="#111111" font-weight="700" text-anchor="start">Nível 2</text>
+<path d="M128 260L128 277" stroke="#1baf7a" stroke-width="3" fill="none"/><path d="M128 283L122 274.6L134 274.6Z" fill="#1baf7a"/>
+<path d="M360 260L360 277" stroke="#eda100" stroke-width="3" fill="none"/><path d="M360 283L354 274.6L366 274.6Z" fill="#eda100"/>
+<rect x="24" y="284" width="440" height="50" rx="8" fill="#ffffff" stroke="#1a5da8" stroke-width="2"/>
+<text x="244" y="308" font-size="14" fill="#111111" font-weight="600" text-anchor="middle">Redigir</text>
+<text x="244" y="324" font-size="11.5" fill="#52525b" font-weight="400" text-anchor="middle">LLM, só com FAQ e fatos do pedido</text>
+<path d="M128 334L128 349" stroke="#1baf7a" stroke-width="3" fill="none"/><path d="M128 355L122 346.6L134 346.6Z" fill="#1baf7a"/>
+<path d="M360 334L360 349" stroke="#eda100" stroke-width="3" fill="none"/><path d="M360 355L354 346.6L366 346.6Z" fill="#eda100"/>
+<rect x="24" y="356" width="440" height="50" rx="8" fill="#ffffff" stroke="#1a5da8" stroke-width="2"/>
+<text x="244" y="380" font-size="14" fill="#111111" font-weight="600" text-anchor="middle">Checar</text>
+<text x="244" y="396" font-size="11.5" fill="#52525b" font-weight="400" text-anchor="middle">código: número, promessa, prazo, CPF</text>
+<path d="M128 406L128 421" stroke="#1baf7a" stroke-width="3" fill="none"/><path d="M128 427L122 418.6L134 418.6Z" fill="#1baf7a"/>
+<path d="M360 406L360 421" stroke="#eda100" stroke-width="3" fill="none"/><path d="M360 427L354 418.6L366 418.6Z" fill="#eda100"/>
+<path d="M592 260L592 421" stroke="#e34948" stroke-width="3" fill="none"/><path d="M592 427L586 418.6L598 418.6Z" fill="#e34948"/>
+<rect x="504" y="318" width="176" height="20" fill="#fbfbfa"/>
+<text x="592" y="332" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="middle">sem redação do LLM</text>
+<rect x="24" y="428" width="208" height="50" rx="8" fill="#ffffff" stroke="#1baf7a" stroke-width="2"/>
+<text x="128" y="452" font-size="14" fill="#111111" font-weight="600" text-anchor="middle">Responde ao cliente</text>
+<text x="128" y="468" font-size="11.5" fill="#52525b" font-weight="400" text-anchor="middle">sem pessoa no fluxo</text>
+<rect x="256" y="428" width="208" height="50" rx="8" fill="#ffffff" stroke="#eda100" stroke-width="2"/>
+<text x="360" y="452" font-size="14" fill="#111111" font-weight="600" text-anchor="middle">Rascunho</text>
+<text x="360" y="468" font-size="11.5" fill="#52525b" font-weight="400" text-anchor="middle">uma pessoa aprova</text>
+<rect x="488" y="428" width="208" height="50" rx="8" fill="#ffffff" stroke="#e34948" stroke-width="2"/>
+<text x="592" y="452" font-size="14" fill="#111111" font-weight="600" text-anchor="middle">Resumo interno</text>
+<text x="592" y="468" font-size="11.5" fill="#52525b" font-weight="400" text-anchor="middle">humano obrigatório</text>
+<text x="24" y="500" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="start">Reprovou duas vezes na checagem: texto de reserva, e o nível 0 passa a nível 1.</text>
+<text x="24" y="518" font-size="12.5" fill="#52525b" font-weight="400" text-anchor="start">Falha do provedor: nível 2. Nada é executado em sistema real.</text>
+<text x="24" y="544" font-size="11.5" fill="#52525b" font-weight="400" text-anchor="start">Fonte: app/src/lib/agent e docs/decisoes.md, seção 14</text>
+</svg>
