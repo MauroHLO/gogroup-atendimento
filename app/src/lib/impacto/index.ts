@@ -341,11 +341,11 @@ export const CARTOES: readonly Cartao[] = [
   },
   {
     id: "niveis",
-    valor: `${fmtPct1(v("nivel0PctConversas"))} vs ${fmtPct1(v("nivel2PctCusto"))}`,
-    texto: "das conversas em nível 0 contra o custo em nível 2",
-    detalhe: `Nível 0: ${fmtPct1(v("nivel0PctConversas"))} das conversas. Nível 2: ${fmtPct1(v("nivel2PctCusto"))} do custo`,
+    valor: `${fmtPct1(v("nivel2PctConversas"))} → ${fmtPct1(v("nivel2PctCusto"))}`,
+    texto: `das conversas (nível 2) concentram ${fmtPct1(v("nivel2PctCusto"))} do custo`,
+    detalhe: `Nível 2: ${fmtPct1(v("nivel2PctConversas"))} das conversas e ${fmtPct1(v("nivel2PctCusto"))} do custo`,
     rotulos: ["amostra", "estimado"],
-    fontes: ["nivel0PctConversas", "nivel2PctCusto"],
+    fontes: ["nivel2PctConversas", "nivel2PctCusto"],
   },
 ];
 

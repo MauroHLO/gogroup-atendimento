@@ -68,9 +68,15 @@ describe("agregados copiados conferem com data/processed", () => {
 
 describe("cartões do topo", () => {
   it("mostram os números pedidos, vindos dos agregados", () => {
-    expect(CARTOES.map((c) => c.valor)).toEqual(["R$ 108 mil", "47,4%", "14,5% vs 60,0%"]);
+    expect(CARTOES.map((c) => c.valor)).toEqual(["R$ 108 mil", "47,4%", "28,4% → 60,0%"]);
     expect(CARTOES[0].detalhe).toContain("R$ 108.299");
     expect(CARTOES[1].texto).toContain("10,2% das conversas");
+    expect(CARTOES[2].texto).toBe("das conversas (nível 2) concentram 60,0% do custo");
+    expect(CARTOES[2].rotulos).toEqual(["amostra", "estimado"]);
+    // Conversas e custo do mesmo nível, conferidos contra autonomia.csv.
+    expect(CARTOES[2].fontes).toEqual(["nivel2PctConversas", "nivel2PctCusto"]);
+    expect(CARTOES[2].fontes.map((k) => AGREGADOS[k].chave)).toEqual(["2.pct_conversas", "2.pct_custo"]);
+    expect(CARTOES[2].fontes.every((k) => AGREGADOS[k].arquivo === "autonomia.csv")).toBe(true);
     expect(fmtRsMil(108299)).toBe("R$ 108 mil");
   });
 
