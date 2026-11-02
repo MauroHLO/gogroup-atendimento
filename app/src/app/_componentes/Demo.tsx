@@ -100,7 +100,7 @@ export function Demo() {
           <h2 id={`${id}-exemplos`} className="text-base font-semibold">
             Exemplos prontos
           </h2>
-          <p className="mt-1 text-sm text-zinc-700">Preenchem a mensagem e o contexto. Todos são fictícios.</p>
+          <p className="mt-1 text-sm text-zinc-700">Fictícios. Escolha um, analise e depois mude o contexto para ver o nível mudar.</p>
           <ul className="mt-3 flex flex-wrap gap-2">
             {EXEMPLOS.map((e) => (
               <li key={e.id}>

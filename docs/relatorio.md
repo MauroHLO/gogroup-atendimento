@@ -8,7 +8,7 @@
 - **Autonomia:** nível 0 em 14,5%, nível 1 em 57,1% e nível 2 em 28,4% das conversas simuladas [M].
 - **Impacto, não medido em produção:** teto de R$ 8.294 no nível 0 [E]; R$ 3.239 a R$ 8.096 no nível 1 [H].
 - **Segurança:** CPF, telefone, e-mail e cartão mascarados antes do modelo; saúde e ameaça só com humano; nada executa em sistema real.
-- **Evidência:** 1.368 testes automatizados [R]; motivo igual ao rótulo em 91,0% de 78 conversas [M]; nível igual em 76 delas [M].
+- **Evidência:** 1.408 testes automatizados [R]; motivo igual ao rótulo em 91,0% de 78 conversas [M]; nível igual em 76 delas [M].
 - **Limites:** dados sintéticos; 22 dos 78 rótulos revisados por pessoa [M]; simulação com classificador por regras.
 - **Pedido:** piloto só de nível 0, em rastreio e pagamento pendente: 476 conversas (13,4%) [M], teto de R$ 7.668 [E].
 - **Links:** [demo](https://gogroup-atendimento.vercel.app) · [repositório](https://github.com/MauroHLO/gogroup-atendimento) · [decisões](decisoes.md)
@@ -36,7 +36,7 @@
 - **Fila:** 20,3% das conversas de WhatsApp com resposta do atendente passam do SLA [M]; preparar o caso pode reduzir o trabalho [H].
 - **Fora do horário:** só o nível 0 responde na hora, em 14,5% das conversas simuladas [M].
 - **Custo concentrado:** no Reclame Aqui, o nível 2 prioriza e resume, sem resposta automática em canal público.
-- **Auditoria:** mesma entrada, mesma decisão, com 1.368 testes [R].
+- **Auditoria:** mesma entrada, mesma decisão, com 1.408 testes [R].
 
 **Pedido:** piloto só com nível 0, em rastreio e pagamento pendente: 476 das 3.541 conversas simuladas (13,4%) [M], teto de R$ 7.668 [E]. Ele mede aprovação na revisão por amostragem, reprovação nas checagens, SLA e recontato.
 
@@ -149,7 +149,7 @@ flowchart TD
 
 **Os testes acharam defeitos reais, corrigidos com medida de antes e depois; a avaliação é boa, mas pequena.**
 
-- **Automatizados:** 1.368 [R], sem chamar o modelo, incluindo os números do painel contra `data/processed/`.
+- **Automatizados:** 1.408 [R], sem chamar o modelo, incluindo os números do painel contra `data/processed/`.
 - **Bateria ao vivo de 22 cenários [R]:** achou os defeitos 3 e 4.
 - **Regressão final, 01/11/2026 [R]:** 15 mensagens fictícias digitadas por uma IA no navegador, revisadas por Mauro: exemplos prontos 1, 4, 5, 7 e 8, mais 10 livres. Nível esperado em todas. CPF e e-mail chegaram mascarados, e a instrução embutida não alterou a resposta. Os exemplos 2, 3 e 6 passaram em baterias anteriores.
 
@@ -354,7 +354,7 @@ Arquivos sem caminho estão em `data/processed/`. `doc:` = conferido no document
 | 91 | `metricas.json#pii_nas_mensagens.com_telefone` | M |
 | 45 | `metricas.json#pii_nas_mensagens.com_cartao` | M |
 | 8 | `doc:README.md` | R |
-| 1.368 | `vitest` | R |
+| 1.408 | `vitest` | R |
 | 91,0 | `avaliacao_classificador.json#contra_rotulo_de_leitura.llm_principal.pct` | M |
 | 82,6 | `avaliacao_classificador.json#contra_rotulo_de_leitura.llm_principal.ic95_inf` | M |
 | 95,6 | `avaliacao_classificador.json#contra_rotulo_de_leitura.llm_principal.ic95_sup` | M |

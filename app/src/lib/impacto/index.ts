@@ -38,6 +38,11 @@ export function fmtRs(n: number): string {
   return `R$ ${fmtInt(n)}`;
 }
 
+// Para os cartões do topo: 108299 → "R$ 108 mil". O valor exato fica no title do cartão.
+export function fmtRsMil(n: number): string {
+  return `R$ ${fmtInt(n / 1000)} mil`;
+}
+
 // ---------------------------------------------------------------- derivados
 
 export const DERIVADOS = {
@@ -71,6 +76,8 @@ export const ROTULO: Readonly<Record<Rotulo, string>> = {
 export interface Destaque {
   valor: string;
   texto: string;
+  // Rótulo de poucas palavras do cartão visível; sem ele, o destaque só aparece nos detalhes.
+  curto?: string;
   rotulos: readonly Rotulo[];
   fontes: readonly ChaveAgregado[];
 }
@@ -92,6 +99,10 @@ export interface NivelSimulado {
 export interface BlocoImpacto {
   id: string;
   titulo: string;
+  // Legenda de uma linha, visível; o texto completo (introducao, aviso) fica nos detalhes.
+  legenda?: string;
+  // Resumo de uma linha dos blocos recolhidos.
+  resumo?: string;
   introducao?: string;
   aviso?: string;
   destaques: readonly Destaque[];
@@ -101,15 +112,24 @@ export interface BlocoImpacto {
   limites?: readonly string[];
 }
 
-export const INTRODUCAO_PAINEL = `Números da análise de ${fmtInt(v("conversasAmostra"))} conversas (amostra de 1 em cada 3 clientes), no período da amostra, gerados por analysis/analise_atendimento.py. Contagens e percentuais de conversas são da amostra; valores em R$ são estimativas para a população (amostra × 3).`;
+export const INTRODUCAO_PAINEL = `${fmtInt(v("conversasAmostra"))} conversas, de 1 em cada 3 clientes. Percentuais de conversas são da amostra; valores em R$ são estimados (amostra × 3).`;
+
+export const ORIGEM_NUMEROS = "Gerados por analysis/analise_atendimento.py e conferidos por teste contra data/processed/.";
+
+export const PRINCIPIO = "O modelo entende e redige; o código decide.";
+
+export const LEGENDA_SOLIDEZ = "sólido = estimado; hachurado = hipótese";
+export const NOTA_SOLIDEZ = "Nestes gráficos nenhuma barra é hipótese; % das conversas é medido na amostra.";
 
 const PROBLEMA: BlocoImpacto = {
   id: "problema",
   titulo: "O problema em números",
+  legenda: "Fila, horário e transportadora, além do custo acima.",
   destaques: [
     {
       valor: `≈ ${fmtInt(v("conversasEstimadas"))}`,
       texto: "conversas de atendimento no período da amostra.",
+      curto: "conversas no período",
       rotulos: ["estimado"],
       fontes: ["conversasEstimadas"],
     },
@@ -133,6 +153,7 @@ const PROBLEMA: BlocoImpacto = {
     },
     {
       valor: fmtPct(v("slaWhatsappEstouro")),
+      curto: "do WhatsApp passa do SLA",
       texto: `das conversas de WhatsApp com resposta do atendente (${fmtInt(v("slaWhatsappConversas"))}) passam do SLA de 30 minutos, contado das 8h às 20h.`,
       rotulos: ["amostra"],
       fontes: ["slaWhatsappEstouro", "slaWhatsappConversas"],
@@ -140,11 +161,13 @@ const PROBLEMA: BlocoImpacto = {
     {
       valor: fmtPct(v("foraDoHorario")),
       texto: "das conversas são abertas fora do horário dos atendentes (8h às 20h).",
+      curto: "abertas fora do horário",
       rotulos: ["amostra"],
       fontes: ["foraDoHorario"],
     },
     {
       valor: `${fmtDec(v("rotaExpressRazao"))}×`,
+      curto: "Rota Express em rastreio e atraso",
       texto: `Rota Express aparece em ${fmtPct(d.rotaExpressLogisticaPct)} dos contatos de rastreio e atraso, contra ${fmtPct(d.rotaExpressReferenciaPct)} dos pedidos dos demais contatos.`,
       rotulos: ["amostra", "associacao"],
       fontes: ["rotaExpressRazao", "rotaExpressLogistica", "rotaExpressReferencia"],
@@ -162,17 +185,20 @@ const PROBLEMA: BlocoImpacto = {
 const EVITAVEIS: BlocoImpacto = {
   id: "evitaveis",
   titulo: "Contatos potencialmente evitáveis (hipótese)",
+  legenda: "O agente não rodou em produção: nada aqui é medido.",
   introducao:
     "O agente não rodou em produção: nada aqui é contato evitado medido. A hipótese agrupa cada conversa pelo seu motivo principal, inferido por regras.",
   destaques: [
     {
       valor: `${fmtInt(v("falhaProcesso"))} (${fmtPct(d.falhaProcessoPct)})`,
+      curto: "falha de processo",
       texto: "conversas de falha de processo (atraso, avaria, item faltando, brinde, erro de personalização): evitáveis corrigindo a causa.",
       rotulos: ["amostra", "hipotese"],
       fontes: ["falhaProcesso", "conversasAmostra"],
     },
     {
       valor: `${fmtInt(v("comunicacaoProativa"))} (${fmtPct(d.comunicacaoProativaPct)})`,
+      curto: "proativa ou autoatendimento",
       texto: "conversas que caberiam em comunicação proativa ou autoatendimento (rastreio, pagamento pendente, cancelamento, endereço, promoção, dúvida de produto).",
       rotulos: ["amostra", "hipotese"],
       fontes: ["comunicacaoProativa", "conversasAmostra"],
@@ -180,11 +206,13 @@ const EVITAVEIS: BlocoImpacto = {
     {
       valor: fmtPct(v("recontato")),
       texto: "das conversas são o 2º contato ou mais sobre o mesmo pedido.",
+      curto: "são recontato",
       rotulos: ["amostra"],
       fontes: ["recontato"],
     },
     {
       valor: fmtPct(v("atrasoEmTransito")),
+      curto: "dos atrasos ainda em trânsito",
       texto: "das reclamações de atraso chegam com o pedido ainda em trânsito: um aviso proativo poderia antecipar o contato.",
       rotulos: ["amostra"],
       fontes: ["atrasoEmTransito"],
@@ -202,6 +230,7 @@ const EVITAVEIS: BlocoImpacto = {
 const AUTONOMIA_SIMULADA: BlocoImpacto = {
   id: "autonomia",
   titulo: "Simulação de autonomia",
+  legenda: "Simulação com o classificador por regras, não com o LLM do agente.",
   introducao: `${fmtInt(v("conversasComMensagem"))} conversas com mensagem do cliente, na amostra; custo estimado. FAQ de produto e promoções pendente.`,
   aviso:
     "A simulação usa o classificador por regras do script Python (analysis/analise_atendimento.py), não o LLM do agente. O script ainda não tem os motivos dúvida de política e direitos do titular.",
@@ -237,6 +266,7 @@ const AUTONOMIA_SIMULADA: BlocoImpacto = {
 const DEFESA: BlocoImpacto = {
   id: "defesa",
   titulo: "Como defendemos as conclusões",
+  resumo: "Base validada, divergências de rótulo declaradas e o porquê do mascaramento.",
   destaques: [],
   linhas: [
     {
@@ -265,6 +295,7 @@ const DEFESA: BlocoImpacto = {
 const LIMITES: BlocoImpacto = {
   id: "limites",
   titulo: "Limites",
+  resumo: "Dados sintéticos, nada medido em produção, avaliação com revisão humana parcial.",
   destaques: [],
   linhas: [],
   limites: [
@@ -279,6 +310,131 @@ const LIMITES: BlocoImpacto = {
 };
 
 export const PAINEL: readonly BlocoImpacto[] = [PROBLEMA, EVITAVEIS, AUTONOMIA_SIMULADA, DEFESA, LIMITES];
+
+// ---------------------------------------------------------------- cartões do topo e gráficos
+
+export interface Cartao {
+  id: string;
+  valor: string;
+  texto: string;
+  detalhe: string; // title do cartão: o valor exato
+  rotulos: readonly Rotulo[];
+  fontes: readonly ChaveAgregado[];
+}
+
+export const CARTOES: readonly Cartao[] = [
+  {
+    id: "custo",
+    valor: fmtRsMil(v("custoEstimado")),
+    texto: "de custo de atendimento no período",
+    detalhe: `${fmtRs(v("custoEstimado"))} de custo estimado`,
+    rotulos: ["estimado"],
+    fontes: ["custoEstimado"],
+  },
+  {
+    id: "reclame-aqui",
+    valor: fmtPct1(v("raPctCusto")),
+    texto: `do custo no Reclame Aqui, com ${fmtPct1(v("raPctConversas"))} das conversas`,
+    detalhe: `Reclame Aqui: ${fmtPct1(v("raPctCusto"))} do custo e ${fmtPct1(v("raPctConversas"))} das conversas`,
+    rotulos: ["estimado", "amostra"],
+    fontes: ["raPctCusto", "raPctConversas"],
+  },
+  {
+    id: "niveis",
+    valor: `${fmtPct1(v("nivel0PctConversas"))} vs ${fmtPct1(v("nivel2PctCusto"))}`,
+    texto: "das conversas em nível 0 contra o custo em nível 2",
+    detalhe: `Nível 0: ${fmtPct1(v("nivel0PctConversas"))} das conversas. Nível 2: ${fmtPct1(v("nivel2PctCusto"))} do custo`,
+    rotulos: ["amostra", "estimado"],
+    fontes: ["nivel0PctConversas", "nivel2PctCusto"],
+  },
+];
+
+export interface SerieNiveis {
+  id: "conversas" | "custo";
+  rotulo: string;
+  tipo: Rotulo;
+  segmentos: readonly { nivel: 0 | 1 | 2; pct: number }[];
+}
+
+export const SERIES_NIVEIS: readonly SerieNiveis[] = [
+  {
+    id: "conversas",
+    rotulo: "% das conversas",
+    tipo: "amostra",
+    segmentos: [
+      { nivel: 0, pct: v("nivel0PctConversas") },
+      { nivel: 1, pct: v("nivel1PctConversas") },
+      { nivel: 2, pct: v("nivel2PctConversas") },
+    ],
+  },
+  {
+    id: "custo",
+    rotulo: "% do custo",
+    tipo: "estimado",
+    segmentos: [
+      { nivel: 0, pct: v("nivel0PctCusto") },
+      { nivel: 1, pct: v("nivel1PctCusto") },
+      { nivel: 2, pct: v("nivel2PctCusto") },
+    ],
+  },
+];
+
+export interface BarraCanal {
+  id: "reclame_aqui" | "whatsapp" | "email";
+  rotulo: string;
+  pctConversas: number;
+  pctCusto: number;
+  destaque: boolean;
+}
+
+// Ordenado por % do custo; o Reclame Aqui é o destaque.
+export const CANAIS: readonly BarraCanal[] = (
+  [
+    { id: "reclame_aqui", rotulo: "Reclame Aqui", pctConversas: v("raPctConversas"), pctCusto: v("raPctCusto"), destaque: true },
+    { id: "whatsapp", rotulo: "WhatsApp", pctConversas: v("whatsappPctConversas"), pctCusto: v("whatsappPctCusto"), destaque: false },
+    { id: "email", rotulo: "E-mail", pctConversas: v("emailPctConversas"), pctCusto: v("emailPctCusto"), destaque: false },
+  ] satisfies BarraCanal[]
+).sort((a, b) => b.pctCusto - a.pctCusto);
+
+export interface BarraMotivo {
+  id: string; // valor da 1ª coluna de motivos_custos.csv
+  rotulo: string;
+  fonte: ChaveAgregado;
+  pctCusto: number;
+  destaque: boolean;
+}
+
+const MOTIVOS_CUSTO: readonly (readonly [string, string, ChaveAgregado])[] = [
+  ["atraso", "Atraso", "atrasoPctCusto"],
+  ["rastreio", "Rastreio", "rastreioPctCusto"],
+  ["financeiro_cobranca", "Cobrança", "cobrancaPctCusto"],
+  ["avaria", "Avaria", "avariaPctCusto"],
+  ["sem_mensagem_cliente", "Sem mensagem do cliente", "semMensagemPctCusto"],
+  ["item_faltando", "Item faltando", "itemFaltandoPctCusto"],
+  ["cancelamento", "Cancelamento", "cancelamentoPctCusto"],
+  ["duvida_produto", "Dúvida de produto", "duvidaProdutoPctCusto"],
+  ["brinde", "Brinde", "brindePctCusto"],
+  ["troca_tamanho", "Troca de tamanho", "trocaTamanhoPctCusto"],
+  ["personalizacao_erro", "Erro de personalização", "personalizacaoPctCusto"],
+  ["promo_cupom", "Promoção e cupom", "promoCupomPctCusto"],
+  ["fragrancia", "Fragrância", "fragranciaPctCusto"],
+  ["endereco", "Endereço", "enderecoPctCusto"],
+  ["pagamento_pendente", "Pagamento pendente", "pagamentoPendentePctCusto"],
+  ["elogio", "Elogio", "elogioPctCusto"],
+  ["reacao_adversa", "Reação adversa", "reacaoAdversaPctCusto"],
+  ["nao_classificado", "Não classificado", "naoClassificadoPctCusto"],
+];
+
+export const MOTIVOS: readonly BarraMotivo[] = MOTIVOS_CUSTO.map(([id, rotulo, fonte]) => ({
+  id,
+  rotulo,
+  fonte,
+  pctCusto: v(fonte),
+  destaque: id === "atraso" || id === "rastreio",
+})).sort((a, b) => b.pctCusto - a.pctCusto);
+
+export const LEGENDA_MOTIVOS = `Atraso e rastreio somam ${fmtPct1(d.atrasoRastreioPctCusto)} do custo.`;
+export const LEGENDA_CANAIS = `O Reclame Aqui tem ${fmtPct1(v("raPctConversas"))} das conversas e ${fmtPct1(v("raPctCusto"))} do custo.`;
 
 export function descreverFonte(k: ChaveAgregado): string {
   const a = AGREGADOS[k];

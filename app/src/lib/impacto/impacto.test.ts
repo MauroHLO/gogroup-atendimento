@@ -3,15 +3,24 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   AGREGADOS,
+  CANAIS,
+  CARTOES,
   DERIVADOS,
   INTRODUCAO_PAINEL,
+  LEGENDA_CANAIS,
+  LEGENDA_MOTIVOS,
+  LEGENDA_SOLIDEZ,
+  MOTIVOS,
   PAINEL,
+  PRINCIPIO,
+  SERIES_NIVEIS,
   descreverFonte,
   fmtDec,
   fmtInt,
   fmtPct,
   fmtPct1,
   fmtRs,
+  fmtRsMil,
   type Arquivo,
   type ChaveAgregado,
 } from ".";
@@ -54,6 +63,75 @@ describe("agregados copiados conferem com data/processed", () => {
   it.skipIf(!existe).each(chaves)("%s", (k) => {
     const a = AGREGADOS[k];
     expect(valorNoArquivo(a.arquivo, a.chave)).toBe(a.valor);
+  });
+});
+
+describe("cartões do topo", () => {
+  it("mostram os números pedidos, vindos dos agregados", () => {
+    expect(CARTOES.map((c) => c.valor)).toEqual(["R$ 108 mil", "47,4%", "14,5% vs 60,0%"]);
+    expect(CARTOES[0].detalhe).toContain("R$ 108.299");
+    expect(CARTOES[1].texto).toContain("10,2% das conversas");
+    expect(fmtRsMil(108299)).toBe("R$ 108 mil");
+  });
+
+  it("cada cartão diz o tipo do número e tem fonte", () => {
+    for (const c of CARTOES) {
+      expect(c.rotulos.length).toBeGreaterThan(0);
+      expect(c.fontes.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("traz o princípio e a legenda de solidez", () => {
+    expect(PRINCIPIO).toBe("O modelo entende e redige; o código decide.");
+    expect(LEGENDA_SOLIDEZ).toBe("sólido = estimado; hachurado = hipótese");
+  });
+});
+
+describe("gráficos conferem com data/processed", () => {
+  it("conversas e custo por nível somam 100% (com arredondamento)", () => {
+    expect(SERIES_NIVEIS.map((s) => s.segmentos.map((x) => x.pct))).toEqual([
+      [14.5, 57.1, 28.4],
+      [8.2, 31.8, 60.0],
+    ]);
+    for (const s of SERIES_NIVEIS) expect(s.segmentos.reduce((a, x) => a + x.pct, 0)).toBeCloseTo(100, 0);
+  });
+
+  it.skipIf(!existe)("os canais são exatamente os do CSV, com os mesmos percentuais", () => {
+    const csv = lerCsv("canais_custos.csv");
+    expect(new Set(CANAIS.map((c) => c.id))).toEqual(new Set(csv.keys()));
+    for (const c of CANAIS) {
+      expect(c.pctConversas).toBe(Number(csv.get(c.id)!.pct_conversas));
+      expect(c.pctCusto).toBe(Number(csv.get(c.id)!.pct_custo));
+    }
+  });
+
+  it.skipIf(!existe)("os motivos são exatamente os do CSV, com os mesmos percentuais", () => {
+    const csv = lerCsv("motivos_custos.csv");
+    expect(new Set(MOTIVOS.map((m) => m.id))).toEqual(new Set(csv.keys()));
+    for (const m of MOTIVOS) {
+      expect(m.pctCusto).toBe(Number(csv.get(m.id)!.pct_custo));
+      expect(AGREGADOS[m.fonte].chave).toBe(`${m.id}.pct_custo`);
+    }
+  });
+
+  it("canais e motivos vêm ordenados por % do custo, com os destaques certos", () => {
+    const custos = CANAIS.map((c) => c.pctCusto);
+    expect(custos).toEqual([...custos].sort((a, b) => b - a));
+    expect(CANAIS.filter((c) => c.destaque).map((c) => c.id)).toEqual(["reclame_aqui"]);
+    const motivos = MOTIVOS.map((m) => m.pctCusto);
+    expect(motivos).toEqual([...motivos].sort((a, b) => b - a));
+    expect(MOTIVOS.filter((m) => m.destaque).map((m) => m.id)).toEqual(["atraso", "rastreio"]);
+    expect(LEGENDA_MOTIVOS).toContain("36,8%");
+    expect(LEGENDA_CANAIS).toContain("47,4%");
+  });
+
+  it("os resumos sem número dinâmico continuam verdadeiros e sem algarismo fixo", () => {
+    for (const b of PAINEL) {
+      expect(b.legenda ?? "").not.toMatch(/\d/);
+      expect(b.resumo ?? "").not.toMatch(/\d/);
+    }
+    expect(PAINEL.find((b) => b.id === "defesa")?.resumo).toBeTruthy();
+    expect(PAINEL.find((b) => b.id === "limites")?.resumo).toBeTruthy();
   });
 });
 
@@ -129,10 +207,12 @@ describe("textos do painel", () => {
     INTRODUCAO_PAINEL,
     ...PAINEL.flatMap((b) => [
       b.titulo,
+      b.legenda ?? "",
+      b.resumo ?? "",
       b.introducao ?? "",
       b.aviso ?? "",
       b.conclusao ?? "",
-      ...b.destaques.flatMap((x) => [x.valor, x.texto]),
+      ...b.destaques.flatMap((x) => [x.valor, x.texto, x.curto ?? ""]),
       ...b.linhas.map((l) => l.texto),
       ...(b.limites ?? []),
     ]),

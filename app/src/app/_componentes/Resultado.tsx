@@ -5,32 +5,91 @@
 // no navegador, o que o modelo viu (mascarada); a API não a devolve.
 
 import { useEffect, useRef, type ReactNode } from "react";
-import type { Nivel } from "@/lib/policy";
 import {
   AUTONOMIA,
-  CHECAGEM,
   checagemNaoAplicavel,
   dataBrasilia,
+  ESTADO_ETAPA,
+  etapasDoPipeline,
   FALHA,
   horaBrasilia,
+  itensDaChecagem,
   NIVEL,
   oQueOModeloViu,
   rotuloLimite,
   rotuloMotivoContingencia,
 } from "@/lib/demo/apresentacao";
 import type { Estado, RespostaRota } from "./Demo";
-
-const COR_NIVEL: Record<Nivel, string> = {
-  0: "border-emerald-700 bg-emerald-50 text-emerald-950",
-  1: "border-amber-600 bg-amber-50 text-amber-950",
-  2: "border-red-700 bg-red-50 text-red-950",
-};
+import { BORDA_NIVEL, FUNDO_CLARO_NIVEL, SimboloNivel } from "./Nivel";
 
 function Bloco({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
     <section className="border-t border-zinc-200 pt-4">
       <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-700">{titulo}</h3>
       <div className="mt-2 text-sm text-zinc-900">{children}</div>
+    </section>
+  );
+}
+
+// Ícone sempre em chip colorido com glifo escuro: a cor marca, o texto continua legível (AA).
+const COR_ICONE = {
+  ok: "bg-nivel-0",
+  gravada: "bg-violet-200",
+  falhou: "bg-nivel-2",
+  pulada: "bg-zinc-200",
+  nao_informada: "bg-zinc-200",
+} as const;
+
+function Icone({ estado }: { estado: keyof typeof COR_ICONE }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold text-zinc-950 ${COR_ICONE[estado]}`}
+    >
+      {ESTADO_ETAPA[estado].icone}
+    </span>
+  );
+}
+
+function ListaChecagem({ itens }: { itens: ReturnType<typeof itensDaChecagem> }) {
+  return (
+    <ul className="grid gap-1 sm:grid-cols-2">
+      {itens.map((i) => (
+        <li key={i.id} className="flex items-start gap-1.5">
+          <Icone estado={i.ok ? "ok" : "falhou"} />
+          <span className="min-w-0">
+            <span className="sr-only">{i.ok ? "Passou: " : "Reprovou: "}</span>
+            {i.rotulo}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function FaixaPipeline({ r }: { r: RespostaRota }) {
+  return (
+    <section aria-label="Etapas do pipeline nesta mensagem">
+      <ol className="grid gap-1.5 sm:grid-cols-5 sm:gap-1">
+        {etapasDoPipeline(r).map((e) => (
+          <li
+            key={e.id}
+            className={`rounded-md border px-2 py-1.5 text-xs ${
+              e.levouAoNivel ? `border-2 ${BORDA_NIVEL[r.nivel]} ${FUNDO_CLARO_NIVEL[r.nivel]}` : "border-zinc-300 bg-white"
+            }`}
+          >
+            {/* Ícone acima do nome no desktop: a coluna é estreita e o nome não pode quebrar no meio. */}
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900 sm:flex-col sm:items-start sm:gap-1 sm:text-xs xl:text-sm">
+              <Icone estado={e.estado} />
+              <span>{e.nome}</span>
+            </p>
+            <p className="mt-0.5 break-words text-zinc-700">
+              {ESTADO_ETAPA[e.estado].rotulo}: {e.detalhe}
+            </p>
+            {e.levouAoNivel && <p className="mt-0.5 font-semibold text-zinc-900">levou ao nível {r.nivel}</p>}
+          </li>
+        ))}
+      </ol>
     </section>
   );
 }
@@ -53,15 +112,15 @@ function Detalhes({ r, ms, mensagemEnviada }: { r: RespostaRota; ms: number; men
         </div>
       )}
 
-      <div className={`rounded-md border-2 px-4 py-3 ${COR_NIVEL[r.nivel]}`}>
-        <p className="text-lg font-semibold">
-          <span aria-hidden="true" className="mr-2">
-            {nivel.simbolo}
-          </span>
-          {nivel.titulo}
-        </p>
-        <p className="mt-1 text-sm">{nivel.descricao}</p>
+      <div className={`flex items-start gap-3 rounded-lg border-2 px-4 py-4 ${BORDA_NIVEL[r.nivel]} ${FUNDO_CLARO_NIVEL[r.nivel]}`}>
+        <SimboloNivel nivel={r.nivel} tamanho="grande" />
+        <div className="min-w-0 text-zinc-950">
+          <p className="text-xl font-bold sm:text-2xl">{nivel.titulo}</p>
+          <p className="mt-1 text-sm">{nivel.descricao}</p>
+        </div>
       </div>
+
+      <FaixaPipeline r={r} />
 
       {r.falha && (
         <p role="alert" className="rounded-md border border-red-700 bg-white px-3 py-2 text-sm text-red-900">
@@ -79,10 +138,6 @@ function Detalhes({ r, ms, mensagemEnviada }: { r: RespostaRota; ms: number; men
             <dd className="font-mono">{outros.join(", ")}</dd>
           </>
         )}
-        <dt className="font-medium text-zinc-700">Tópico de política</dt>
-        <dd className="font-mono">{r.topico ?? "nenhum"}</dd>
-        <dt className="font-medium text-zinc-700">Confiança</dt>
-        <dd>{r.confianca === null ? "não disponível" : r.confianca.toFixed(2)}</dd>
         <dt className="font-medium text-zinc-700">Sinais</dt>
         <dd>
           {[r.sinais.saude && "saúde", r.sinais.ameaca && "ameaça"].filter(Boolean).join(", ") || "nenhum"}
@@ -130,27 +185,30 @@ function Detalhes({ r, ms, mensagemEnviada }: { r: RespostaRota; ms: number; men
       <Bloco titulo="Checagens do texto">
         {r.checagem === null ? (
           <p>{checagemNaoAplicavel(r.nivel)}</p>
-        ) : r.checagem.ok ? (
-          <p>
-            <span aria-hidden="true">✓ </span>Aprovado: sem números sem fonte, promessas, pedido de dados sensíveis ou
-            links estranhos.
-          </p>
         ) : (
-          <ul className="list-disc space-y-1 pl-5">
-            {r.checagem.falhas.map((f) => (
-              <li key={f}>Reprovado: {CHECAGEM[f] ?? f}</li>
-            ))}
-          </ul>
+          <>
+            <p className="mb-2 font-medium">{r.checagem.ok ? "Aprovado" : "Reprovado"}</p>
+            <ListaChecagem itens={itensDaChecagem(r.checagem, r.nivel)} />
+          </>
         )}
       </Bloco>
 
-      <Bloco titulo="Telemetria">
-        <p>
+      <details className="rounded-md border border-zinc-300 px-3 py-2 text-sm">
+        <summary className="cursor-pointer font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-marca">
+          Detalhes técnicos: telemetria e classificação
+        </summary>
+        <dl className="mt-2 grid gap-x-4 gap-y-1 sm:grid-cols-[max-content_1fr]">
+          <dt className="font-medium text-zinc-700">Tópico de política</dt>
+          <dd className="font-mono break-words">{r.topico ?? "nenhum"}</dd>
+          <dt className="font-medium text-zinc-700">Confiança</dt>
+          <dd>{r.confianca === null ? "não disponível" : r.confianca.toFixed(2)}</dd>
+        </dl>
+        <p className="mt-2">
           Tempo total: {ms} ms{r.modelo ? ` · modelo ${r.modelo}` : ""}
           {r.contingencia ? " · tokens da gravação, sem chamada agora" : ""}
         </p>
         {r.chamadas.length > 0 && (
-          <ul className="mt-1 space-y-0.5 font-mono text-xs">
+          <ul className="mt-1 space-y-0.5 font-mono text-xs break-words">
             {r.chamadas.map((c, i) => (
               <li key={i}>
                 {c.nome}: {c.uso ? `${c.uso.entrada} tokens de entrada, ${c.uso.saida} de saída` : "sem uso informado"}
@@ -160,7 +218,7 @@ function Detalhes({ r, ms, mensagemEnviada }: { r: RespostaRota; ms: number; men
             ))}
           </ul>
         )}
-      </Bloco>
+      </details>
 
       <details className="rounded-md border border-zinc-300 px-3 py-2">
         <summary className="cursor-pointer text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-marca">
